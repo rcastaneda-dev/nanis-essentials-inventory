@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Modal } from '../../shared/Modal';
 import {
   DB,
@@ -55,6 +55,37 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
     if (!q) return buyerOptions;
     return buyerOptions.filter(n => n.toLowerCase().includes(q));
   }, [buyerName, buyerOptions]);
+
+  // Autocomplete state for item selection (per line)
+  const [itemSearchQueries, setItemSearchQueries] = useState<Record<string, string>>({});
+  const [showItemSuggestions, setShowItemSuggestions] = useState<Record<string, boolean>>({});
+  const [itemActiveIndices, setItemActiveIndices] = useState<Record<string, number>>({});
+  const itemBlurTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const buyerBlurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const linesRef = useRef<SaleLine[]>(lines);
+
+  // Get available items based on branch filter
+  const availableItems = useMemo(() => {
+    return db.items
+      .filter(i => {
+        if (branchId) {
+          return i.stock > 0 && i.branchId === branchId;
+        }
+        return i.stock > 0 && !i.branchId;
+      })
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [db.items, branchId]);
+
+  // Get filtered items for a specific line
+  const getFilteredItems = (lineId: string) => {
+    const query = itemSearchQueries[lineId]?.trim().toLowerCase() || '';
+    if (!query) return availableItems;
+    return availableItems.filter(i => i.name.toLowerCase().includes(query));
+  };
+
+  // Keep linesRef in sync with lines state
+  linesRef.current = lines;
 
   function addLine() {
     setLines([
@@ -135,45 +166,143 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
             <div className="grid three row-gap">
               <div>
                 <label>Select Item</label>
-                <select
-                  value={l.itemId}
-                  onChange={e => {
-                    const newItemId = e.target.value;
-                    const newItem = db.items.find(i => i.id === newItemId);
-                    const defaultPrice = newItem?.minPrice ?? 0;
-
-                    setLines(
-                      lines.map(x =>
-                        x.id === l.id
-                          ? {
-                              ...x,
-                              itemId: newItemId,
-                              unitPrice: defaultPrice,
-                            }
-                          : x
-                      )
-                    );
-                  }}
-                >
-                  <option value="" disabled>
-                    Select Item
-                  </option>
-                  {db.items
-                    .filter(i => {
-                      // Filter by branch if selected, otherwise show main inventory
-                      if (branchId) {
-                        return i.stock > 0 && i.branchId === branchId;
+                <div className="autocomplete">
+                  <input
+                    type="text"
+                    placeholder="Type to search items..."
+                    value={
+                      itemSearchQueries[l.id] !== undefined
+                        ? itemSearchQueries[l.id]
+                        : selectedItem?.name || ''
+                    }
+                    onFocus={() => {
+                      // Cancel any pending blur timeout for this line
+                      if (itemBlurTimeoutsRef.current[l.id]) {
+                        clearTimeout(itemBlurTimeoutsRef.current[l.id]);
+                        delete itemBlurTimeoutsRef.current[l.id];
                       }
-                      return i.stock > 0 && !i.branchId;
-                    })
-                    .slice()
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .map(i => (
-                      <option key={i.id} value={i.id}>
-                        {i.name}
-                      </option>
-                    ))}
-                </select>
+                      setShowItemSuggestions(prev => ({ ...prev, [l.id]: true }));
+                      if (!itemSearchQueries[l.id] && selectedItem) {
+                        setItemSearchQueries(prev => ({ ...prev, [l.id]: selectedItem.name }));
+                      }
+                    }}
+                    onChange={e => {
+                      const query = e.target.value;
+                      setItemSearchQueries(prev => ({ ...prev, [l.id]: query }));
+                      setShowItemSuggestions(prev => ({ ...prev, [l.id]: true }));
+                      setItemActiveIndices(prev => ({ ...prev, [l.id]: 0 }));
+                    }}
+                    onKeyDown={e => {
+                      const filtered = getFilteredItems(l.id);
+                      const isShowing = showItemSuggestions[l.id];
+                      if (!isShowing || filtered.length === 0) return;
+
+                      const activeIdx = itemActiveIndices[l.id] || 0;
+
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setItemActiveIndices(prev => ({
+                          ...prev,
+                          [l.id]: Math.min(activeIdx + 1, filtered.length - 1),
+                        }));
+                      }
+                      if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setItemActiveIndices(prev => ({
+                          ...prev,
+                          [l.id]: Math.max(activeIdx - 1, 0),
+                        }));
+                      }
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const selected = filtered[activeIdx];
+                        if (selected) {
+                          const defaultPrice = selected.minPrice ?? 0;
+                          setLines(
+                            lines.map(x =>
+                              x.id === l.id
+                                ? {
+                                    ...x,
+                                    itemId: selected.id,
+                                    unitPrice: defaultPrice,
+                                  }
+                                : x
+                            )
+                          );
+                          setItemSearchQueries(prev => ({ ...prev, [l.id]: selected.name }));
+                          setShowItemSuggestions(prev => ({ ...prev, [l.id]: false }));
+                        }
+                      }
+                      if (e.key === 'Escape') {
+                        setShowItemSuggestions(prev => ({ ...prev, [l.id]: false }));
+                      }
+                    }}
+                    onBlur={() => {
+                      // Clear any existing timeout for this line
+                      if (itemBlurTimeoutsRef.current[l.id]) {
+                        clearTimeout(itemBlurTimeoutsRef.current[l.id]);
+                      }
+                      // Store lineId to avoid stale closure
+                      const lineId = l.id;
+                      // Set new timeout and store its ID
+                      itemBlurTimeoutsRef.current[lineId] = setTimeout(() => {
+                        setShowItemSuggestions(prev => ({ ...prev, [lineId]: false }));
+                        // Read the current selected item from ref (which has latest state) to avoid stale closure
+                        const currentLine = linesRef.current.find(line => line.id === lineId);
+                        if (currentLine) {
+                          const currentSelectedItem = db.items.find(
+                            i => i.id === currentLine.itemId
+                          );
+                          // Only reset if the current query doesn't match the selected item
+                          // This prevents overwriting a newly selected item's name
+                          if (currentSelectedItem) {
+                            setItemSearchQueries(prev => {
+                              if (prev[lineId] !== currentSelectedItem.name) {
+                                return { ...prev, [lineId]: currentSelectedItem.name };
+                              }
+                              return prev;
+                            });
+                          }
+                        }
+                        delete itemBlurTimeoutsRef.current[lineId];
+                      }, 100);
+                    }}
+                    autoComplete="off"
+                  />
+                  {showItemSuggestions[l.id] && getFilteredItems(l.id).length > 0 && (
+                    <div className="autocomplete-list" role="listbox">
+                      {getFilteredItems(l.id).map((item, idx) => {
+                        const activeIdx = itemActiveIndices[l.id] || 0;
+                        return (
+                          <div
+                            key={item.id}
+                            role="option"
+                            aria-selected={activeIdx === idx}
+                            className={`autocomplete-item ${activeIdx === idx ? 'active' : ''}`}
+                            onMouseDown={() => {
+                              const defaultPrice = item.minPrice ?? 0;
+                              setLines(
+                                lines.map(x =>
+                                  x.id === l.id
+                                    ? {
+                                        ...x,
+                                        itemId: item.id,
+                                        unitPrice: defaultPrice,
+                                      }
+                                    : x
+                                )
+                              );
+                              setItemSearchQueries(prev => ({ ...prev, [l.id]: item.name }));
+                              setShowItemSuggestions(prev => ({ ...prev, [l.id]: false }));
+                            }}
+                          >
+                            {item.name}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <label>Quantity</label>
@@ -238,7 +367,14 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
               type="text"
               placeholder="Enter customer name..."
               value={buyerName}
-              onFocus={() => setShowBuyerSuggestions(true)}
+              onFocus={() => {
+                // Cancel any pending blur timeout
+                if (buyerBlurTimeoutRef.current) {
+                  clearTimeout(buyerBlurTimeoutRef.current);
+                  buyerBlurTimeoutRef.current = null;
+                }
+                setShowBuyerSuggestions(true);
+              }}
               onChange={e => {
                 setBuyerName(e.target.value);
                 setShowBuyerSuggestions(true);
@@ -266,7 +402,17 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
                   setShowBuyerSuggestions(false);
                 }
               }}
-              onBlur={() => setTimeout(() => setShowBuyerSuggestions(false), 100)}
+              onBlur={() => {
+                // Clear any existing timeout
+                if (buyerBlurTimeoutRef.current) {
+                  clearTimeout(buyerBlurTimeoutRef.current);
+                }
+                // Set new timeout and store its ID
+                buyerBlurTimeoutRef.current = setTimeout(() => {
+                  setShowBuyerSuggestions(false);
+                  buyerBlurTimeoutRef.current = null;
+                }, 100);
+              }}
               autoComplete="off"
             />
             {showBuyerSuggestions && filteredBuyerOptions.length > 0 && (
@@ -297,6 +443,9 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
             <option value="instagram">Instagram</option>
             <option value="tiktok">TikTok</option>
             <option value="family_friends">Family/Friends</option>
+            <option value="loyal_customer">Loyal Customer</option>
+            <option value="referred_to_store">Referred to Store</option>
+            <option value="store_customer">Store Customer</option>
             <option value="other">Other</option>
           </select>
         </div>
@@ -322,6 +471,8 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
             <option value="cash">Cash</option>
             <option value="transfer">Transfer</option>
             <option value="installments">Installments</option>
+            <option value="payment_link">Payment Link</option>
+            <option value="credit_card">Credit Card</option>
           </select>
         </div>
         {paymentMethod === 'installments' && (

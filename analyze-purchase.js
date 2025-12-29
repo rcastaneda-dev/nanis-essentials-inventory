@@ -125,7 +125,7 @@ function analyzePurchase() {
     const taxRateDecimal = taxRate / 100;
     const expectedPerUnitTax = line.unitCost * taxRateDecimal;
     const actualPerUnitTax = line.perUnitTax ?? 0;
-    const expectedLineTax = expectedPerUnitTax * lineUnits;
+    const _expectedLineTax = expectedPerUnitTax * lineUnits;
 
     console.log('TAX CALCULATION');
     console.log('  Formula: perUnitTax = unitCost × (taxRate / 100)');
@@ -148,7 +148,7 @@ function analyzePurchase() {
     const expectedPerUnitShippingUS =
       purchase.shippingUS > 0 && units > 0 ? purchase.shippingUS / units : 0;
     const actualPerUnitShippingUS = line.perUnitShippingUS ?? 0;
-    const expectedLineShippingUS = expectedPerUnitShippingUS * lineUnits;
+    const _expectedLineShippingUS = expectedPerUnitShippingUS * lineUnits;
 
     console.log('US SHIPPING CALCULATION');
     console.log('  Formula: perUnitShippingUS = shippingUS / totalUnits');
@@ -172,7 +172,7 @@ function analyzePurchase() {
     const expectedPerUnitShippingIntl =
       lineUnits > 0 ? (purchase.shippingIntl * weightRatio) / lineUnits : 0;
     const actualPerUnitShippingIntl = line.perUnitShippingIntl ?? 0;
-    const expectedLineShippingIntl = expectedPerUnitShippingIntl * lineUnits;
+    const _expectedLineShippingIntl = expectedPerUnitShippingIntl * lineUnits;
 
     console.log('INTERNATIONAL SHIPPING CALCULATION');
     console.log('  Formula: weightRatio = lineWeight / totalWeight');

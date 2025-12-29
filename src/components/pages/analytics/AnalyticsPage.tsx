@@ -84,12 +84,23 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
   const salesByMethod = filteredSales.reduce(
     (acc, s) => {
       const key = s.paymentMethod;
-      if (!acc[key]) acc[key] = { count: 0, amount: 0 } as { count: number; amount: number };
-      acc[key].count += 1;
-      acc[key].amount += s.totalAmount;
+      if (
+        key === 'cash' ||
+        key === 'transfer' ||
+        key === 'installments' ||
+        key === 'payment_link' ||
+        key === 'credit_card'
+      ) {
+        if (!acc[key]) acc[key] = { count: 0, amount: 0 };
+        acc[key].count += 1;
+        acc[key].amount += s.totalAmount;
+      }
       return acc;
     },
-    {} as Record<'cash' | 'transfer' | 'installments', { count: number; amount: number }>
+    {} as Record<
+      'cash' | 'transfer' | 'installments' | 'payment_link' | 'credit_card',
+      { count: number; amount: number }
+    >
   );
 
   const totalInvWithShipping = db.items.reduce(
@@ -209,6 +220,24 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
               count={salesByMethod.installments.count}
               amount={salesByMethod.installments.amount}
               testId="sales-by-installments-card"
+            />
+          )}
+
+          {salesByMethod.payment_link?.count > 0 && (
+            <AnalyticsPaymentCard
+              title="Sales by Payment Link"
+              count={salesByMethod.payment_link.count}
+              amount={salesByMethod.payment_link.amount}
+              testId="sales-by-payment-link-card"
+            />
+          )}
+
+          {salesByMethod.credit_card?.count > 0 && (
+            <AnalyticsPaymentCard
+              title="Sales by Credit Card"
+              count={salesByMethod.credit_card.count}
+              amount={salesByMethod.credit_card.amount}
+              testId="sales-by-credit-card-card"
             />
           )}
         </div>
