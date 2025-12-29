@@ -9,6 +9,7 @@ import { TransactionsPage } from './components/pages/transactions';
 import { AnalyticsPage } from './components/pages/analytics';
 import { FinancialDashboard } from './components/pages/reports';
 import { ImportExportPage } from './components/pages/import-export';
+import { QuotesPage } from './components/pages/quotes';
 import { useAppData } from './hooks/useAppData';
 import { useBackupImport } from './hooks/useBackupImport';
 
@@ -31,6 +32,8 @@ export default function App() {
         return <AnalyticsPage db={db} />;
       case 'reports':
         return <FinancialDashboard db={db} />;
+      case 'quotes':
+        return <QuotesPage db={db} />;
       case 'import-export':
         return (
           <ImportExportPage onExport={handleExport} onImport={handleImport} onClear={handleClear} />
