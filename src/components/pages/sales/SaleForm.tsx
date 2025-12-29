@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Modal } from '../../shared/Modal';
 import {
   DB,
@@ -63,6 +63,7 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
   const itemBlurTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
   const buyerBlurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const linesRef = useRef<SaleLine[]>(lines);
+  const dbRef = useRef<DB>(db);
 
   // Get available items based on branch filter
   const availableItems = useMemo(() => {
@@ -84,8 +85,26 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
     return availableItems.filter(i => i.name.toLowerCase().includes(query));
   };
 
-  // Keep linesRef in sync with lines state
+  // Keep refs in sync with current state/props
   linesRef.current = lines;
+  dbRef.current = db;
+
+  // Cleanup all pending timeouts on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      // Clear all item blur timeouts
+      Object.values(itemBlurTimeoutsRef.current).forEach(timeout => {
+        clearTimeout(timeout);
+      });
+      itemBlurTimeoutsRef.current = {};
+
+      // Clear buyer blur timeout
+      if (buyerBlurTimeoutRef.current) {
+        clearTimeout(buyerBlurTimeoutRef.current);
+        buyerBlurTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   function addLine() {
     setLines([
@@ -102,6 +121,29 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
   function deleteLine(lineId: string) {
     if (lines.length > 1) {
       setLines(lines.filter(l => l.id !== lineId));
+
+      // Clean up autocomplete state for the deleted line
+      setItemSearchQueries(prev => {
+        const next = { ...prev };
+        delete next[lineId];
+        return next;
+      });
+      setShowItemSuggestions(prev => {
+        const next = { ...prev };
+        delete next[lineId];
+        return next;
+      });
+      setItemActiveIndices(prev => {
+        const next = { ...prev };
+        delete next[lineId];
+        return next;
+      });
+
+      // Clear any pending timeout for the deleted line
+      if (itemBlurTimeoutsRef.current[lineId]) {
+        clearTimeout(itemBlurTimeoutsRef.current[lineId]);
+        delete itemBlurTimeoutsRef.current[lineId];
+      }
     }
   }
 
@@ -182,8 +224,12 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
                         delete itemBlurTimeoutsRef.current[l.id];
                       }
                       setShowItemSuggestions(prev => ({ ...prev, [l.id]: true }));
-                      if (!itemSearchQueries[l.id] && selectedItem) {
-                        setItemSearchQueries(prev => ({ ...prev, [l.id]: selectedItem.name }));
+                      // Look up item from current db to avoid stale closure
+                      if (!itemSearchQueries[l.id]) {
+                        const currentItem = dbRef.current.items.find(i => i.id === l.itemId);
+                        if (currentItem) {
+                          setItemSearchQueries(prev => ({ ...prev, [l.id]: currentItem.name }));
+                        }
                       }
                     }}
                     onChange={e => {
@@ -247,10 +293,10 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
                       // Set new timeout and store its ID
                       itemBlurTimeoutsRef.current[lineId] = setTimeout(() => {
                         setShowItemSuggestions(prev => ({ ...prev, [lineId]: false }));
-                        // Read the current selected item from ref (which has latest state) to avoid stale closure
+                        // Read the current selected item from refs (which have latest state/props) to avoid stale closure
                         const currentLine = linesRef.current.find(line => line.id === lineId);
                         if (currentLine) {
-                          const currentSelectedItem = db.items.find(
+                          const currentSelectedItem = dbRef.current.items.find(
                             i => i.id === currentLine.itemId
                           );
                           // Only reset if the current query doesn't match the selected item
