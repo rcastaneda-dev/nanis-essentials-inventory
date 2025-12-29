@@ -9,6 +9,7 @@ export type Tab =
   | 'transactions'
   | 'analytics'
   | 'reports'
+  | 'quotes'
   | 'import-export';
 
 interface NavigationBarProps {
@@ -25,6 +26,7 @@ export function NavigationBar({ brandTitle, activeTab, onTabChange }: Navigation
     { key: 'transactions', label: 'Transactions' },
     { key: 'analytics', label: 'Analytics' },
     { key: 'reports', label: 'Reports', disabled: true },
+    { key: 'quotes', label: 'Quotes' },
     { key: 'import-export', label: 'Import/Export' },
   ];
 
