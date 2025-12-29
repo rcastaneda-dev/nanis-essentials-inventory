@@ -1,6 +1,6 @@
 export type Category = 'Hair Care' | 'Body Care' | 'Makeup' | 'Fragrance' | 'Skin Care' | 'Other';
 
-export type PaymentMethod = 'cash' | 'transfer' | 'installments';
+export type PaymentMethod = 'cash' | 'transfer' | 'installments' | 'payment_link' | 'credit_card';
 
 export type PaymentSource = 'external' | 'revenue' | 'mixed';
 
@@ -9,6 +9,9 @@ export type SalesChannel =
   | 'instagram'
   | 'tiktok'
   | 'family_friends'
+  | 'loyal_customer'
+  | 'referred_to_store'
+  | 'store_customer'
   | 'other';
 
 export interface ItemImage {

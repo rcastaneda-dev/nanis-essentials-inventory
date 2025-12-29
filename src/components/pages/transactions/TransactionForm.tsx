@@ -227,6 +227,8 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
                   <option value="cash">Cash</option>
                   <option value="transfer">Bank Transfer</option>
                   <option value="installments">Installments</option>
+                  <option value="payment_link">Payment Link</option>
+                  <option value="credit_card">Credit Card</option>
                 </select>
               </label>
 

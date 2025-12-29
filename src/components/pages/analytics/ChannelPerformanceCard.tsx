@@ -22,6 +22,9 @@ function getChannelLabel(channel: SalesChannel): string {
     instagram: 'Instagram',
     tiktok: 'TikTok',
     family_friends: 'Family/Friends',
+    loyal_customer: 'Loyal Customer',
+    referred_to_store: 'Referred to Store',
+    store_customer: 'Store Customer',
     other: 'Other',
   };
   return labels[channel];
