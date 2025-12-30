@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 
 export type DateFilterOption = 'current-month' | 'previous-month' | 'overall';
@@ -9,10 +10,11 @@ interface DateFiltersProps {
 }
 
 export function DateFilters({ activeFilter, onFilterChange }: DateFiltersProps) {
+  const { t } = useTranslation();
   const filters: { key: DateFilterOption; label: string }[] = [
-    { key: 'current-month', label: 'Current Month' },
-    { key: 'previous-month', label: 'Previous Month' },
-    { key: 'overall', label: 'Overall' },
+    { key: 'current-month', label: t('dateFilters.currentMonth') },
+    { key: 'previous-month', label: t('dateFilters.previousMonth') },
+    { key: 'overall', label: t('dateFilters.overall') },
   ];
 
   return (

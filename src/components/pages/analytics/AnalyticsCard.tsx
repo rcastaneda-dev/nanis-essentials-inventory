@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ItemCardImage } from '../../ItemImageDisplay';
 import { InventoryItem } from '../../../types/models';
 import { fmtUSD } from '../../../lib/utils';
@@ -77,15 +78,16 @@ interface AnalyticsPaymentCardProps {
 }
 
 export function AnalyticsPaymentCard({ title, count, amount, testId }: AnalyticsPaymentCardProps) {
+  const { t } = useTranslation();
   return (
     <div className="card subcard" data-testid={testId}>
       <div className="card-title">{title}</div>
       <div className="grid two">
         <div>
-          <b>Count:</b> {count}
+          <b>{t('analytics.count')}:</b> {count}
         </div>
         <div>
-          <b>Amount:</b> {fmtUSD(amount)}
+          <b>{t('analytics.amount')}:</b> {fmtUSD(amount)}
         </div>
       </div>
     </div>

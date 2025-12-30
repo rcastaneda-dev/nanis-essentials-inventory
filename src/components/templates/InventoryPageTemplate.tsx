@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../molecules/PageHeader';
 import { SearchFilters, SortOption } from '../molecules/SearchFilters';
 import { ItemGrid } from '../organisms/ItemGrid';
@@ -75,7 +76,10 @@ export function InventoryPageTemplate({
   branchName,
   db,
 }: InventoryPageTemplateProps) {
-  const pageTitle = branchName ? `Inventory - ${branchName}` : 'Inventory Management';
+  const { t } = useTranslation();
+  const pageTitle = branchName
+    ? `${t('inventory.title')} - ${branchName}`
+    : t('inventory.management');
 
   return (
     <div className="page">

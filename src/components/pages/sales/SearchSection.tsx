@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { SearchInput } from '../../atoms/Input';
 import { Text } from '../../atoms/Typography';
 import { SortSelect } from '../../atoms/Select';
@@ -29,11 +30,12 @@ export function SearchSection({
   onExpandAll,
   onCollapseAll,
 }: SearchSectionProps) {
+  const { t } = useTranslation();
   return (
     <div className="filters-container">
       <div className="filters-row">
         <SearchInput
-          placeholder="Search by customer, sale id, payment, amount or date..."
+          placeholder={t('sales.searchPlaceholder')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           onClear={() => setSearchQuery('')}
@@ -46,14 +48,15 @@ export function SearchSection({
           className="month-filter"
         />
         <div className="group-controls">
-          <button onClick={onExpandAll}>Expand All</button>
-          <button onClick={onCollapseAll}>Collapse All</button>
+          <button onClick={onExpandAll}>{t('sales.expandAll')}</button>
+          <button onClick={onCollapseAll}>{t('sales.collapseAll')}</button>
         </div>
       </div>
       <div className="results-info-modern">
         <Text variant="small">
-          {summaryStats.totalSales} sales | {fmtUSD(summaryStats.totalAmount)} |{' '}
-          {summaryStats.uniqueCustomers} customers
+          {t('sales.salesCount', { count: summaryStats.totalSales })} |{' '}
+          {fmtUSD(summaryStats.totalAmount)} |{' '}
+          {t('sales.customersCount', { count: summaryStats.uniqueCustomers })}
         </Text>
       </div>
     </div>

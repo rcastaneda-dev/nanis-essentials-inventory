@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PurchaseForm } from './PurchaseForm';
 import { DB, Purchase, InventoryItem } from '../../../types/models';
 import { fmtUSD } from '../../../lib/utils';
@@ -9,11 +10,12 @@ interface PurchasesPageProps {
 }
 
 export function PurchasesPage({ db, persist }: PurchasesPageProps) {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Purchase | null>(null);
 
   const onDelete = (id: string) => {
-    if (!window.confirm('Delete purchase?')) return;
+    if (!window.confirm(t('purchases.deletePurchase'))) return;
     const p = db.purchases.find(x => x.id === id);
     if (p) {
       const nextItems = db.items.map(it => {
@@ -73,7 +75,7 @@ export function PurchasesPage({ db, persist }: PurchasesPageProps) {
   return (
     <div className="page">
       <div className="page-header">
-        <h2>Purchase Management</h2>
+        <h2>{t('purchases.title')}</h2>
         <button
           className="primary"
           onClick={() => {
@@ -81,7 +83,7 @@ export function PurchasesPage({ db, persist }: PurchasesPageProps) {
             setShowForm(true);
           }}
         >
-          + Register Purchase
+          {t('purchases.registerPurchase')}
         </button>
       </div>
 
@@ -89,27 +91,27 @@ export function PurchasesPage({ db, persist }: PurchasesPageProps) {
         {db.purchases.map(p => (
           <div key={p.id} className="card" data-testid="purchase-card">
             <div className="card-row">
-              <div className="card-title">Purchase #{p.id}</div>
+              <div className="card-title">{t('purchases.purchaseNumber', { id: p.id })}</div>
               <div className="muted">{new Date(p.createdAt).toLocaleDateString()}</div>
             </div>
             <div className="grid three">
               <div>
-                <b>Subtotal:</b> {fmtUSD(p.subtotal)}
+                <b>{t('purchases.subtotal')}:</b> {fmtUSD(p.subtotal)}
               </div>
               <div>
-                <b>Tax:</b> {fmtUSD(p.tax)}
+                <b>{t('purchases.tax')}:</b> {fmtUSD(p.tax)}
               </div>
               <div>
-                <b>Total:</b> {fmtUSD(p.totalCost)}
+                <b>{t('purchases.total')}:</b> {fmtUSD(p.totalCost)}
               </div>
               <div>
-                <b>Shipping (US):</b> {fmtUSD(p.shippingUS)}
+                <b>{t('purchases.shippingUS')}:</b> {fmtUSD(p.shippingUS)}
               </div>
               <div>
-                <b>Shipping (Intl):</b> {fmtUSD(p.shippingIntl)}
+                <b>{t('purchases.shippingIntl')}:</b> {fmtUSD(p.shippingIntl)}
               </div>
               <div>
-                <b>Items:</b> {p.totalUnits}
+                <b>{t('purchases.items')}:</b> {p.totalUnits}
               </div>
             </div>
             <div className="row gap">
@@ -119,15 +121,15 @@ export function PurchasesPage({ db, persist }: PurchasesPageProps) {
                   setShowForm(true);
                 }}
               >
-                Edit
+                {t('common.edit')}
               </button>
               <button className="danger" onClick={() => onDelete(p.id)}>
-                Delete
+                {t('common.delete')}
               </button>
             </div>
           </div>
         ))}
-        {db.purchases.length === 0 && <div className="empty">No purchases yet.</div>}
+        {db.purchases.length === 0 && <div className="empty">{t('purchases.noPurchases')}</div>}
       </div>
 
       {showForm && (

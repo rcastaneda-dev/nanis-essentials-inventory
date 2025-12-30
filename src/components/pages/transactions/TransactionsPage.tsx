@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DB, Transaction } from '../../../types/models';
 import { fmtUSD, isCurrentMonth, isPreviousMonth } from '../../../lib/utils';
 import { RevenueService } from '../../../lib/revenueService';
 import { TransactionForm } from './TransactionForm';
 import { DateFilters, DateFilterOption } from '../../molecules/DateFilters';
 import { RevenueWithdrawals } from '../../RevenueWithdrawals';
+import { getTransactionCategoryTranslationKey } from '../../../lib/transactionUtils';
 
 interface TransactionsPageProps {
   db: DB;
@@ -12,12 +14,13 @@ interface TransactionsPageProps {
 }
 
 export function TransactionsPage({ db, persist }: TransactionsPageProps) {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [dateFilter, setDateFilter] = useState<DateFilterOption>('current-month');
 
   const onDelete = (id: string) => {
-    if (!window.confirm('Delete transaction?')) return;
+    if (!window.confirm(t('transactions.deleteTransaction'))) return;
     persist({ ...db, transactions: db.transactions.filter(x => x.id !== id) });
   };
 
@@ -63,7 +66,7 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
       );
 
       if (error) {
-        alert(`Error processing transaction: ${error}`);
+        alert(t('transactions.errorProcessingTransaction', { error }));
         return;
       }
 
@@ -102,7 +105,7 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
   return (
     <div className="page">
       <div className="page-header">
-        <h2>Business Transactions</h2>
+        <h2>{t('transactions.title')}</h2>
         <button
           className="primary"
           onClick={() => {
@@ -110,7 +113,7 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
             setShowForm(true);
           }}
         >
-          + Add Transaction
+          {t('transactions.addTransaction')}
         </button>
       </div>
 
@@ -118,34 +121,34 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
 
       <div className="summary-cards">
         <div className="summary-card">
-          <h3>Total Expenses</h3>
+          <h3>{t('transactions.totalExpenses')}</h3>
           <div className="amount">{fmtUSD(totalExpenses)}</div>
-          <div className="muted">Business expenses (packaging, marketing, etc.)</div>
+          <div className="muted">{t('transactions.totalExpensesDescription')}</div>
         </div>
         <div className="summary-card">
-          <h3>Total Fees</h3>
+          <h3>{t('transactions.totalFees')}</h3>
           <div className="amount">{fmtUSD(totalFees)}</div>
-          <div className="muted">Platform fees, payment processing, etc.</div>
+          <div className="muted">{t('transactions.totalFeesDescription')}</div>
         </div>
         <div className="summary-card">
-          <h3>Total Income</h3>
+          <h3>{t('transactions.totalIncome')}</h3>
           <div className="amount" style={{ color: totalIncome > 0 ? '#22c55e' : undefined }}>
             {fmtUSD(totalIncome)}
           </div>
-          <div className="muted">Additional income and revenue</div>
+          <div className="muted">{t('transactions.totalIncomeDescription')}</div>
         </div>
         <div className="summary-card">
-          <h3>Net Transactions</h3>
+          <h3>{t('transactions.netTransactions')}</h3>
           <div className={`amount total ${netTransactions >= 0 ? 'positive' : 'negative'}`}>
             {fmtUSD(netTransactions)}
           </div>
-          <div className="muted">Income minus expenses and fees</div>
+          <div className="muted">{t('transactions.netTransactionsDescription')}</div>
         </div>
         {totalDiscounts > 0 && (
           <div className="summary-card">
-            <h3>Total Discounts</h3>
+            <h3>{t('transactions.totalDiscounts')}</h3>
             <div className="amount">{fmtUSD(totalDiscounts)}</div>
-            <div className="muted">Tracked discounts (informational only)</div>
+            <div className="muted">{t('transactions.totalDiscountsDescription')}</div>
           </div>
         )}
       </div>
@@ -153,74 +156,87 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
       <div className="cards two-cols" data-testid="transaction-cards">
         {filteredTransactions
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .map(t => (
-            <div key={t.id} className="card" data-testid="transaction-card">
+          .map(transaction => (
+            <div key={transaction.id} className="card" data-testid="transaction-card">
               <div className="card-row">
-                <div className="card-title">{t.description}</div>
+                <div className="card-title">{transaction.description}</div>
                 <div className="transaction-type">
-                  <span className={`badge ${t.type}`}>{t.type.toUpperCase()}</span>
+                  <span className={`badge ${transaction.type}`}>
+                    {t(`transactions.transactionTypes.${transaction.type}`)}
+                  </span>
                 </div>
               </div>
               <div className="card-row">
                 <div
                   className="amount-large"
                   style={
-                    t.type === 'income'
+                    transaction.type === 'income'
                       ? { color: '#22c55e', fontWeight: 'bold' }
-                      : t.type === 'discount'
+                      : transaction.type === 'discount'
                         ? { color: '#3b82f6', fontWeight: 'bold' }
                         : undefined
                   }
                 >
-                  {t.type === 'income' ? '+' : ''}
-                  {fmtUSD(t.amount)}
+                  {transaction.type === 'income' ? '+' : ''}
+                  {fmtUSD(transaction.amount)}
                 </div>
-                <div className="muted">{new Date(t.createdAt).toLocaleDateString()}</div>
+                <div className="muted">{new Date(transaction.createdAt).toLocaleDateString()}</div>
               </div>
               <div className="grid two">
                 <div>
-                  <b>Category:</b> {t.category}
+                  <b>{t('transactions.categoryLabel')}:</b>{' '}
+                  {t(
+                    `transactions.transactionCategories.${getTransactionCategoryTranslationKey(transaction.category)}`
+                  )}
                 </div>
-                {t.type !== 'income' && t.type !== 'discount' && (
+                {transaction.type !== 'income' && transaction.type !== 'discount' && (
                   <div>
-                    <b>Payment:</b> {t.paymentMethod || 'Not specified'}
+                    <b>{t('transactions.paymentLabel')}:</b>{' '}
+                    {transaction.paymentMethod
+                      ? t(`transactions.${transaction.paymentMethod}`)
+                      : t('transactions.notSpecified')}
                   </div>
                 )}
               </div>
-              {t.type !== 'income' && t.type !== 'discount' && (
+              {transaction.type !== 'income' && transaction.type !== 'discount' && (
                 <div className="grid two">
                   <div>
-                    <b>Source:</b>{' '}
-                    {t.paymentSource === 'mixed'
-                      ? 'Mixed Sources'
-                      : t.paymentSource === 'revenue'
-                        ? 'Business Revenue'
-                        : 'External Funds'}
+                    <b>{t('transactions.sourceLabel')}:</b>{' '}
+                    {transaction.paymentSource === 'mixed'
+                      ? t('transactions.mixedSources')
+                      : transaction.paymentSource === 'revenue'
+                        ? t('transactions.businessRevenue')
+                        : t('transactions.externalFunds')}
                   </div>
-                  {t.paymentSource === 'mixed' && t.revenueAmount && t.externalAmount && (
-                    <div>
-                      <b>Breakdown:</b> {fmtUSD(t.revenueAmount)} revenue +{' '}
-                      {fmtUSD(t.externalAmount)} external
-                    </div>
-                  )}
+                  {transaction.paymentSource === 'mixed' &&
+                    transaction.revenueAmount &&
+                    transaction.externalAmount && (
+                      <div>
+                        <b>{t('transactions.breakdownLabel')}:</b>{' '}
+                        {fmtUSD(transaction.revenueAmount)}{' '}
+                        {t('transactions.businessRevenue').toLowerCase()} +{' '}
+                        {fmtUSD(transaction.externalAmount)}{' '}
+                        {t('transactions.externalFunds').toLowerCase()}
+                      </div>
+                    )}
                 </div>
               )}
-              {t.notes && (
+              {transaction.notes && (
                 <div className="notes">
-                  <b>Notes:</b> {t.notes}
+                  <b>{t('transactions.notesLabel')}:</b> {transaction.notes}
                 </div>
               )}
               <div className="row gap">
                 <button
                   onClick={() => {
-                    setEditing(t);
+                    setEditing(transaction);
                     setShowForm(true);
                   }}
                 >
-                  Edit
+                  {t('common.edit')}
                 </button>
-                <button className="danger" onClick={() => onDelete(t.id)}>
-                  Delete
+                <button className="danger" onClick={() => onDelete(transaction.id)}>
+                  {t('common.delete')}
                 </button>
               </div>
             </div>
@@ -228,8 +244,10 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
         {filteredTransactions.length === 0 && (
           <div className="empty">
             {dateFilter === 'overall'
-              ? 'No transactions yet. Add business expenses, fees, income, discounts, and other transactions.'
-              : `No transactions found for ${dateFilter === 'current-month' ? 'current month' : 'previous month'}.`}
+              ? t('transactions.noTransactionsYet')
+              : dateFilter === 'current-month'
+                ? t('transactions.noTransactionsForCurrentMonth')
+                : t('transactions.noTransactionsForPreviousMonth')}
           </div>
         )}
       </div>

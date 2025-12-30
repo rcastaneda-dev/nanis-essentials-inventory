@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { fmtUSD, getWeeksInRange, isDateInWeek } from '../../../lib/utils';
 import { DateFilterOption } from '../../molecules/DateFilters';
 
@@ -8,6 +9,7 @@ interface WeeklySalesSummaryProps {
 }
 
 export function WeeklySalesSummary({ filteredSales, dateFilter }: WeeklySalesSummaryProps) {
+  const { t } = useTranslation();
   const weeklySummary = useMemo(() => {
     // Determine date range based on filter
     let startDate: Date, endDate: Date;
@@ -76,37 +78,37 @@ export function WeeklySalesSummary({ filteredSales, dateFilter }: WeeklySalesSum
   if (weeklySummary.length === 0) {
     return (
       <div className="card">
-        <div className="card-title">Weekly Sales Summary</div>
-        <div className="text-gray-500">No sales data available</div>
+        <div className="card-title">{t('analytics.weeklySalesSummary')}</div>
+        <div className="text-gray-500">{t('analytics.noSalesDataAvailable')}</div>
       </div>
     );
   }
 
   return (
     <div className="card">
-      <div className="card-title">Weekly Sales Summary</div>
+      <div className="card-title">{t('analytics.weeklySalesSummary')}</div>
       <div className="weekly-summary-container">
         {weeklySummary.map((week, index) => (
           <div key={index} className="weekly-summary-item">
             <div className="week-range">{formatWeekRange(week.weekStart, week.weekEnd)}</div>
             {week.salesCount === 0 ? (
-              <div className="text-gray-500">No sales data for this week.</div>
+              <div className="text-gray-500">{t('analytics.noSalesDataForThisWeek')}</div>
             ) : (
               <div className="week-stats">
                 <div className="stat">
-                  <span className="stat-label">Sales:</span>
+                  <span className="stat-label">{t('analytics.sales')}:</span>
                   <span className="stat-value">{week.salesCount}</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-label">Items:</span>
+                  <span className="stat-label">{t('analytics.items')}:</span>
                   <span className="stat-value">{week.totalItems}</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-label">Total:</span>
+                  <span className="stat-label">{t('common.total')}:</span>
                   <span className="stat-value green">{fmtUSD(week.totalSales)}</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-label">Avg:</span>
+                  <span className="stat-label">{t('analytics.avg')}:</span>
                   <span className="stat-value">{fmtUSD(week.averageSale)}</span>
                 </div>
               </div>
