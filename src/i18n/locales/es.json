@@ -38,6 +38,15 @@
     "quotes": "Cotizaciones",
     "importExport": "Importar/Exportar"
   },
+  "itemCard": {
+    "outOfStock": "SIN STOCK",
+    "lastItem": "ÚLTIMO ARTÍCULO",
+    "unitCost": "Costo Unitario",
+    "priceRange": "Rango de Precios",
+    "potentialRevenue": "Ingreso Potencial",
+    "stock": "Stock",
+    "weight": "Peso"
+  },
   "inventory": {
     "title": "Inventario",
     "management": "Gestión de Inventario",
@@ -179,6 +188,13 @@
     "anonymous": "Anónimo",
     "expandAll": "Expandir Todo",
     "collapseAll": "Contraer Todo",
+    "expand": "Expandir",
+    "collapse": "Contraer",
+    "sale": "venta",
+    "sales_plural": "ventas",
+    "item": "artículo",
+    "items_plural": "artículos",
+    "noSalesForCustomer": "No hay ventas para este cliente.",
     "searchPlaceholder": "Buscar por cliente, ID de venta, pago, monto o fecha...",
     "salesCount": "{{count}} ventas",
     "customersCount": "{{count}} clientes",
