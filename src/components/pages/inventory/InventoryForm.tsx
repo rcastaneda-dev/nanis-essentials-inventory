@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../../shared/Modal';
 import { ImageUploadSection } from '../../organisms/ImageUploadSection';
 import { InventoryItem, Category, ItemImage } from '../../../types/models';
 import { parseNumber, uid, nowIso, fmtUSD } from '../../../lib/utils';
+import { getCategoryTranslationKey } from '../../../lib/i18nUtils';
 
 const CATEGORIES: Category[] = [
   'Hair Care',
@@ -20,6 +22,7 @@ interface InventoryFormProps {
 }
 
 export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState(initial?.name ?? '');
   const [category, setCategory] = useState<Category>(initial?.category ?? 'Other');
   const [description, setDescription] = useState(initial?.description ?? '');
@@ -57,7 +60,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
 
   const save = () => {
     if (!name.trim()) {
-      alert('Name is required');
+      alert(t('inventory.nameRequired'));
       return;
     }
     const item: InventoryItem = {
@@ -85,10 +88,10 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
   };
 
   return (
-    <Modal title={initial ? 'Edit Item' : 'Add New Item'} onClose={onClose}>
+    <Modal title={initial ? t('inventory.editItem') : t('inventory.addItem')} onClose={onClose}>
       <div className="form grid two">
         <div>
-          <label>Item Name</label>
+          <label>{t('inventory.itemName')}</label>
           <input
             value={name}
             onChange={e => setName(e.target.value)}
@@ -96,7 +99,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
           />
         </div>
         <div>
-          <label>Category</label>
+          <label>{t('inventory.category')}</label>
           <select
             value={category}
             onChange={e => setCategory(e.target.value as Category)}
@@ -104,14 +107,14 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
           >
             {CATEGORIES.map(c => (
               <option key={c} value={c}>
-                {c}
+                {t(`categories.${getCategoryTranslationKey(c)}`)}
               </option>
             ))}
           </select>
         </div>
 
         <div className="col-span-2">
-          <label>Description</label>
+          <label>{t('inventory.description')}</label>
           <input
             value={description}
             onChange={e => setDescription(e.target.value)}
@@ -120,7 +123,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
         </div>
 
         <div>
-          <label>Initial Count</label>
+          <label>{t('inventory.initialCount')}</label>
           <input
             type="number"
             value={stock}
@@ -129,7 +132,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
           />
         </div>
         <div>
-          <label>Weight (lbs per unit)</label>
+          <label>{t('inventory.weight')}</label>
           <input
             type="number"
             step="0.01"
@@ -140,7 +143,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
           />
         </div>
         <div>
-          <label>Total Cost (per unit, post-shipping)</label>
+          <label>{t('inventory.costPostShipping')}</label>
           <input
             type="number"
             step="0.01"
@@ -151,7 +154,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
           />
         </div>
         <div>
-          <label>Cost (per unit, pre-shipping)</label>
+          <label>{t('inventory.costPreShipping')}</label>
           <input
             type="number"
             step="0.01"
@@ -164,7 +167,8 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
 
         <div>
           <label>
-            Min Price <span className="formula-hint">(Cost + 20%)</span>
+            {t('inventory.minPrice')}{' '}
+            <span className="formula-hint">{t('inventory.formulaHint20')}</span>
           </label>
           <input
             type="number"
@@ -177,7 +181,8 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
         </div>
         <div>
           <label>
-            Max Price <span className="formula-hint">(Cost + 30%)</span>
+            {t('inventory.maxPrice')}{' '}
+            <span className="formula-hint">{t('inventory.formulaHint30')}</span>
           </label>
           <input
             type="number"
@@ -190,7 +195,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
         </div>
 
         <div>
-          <label>Competitor A Price (optional)</label>
+          <label>{t('inventory.competitorAPrice')}</label>
           <input
             type="number"
             step="0.01"
@@ -200,7 +205,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
           />
         </div>
         <div>
-          <label>Competitor B Price (optional)</label>
+          <label>{t('inventory.competitorBPrice')}</label>
           <input
             type="number"
             step="0.01"
@@ -211,7 +216,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
         </div>
 
         <div className="col-span-2">
-          <label>Notes</label>
+          <label>{t('inventory.notes')}</label>
           <input value={notes} onChange={e => setNotes(e.target.value)} />
         </div>
       </div>
@@ -225,18 +230,18 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
 
       <div className="summary grid two">
         <div>
-          <b>Min Revenue:</b> {fmtUSD(minRevenue)}
+          <b>{t('inventory.minRevenue')}:</b> {fmtUSD(minRevenue)}
         </div>
         <div>
-          <b>Max Revenue:</b> {fmtUSD(maxRevenue)}
+          <b>{t('inventory.maxRevenue')}:</b> {fmtUSD(maxRevenue)}
         </div>
       </div>
 
       <div className="row gap end">
         <button className="primary" onClick={save}>
-          {initial ? 'Save Changes' : 'Add Item'}
+          {initial ? t('inventory.saveChanges') : t('inventory.addItem')}
         </button>
-        <button onClick={onClose}>Cancel</button>
+        <button onClick={onClose}>{t('common.cancel')}</button>
       </div>
     </Modal>
   );

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../../molecules/PageHeader';
 import { Heading, Text } from '../../atoms/Typography';
 import { Button } from '../../atoms/Button';
@@ -23,6 +24,7 @@ interface QuoteResult {
 }
 
 export function QuotesPage({ db }: QuotesPageProps) {
+  const { t } = useTranslation();
   const [productName, setProductName] = useState('');
   const [price, setPrice] = useState<number>(0);
   const [weight, setWeight] = useState<number>(1);
@@ -31,12 +33,12 @@ export function QuotesPage({ db }: QuotesPageProps) {
 
   const calculateQuote = () => {
     if (!productName.trim()) {
-      alert('Please enter a product name');
+      alert(t('quotes.pleaseEnterProductName'));
       return;
     }
 
     if (price <= 0) {
-      alert('Please enter a valid price');
+      alert(t('quotes.pleaseEnterValidPrice'));
       return;
     }
 
@@ -84,32 +86,31 @@ export function QuotesPage({ db }: QuotesPageProps) {
 
   return (
     <div className="page">
-      <PageHeader title="Product Quote Calculator" />
+      <PageHeader title={t('quotes.title')} />
 
       <div className="cards">
         <div className="card">
           <div className="card-title">
-            <Heading level={3}>📊 Calculate Quote</Heading>
+            <Heading level={3}>{t('quotes.calculateQuote')}</Heading>
           </div>
           <Text variant="muted" className="card-description">
-            Calculate the unit cost post shipping (international) and determine the minimum selling
-            price to ensure at least ${fmtUSD(5)} in revenue.
+            {t('quotes.description', { amount: fmtUSD(5) })}
           </Text>
 
           <div className="grid two row-gap">
             <div>
-              <label>Product Name *</label>
+              <label>{t('quotes.productName')}</label>
               <input
                 type="text"
                 value={productName}
                 onChange={e => setProductName(e.target.value)}
-                placeholder="Enter product name"
+                placeholder={t('quotes.enterProductName')}
                 data-testid="product-name-input"
               />
             </div>
 
             <div>
-              <label>Price *</label>
+              <label>{t('quotes.price')}</label>
               <input
                 type="number"
                 step="0.01"
@@ -125,7 +126,7 @@ export function QuotesPage({ db }: QuotesPageProps) {
             </div>
 
             <div>
-              <label>Weight (lbs)</label>
+              <label>{t('quotes.weight')}</label>
               <input
                 type="number"
                 step="0.1"
@@ -138,11 +139,11 @@ export function QuotesPage({ db }: QuotesPageProps) {
                 }}
                 data-testid="weight-input"
               />
-              <div className="muted tiny">Default: 1 pound</div>
+              <div className="muted tiny">{t('quotes.defaultWeight')}</div>
             </div>
 
             <div>
-              <label>Coupon Discount (optional)</label>
+              <label>{t('quotes.couponDiscount')}</label>
               <input
                 type="number"
                 step="0.01"
@@ -160,10 +161,10 @@ export function QuotesPage({ db }: QuotesPageProps) {
 
           <div className="card-actions" style={{ marginTop: '1.5rem' }}>
             <Button variant="primary" onClick={calculateQuote} data-testid="calculate-btn">
-              Calculate Quote
+              {t('quotes.calculate')}
             </Button>
             <Button onClick={clearForm} data-testid="clear-btn">
-              Clear
+              {t('quotes.clear')}
             </Button>
           </div>
         </div>
@@ -171,46 +172,52 @@ export function QuotesPage({ db }: QuotesPageProps) {
         {quoteResult && (
           <div className="card" data-testid="quote-result">
             <div className="card-title">
-              <Heading level={3}>💰 Quote Result</Heading>
+              <Heading level={3}>{t('quotes.quoteResult')}</Heading>
             </div>
             <div className="card-description">
               <Text>
-                <strong>Product:</strong> {quoteResult.productName}
+                <strong>{t('quotes.product')}:</strong> {quoteResult.productName}
               </Text>
             </div>
 
             <div className="quote-breakdown">
               <div className="breakdown-section">
                 <Text variant="small" className="section-title">
-                  Cost Breakdown:
+                  {t('quotes.costBreakdown')}:
                 </Text>
                 <div className="breakdown-row">
-                  <span>Base Price:</span>
+                  <span>{t('quotes.basePrice')}:</span>
                   <span>{fmtUSD(quoteResult.basePrice)}</span>
                 </div>
                 {quoteResult.couponDiscount > 0 && (
                   <div className="breakdown-row discount">
-                    <span>Coupon Discount:</span>
+                    <span>{t('quotes.couponDiscountLabel')}:</span>
                     <span className="green">-{fmtUSD(quoteResult.couponDiscount)}</span>
                   </div>
                 )}
                 {quoteResult.couponDiscount > 0 && (
                   <div className="breakdown-row">
-                    <span>Price After Coupon:</span>
+                    <span>{t('quotes.priceAfterCoupon')}:</span>
                     <span>{fmtUSD(quoteResult.priceAfterCoupon)}</span>
                   </div>
                 )}
                 <div className="breakdown-row">
                   <span>
-                    Tax ({db.settings?.taxRatePercent ?? DEFAULT_SETTINGS.taxRatePercent}%):
+                    {t('quotes.tax', {
+                      rate: db.settings?.taxRatePercent ?? DEFAULT_SETTINGS.taxRatePercent,
+                    })}
+                    :
                   </span>
                   <span>{fmtUSD(quoteResult.tax)}</span>
                 </div>
                 <div className="breakdown-row">
                   <span>
-                    International Shipping ({quoteResult.weight} lbs @{' '}
-                    {fmtUSD(db.settings?.weightCostPerLb ?? DEFAULT_SETTINGS.weightCostPerLb)}
-                    /lb):
+                    {t('quotes.internationalShipping', {
+                      weight: quoteResult.weight,
+                      costPerLb: fmtUSD(
+                        db.settings?.weightCostPerLb ?? DEFAULT_SETTINGS.weightCostPerLb
+                      ),
+                    })}
                   </span>
                   <span>{fmtUSD(quoteResult.shippingIntl)}</span>
                 </div>
@@ -219,7 +226,7 @@ export function QuotesPage({ db }: QuotesPageProps) {
               <div className="breakdown-section highlight">
                 <div className="breakdown-row total">
                   <span>
-                    <strong>Unit Cost Post Shipping:</strong>
+                    <strong>{t('quotes.unitCostPostShipping')}:</strong>
                   </span>
                   <span>
                     <strong>{fmtUSD(quoteResult.unitCostPostShipping)}</strong>
@@ -229,12 +236,12 @@ export function QuotesPage({ db }: QuotesPageProps) {
 
               <div className="breakdown-section success">
                 <div className="breakdown-row revenue">
-                  <span>Target Revenue:</span>
+                  <span>{t('quotes.targetRevenue')}:</span>
                   <span className="green">+{fmtUSD(quoteResult.targetRevenue)}</span>
                 </div>
                 <div className="breakdown-row selling-price">
                   <span>
-                    <strong>Minimum Selling Price:</strong>
+                    <strong>{t('quotes.minimumSellingPrice')}:</strong>
                   </span>
                   <span className="price-highlight">
                     <strong>{fmtUSD(quoteResult.minimumSellingPrice)}</strong>
@@ -245,8 +252,7 @@ export function QuotesPage({ db }: QuotesPageProps) {
 
             <div className="info-box" style={{ marginTop: '1rem' }}>
               <Text variant="small" className="info-text">
-                💡 This quote ensures a minimum revenue of {fmtUSD(quoteResult.targetRevenue)} per
-                unit sold. Adjust your selling price accordingly to meet your revenue goals.
+                {t('quotes.quoteInfo', { amount: fmtUSD(quoteResult.targetRevenue) })}
               </Text>
             </div>
           </div>

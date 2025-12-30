@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../../molecules/Modal';
 import { Button } from '../../atoms/Button';
 import { DB, Branch } from '../../../types/models';
@@ -12,6 +13,7 @@ interface BranchManagerProps {
 }
 
 export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
+  const { t } = useTranslation();
   const [newBranchName, setNewBranchName] = useState('');
   const [branches, setBranches] = useState<Branch[]>(db.branches || []);
 
@@ -21,7 +23,7 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
   const handleCreateBranch = () => {
     const trimmedName = newBranchName.trim();
     if (!trimmedName) {
-      alert('Please enter a branch name');
+      alert(t('inventory.branches.pleaseEnterName'));
       return;
     }
 
@@ -30,7 +32,7 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
       b => b.name.toLowerCase() === trimmedName.toLowerCase() && !b.closedAt
     );
     if (nameExists) {
-      alert('A branch with this name already exists');
+      alert(t('inventory.branches.nameAlreadyExists'));
       return;
     }
 
@@ -45,11 +47,7 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
   };
 
   const handleCloseBranch = (branchId: string) => {
-    if (
-      !window.confirm(
-        'Closing a branch will require moving all items back to main inventory. Continue?'
-      )
-    ) {
+    if (!window.confirm(t('inventory.branches.confirmCloseBranch'))) {
       return;
     }
 
@@ -73,13 +71,11 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
     // Check if branch has any inventory items
     const hasItems = db.items.some(item => item.branchId === branchId);
     if (hasItems) {
-      alert(
-        'Cannot delete branch with inventory items. Please move all items back to main inventory first.'
-      );
+      alert(t('inventory.branches.cannotDeleteWithItems'));
       return;
     }
 
-    if (!window.confirm(`Delete branch "${branch.name}"? This action cannot be undone.`)) {
+    if (!window.confirm(t('inventory.branches.confirmDeleteBranch', { name: branch.name }))) {
       return;
     }
 
@@ -92,11 +88,11 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
   };
 
   return (
-    <Modal title="Manage Branches" onClose={onClose}>
-      <div className="section-title">Create New Branch</div>
+    <Modal title={t('inventory.branches.manageTitle')} onClose={onClose}>
+      <div className="section-title">{t('inventory.branches.createNew')}</div>
       <div className="grid two row-gap">
         <div>
-          <label>Branch Name</label>
+          <label>{t('inventory.branches.branchName')}</label>
           <input
             type="text"
             value={newBranchName}
@@ -107,12 +103,12 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
                 handleCreateBranch();
               }
             }}
-            placeholder="Enter branch/store name"
+            placeholder={t('inventory.branches.enterBranchName')}
           />
         </div>
         <div className="flex align-center">
           <Button onClick={handleCreateBranch} variant="primary">
-            Create Branch
+            {t('inventory.branches.createBranch')}
           </Button>
         </div>
       </div>
@@ -120,7 +116,7 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
       {activeBranches.length > 0 && (
         <>
           <div className="section-title" style={{ marginTop: '2rem' }}>
-            Active Branches
+            {t('inventory.branches.activeBranches')}
           </div>
           <div className="cards">
             {activeBranches.map(branch => (
@@ -129,23 +125,24 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
                   <div>
                     <h4>{branch.name}</h4>
                     <p className="text-muted">
-                      Created: {new Date(branch.createdAt).toLocaleDateString()}
+                      {t('inventory.branches.created')}:{' '}
+                      {new Date(branch.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="flex gap">
                     <Button
                       variant="secondary"
                       onClick={() => handleCloseBranch(branch.id)}
-                      title="Close branch"
+                      title={t('inventory.branches.closeBranchTitle')}
                     >
-                      Close
+                      {t('inventory.branches.close')}
                     </Button>
                     <Button
                       variant="danger"
                       onClick={() => handleDeleteBranch(branch.id)}
-                      title="Delete branch"
+                      title={t('inventory.branches.deleteBranchTitle')}
                     >
-                      Delete
+                      {t('common.delete')}
                     </Button>
                   </div>
                 </div>
@@ -158,7 +155,7 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
       {closedBranches.length > 0 && (
         <>
           <div className="section-title" style={{ marginTop: '2rem' }}>
-            Closed Branches
+            {t('inventory.branches.closedBranches')}
           </div>
           <div className="cards">
             {closedBranches.map(branch => (
@@ -167,7 +164,7 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
                   <div>
                     <h4>{branch.name}</h4>
                     <p className="text-muted">
-                      Closed:{' '}
+                      {t('inventory.branches.closed')}:{' '}
                       {branch.closedAt ? new Date(branch.closedAt).toLocaleDateString() : ''}
                     </p>
                   </div>
@@ -175,16 +172,16 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
                     <Button
                       variant="secondary"
                       onClick={() => handleReopenBranch(branch.id)}
-                      title="Reopen branch"
+                      title={t('inventory.branches.reopenBranchTitle')}
                     >
-                      Reopen
+                      {t('inventory.branches.reopen')}
                     </Button>
                     <Button
                       variant="danger"
                       onClick={() => handleDeleteBranch(branch.id)}
-                      title="Delete branch"
+                      title={t('inventory.branches.deleteBranchTitle')}
                     >
-                      Delete
+                      {t('common.delete')}
                     </Button>
                   </div>
                 </div>
@@ -196,15 +193,15 @@ export function BranchManager({ db, onSave, onClose }: BranchManagerProps) {
 
       {branches.length === 0 && (
         <div className="empty">
-          <p>No branches created yet. Create your first branch above.</p>
+          <p>{t('inventory.branches.noBranches')}</p>
         </div>
       )}
 
       <div className="row gap end" style={{ marginTop: '2rem' }}>
         <Button variant="primary" onClick={handleSave}>
-          Save Changes
+          {t('inventory.saveChanges')}
         </Button>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
       </div>
     </Modal>
   );

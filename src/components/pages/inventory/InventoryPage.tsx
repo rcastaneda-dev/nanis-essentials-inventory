@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { InventoryForm } from './InventoryForm';
 import { BranchManager } from './BranchManager';
 import { MoveToBranchModal } from './MoveToBranchModal';
@@ -8,6 +9,7 @@ import { SortOption } from '../../molecules/SearchFilters';
 import { DB, InventoryItem } from '../../../types/models';
 import { nowIso, uid, generateInventoryCSV, downloadCSV } from '../../../lib/utils';
 import { CATEGORIES } from '../../../constants/categories';
+import { getCategoryTranslationKey } from '../../../lib/i18nUtils';
 
 interface InventoryPageProps {
   db: DB;
@@ -16,6 +18,7 @@ interface InventoryPageProps {
 }
 
 export function InventoryPage({ db, persist }: InventoryPageProps) {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [showBranchManager, setShowBranchManager] = useState(false);
   const [showMoveToBranch, setShowMoveToBranch] = useState(false);
@@ -95,7 +98,7 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
   }, [filteredItems, sortBy]);
 
   const onDelete = (id: string) => {
-    if (!window.confirm('Delete item?')) return;
+    if (!window.confirm(t('inventory.deleteItem'))) return;
     persist({ ...db, items: db.items.filter(i => i.id !== id) });
   };
 
@@ -183,7 +186,7 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
     selectedBranchId === 'main' ? null : db.branches?.find(b => b.id === selectedBranchId);
 
   const handleDownloadInventory = () => {
-    const branchName = selectedBranch?.name || 'Main';
+    const branchName = selectedBranch?.name || t('inventory.mainInventory');
     const csvContent = generateInventoryCSV(items);
     const filename = `Nanis Essentials Inventory - ${branchName}.csv`;
     downloadCSV(csvContent, filename);
@@ -343,45 +346,46 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
 
   const headerActions = [
     {
-      label: '📥 Download Inventory',
+      label: t('inventory.downloadInventory'),
       onClick: handleDownloadInventory,
-      title: `Download inventory as CSV for ${selectedBranch?.name || 'Main'}`,
+      title: t('inventory.downloadInventoryTitle', {
+        branch: selectedBranch?.name || t('inventory.mainInventory'),
+      }),
       testId: 'download-inventory-btn',
     },
     {
-      label: '⚖️ Recalculate Unit Costs',
+      label: t('inventory.recalculateUnitCosts'),
       onClick: handleRecalculatePrices,
-      title:
-        'Recalculate all unit costs using weight-based shipping allocation and proportional tax distribution',
+      title: t('inventory.recalculatePricesTitle'),
       testId: 'recalculate-prices-btn',
     },
     {
-      label: '🏪 Manage Branches',
+      label: t('inventory.manageBranches'),
       onClick: () => setShowBranchManager(true),
-      title: 'Create and manage branch/stores',
+      title: t('inventory.manageBranchesTitle'),
       testId: 'manage-branches-btn',
     },
     ...(selectedBranchId === 'main'
       ? [
           {
-            label: '📦 Move to Branch',
+            label: t('inventory.moveToBranch'),
             onClick: () => setShowMoveToBranch(true),
-            title: 'Move items from main inventory to a branch',
+            title: t('inventory.moveToBranchTitle'),
             testId: 'move-to-branch-btn',
             variant: 'secondary' as const,
           },
         ]
       : [
           {
-            label: '⬅️ Move to Main',
+            label: t('inventory.moveToMain'),
             onClick: () => setShowMoveToMain(true),
-            title: 'Move items from branch back to main inventory',
+            title: t('inventory.moveToMainTitle'),
             testId: 'move-to-main-btn',
             variant: 'secondary' as const,
           },
         ]),
     {
-      label: '+ Add Item',
+      label: `+ ${t('inventory.addItem')}`,
       onClick: () => {
         setEditing(null);
         setShowForm(true);
@@ -391,18 +395,21 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
   ];
 
   const sortOptions = [
-    { value: '', label: 'Sort by', disabled: true },
-    { value: 'inStock', label: 'Stock Level (High → Low)' },
-    { value: 'outOfStock', label: 'Stock Level (Low → High)' },
-    { value: 'nameAsc', label: 'Name (A–Z)' },
-    { value: 'nameDesc', label: 'Name (Z–A)' },
-    { value: 'minPriceAsc', label: 'Min Price (Low → High)' },
-    { value: 'minPriceDesc', label: 'Min Price (High → Low)' },
+    { value: '', label: t('inventory.sortBy'), disabled: true },
+    { value: 'inStock', label: t('inventory.stockLevelHighLow') },
+    { value: 'outOfStock', label: t('inventory.stockLevelLowHigh') },
+    { value: 'nameAsc', label: t('inventory.nameAZ') },
+    { value: 'nameDesc', label: t('inventory.nameZA') },
+    { value: 'minPriceAsc', label: t('inventory.minPriceLowHigh') },
+    { value: 'minPriceDesc', label: t('inventory.minPriceHighLow') },
   ];
 
   const categoryOptions = [
-    { value: '', label: 'All Categories' },
-    ...CATEGORIES.map(category => ({ value: category, label: category })),
+    { value: '', label: t('inventory.allCategories') },
+    ...CATEGORIES.map(category => ({
+      value: category,
+      label: t(`categories.${getCategoryTranslationKey(category)}`),
+    })),
   ];
 
   const formContent = showForm ? (
@@ -440,7 +447,7 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
         showEmptyState={filteredItems.length === 0 && items.length === 0}
         showNoResults={filteredItems.length === 0 && items.length > 0}
         showForm={showForm}
-        formTitle={editing ? 'Edit Item' : 'Add New Item'}
+        formTitle={editing ? t('inventory.editItem') : t('inventory.addItem')}
         onCloseForm={() => setShowForm(false)}
         formContent={formContent}
         categoryFilter={categoryFilter}
@@ -449,7 +456,7 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
         selectedBranchId={selectedBranchId}
         onBranchChange={setSelectedBranchId}
         branchOptions={[
-          { value: 'main', label: 'Main Inventory' },
+          { value: 'main', label: t('inventory.mainInventory') },
           ...activeBranches.map(b => ({ value: b.id, label: b.name })),
         ]}
         branchName={selectedBranch?.name}

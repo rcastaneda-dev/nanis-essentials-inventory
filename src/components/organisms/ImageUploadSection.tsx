@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 import { Text } from '../atoms/Typography';
 import { Icon } from '../atoms/Icon';
@@ -20,6 +21,7 @@ export function ImageUploadSection({
   onPrimaryImageChange,
   maxImages = IMAGE_CONFIG.maxImagesPerItem,
 }: ImageUploadSectionProps) {
+  const { t } = useTranslation();
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,7 +31,12 @@ export function ImageUploadSection({
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
     if (filesToProcess.length === 0) {
-      alert(`Maximum ${maxImages} images allowed`);
+      alert(
+        t('inventory.imageHint', {
+          maxSize: IMAGE_CONFIG.maxFileSize / (1024 * 1024),
+          maxImages,
+        })
+      );
       return;
     }
 
@@ -99,7 +106,7 @@ export function ImageUploadSection({
   return (
     <div className="image-upload-container">
       <label>
-        <Text variant="label">Product Images</Text>
+        <Text variant="label">{t('inventory.productImages')}</Text>
       </label>
 
       <div
@@ -122,17 +129,19 @@ export function ImageUploadSection({
         {uploading ? (
           <div className="upload-spinner">
             <div className="spinner"></div>
-            <Text>Processing images...</Text>
+            <Text>{t('inventory.processingImages')}</Text>
           </div>
         ) : (
           <div className="upload-prompt">
             <div className="upload-icon">📸</div>
             <Text>
-              <strong>Click or drag images here</strong>
+              <strong>{t('inventory.clickOrDragImages')}</strong>
             </Text>
             <Text variant="small" className="upload-hint">
-              JPEG, PNG, WebP • Max {IMAGE_CONFIG.maxFileSize / (1024 * 1024)}MB each • Up to{' '}
-              {maxImages} images
+              {t('inventory.imageHint', {
+                maxSize: IMAGE_CONFIG.maxFileSize / (1024 * 1024),
+                maxImages,
+              })}
             </Text>
           </div>
         )}

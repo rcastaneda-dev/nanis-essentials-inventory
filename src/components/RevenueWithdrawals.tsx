@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { DB } from '../types/models';
 import { fmtUSD } from '../lib/utils';
 
@@ -11,6 +12,7 @@ interface RevenueWithdrawalsProps {
  * Displays a history of revenue withdrawals for tracking and audit purposes
  */
 export function RevenueWithdrawals({ db }: RevenueWithdrawalsProps) {
+  const { t } = useTranslation();
   const sortedWithdrawals = [...db.revenueWithdrawals].sort(
     (a, b) => new Date(b.withdrawnAt).getTime() - new Date(a.withdrawnAt).getTime()
   );
@@ -33,17 +35,15 @@ export function RevenueWithdrawals({ db }: RevenueWithdrawalsProps) {
   if (sortedWithdrawals.length === 0) {
     return (
       <div className="empty-state" data-testid="no-withdrawals">
-        <h3>No Revenue Withdrawals</h3>
-        <p className="muted">
-          When you use revenue to fund purchases, the withdrawal history will appear here.
-        </p>
+        <h3>{t('transactions.revenueWithdrawals.noWithdrawals')}</h3>
+        <p className="muted">{t('transactions.revenueWithdrawals.noWithdrawalsDescription')}</p>
       </div>
     );
   }
 
   return (
     <div className="revenue-withdrawals" data-testid="revenue-withdrawals-list">
-      <h3>Revenue Withdrawal History</h3>
+      <h3>{t('transactions.revenueWithdrawals.title')}</h3>
 
       <div className="withdrawals-list">
         {sortedWithdrawals.map(withdrawal => {
@@ -64,25 +64,27 @@ export function RevenueWithdrawals({ db }: RevenueWithdrawalsProps) {
 
               <div className="withdrawal-details">
                 <div className="detail-row">
-                  <span className="label">Reason:</span>
+                  <span className="label">{t('transactions.revenueWithdrawals.reason')}:</span>
                   <span className="value">{withdrawal.reason}</span>
                 </div>
 
                 {linkedPurchase && (
                   <div className="detail-row">
-                    <span className="label">Linked Purchase:</span>
+                    <span className="label">
+                      {t('transactions.revenueWithdrawals.linkedPurchase')}:
+                    </span>
                     <span className="value">
                       {formatDate(linkedPurchase.createdAt)} - {fmtUSD(linkedPurchase.totalCost)}
                       {linkedPurchase.lines.length === 1
-                        ? ` (${linkedPurchase.lines.length} item)`
-                        : ` (${linkedPurchase.lines.length} items)`}
+                        ? ` (${linkedPurchase.lines.length} ${t('transactions.revenueWithdrawals.item')})`
+                        : ` (${linkedPurchase.lines.length} ${t('transactions.revenueWithdrawals.items')})`}
                     </span>
                   </div>
                 )}
 
                 {withdrawal.notes && (
                   <div className="detail-row">
-                    <span className="label">Notes:</span>
+                    <span className="label">{t('transactions.notesLabel')}:</span>
                     <span className="value notes">{withdrawal.notes}</span>
                   </div>
                 )}
@@ -94,11 +96,11 @@ export function RevenueWithdrawals({ db }: RevenueWithdrawalsProps) {
 
       <div className="withdrawals-summary">
         <div className="summary-item">
-          <span className="label">Total Withdrawals:</span>
+          <span className="label">{t('transactions.revenueWithdrawals.totalWithdrawals')}:</span>
           <span className="value">{sortedWithdrawals.length}</span>
         </div>
         <div className="summary-item">
-          <span className="label">Total Amount:</span>
+          <span className="label">{t('transactions.revenueWithdrawals.totalAmount')}:</span>
           <span className="value amount">
             {fmtUSD(sortedWithdrawals.reduce((sum, w) => sum + w.amount, 0))}
           </span>
@@ -113,6 +115,7 @@ export function RevenueWithdrawals({ db }: RevenueWithdrawalsProps) {
  * Shows a condensed view suitable for cards or dashboards
  */
 export function RevenueWithdrawalSummary({ db }: { db: DB }) {
+  const { t } = useTranslation();
   const withdrawals = db.revenueWithdrawals;
   const totalWithdrawn = withdrawals.reduce((sum, w) => sum + w.amount, 0);
 
@@ -127,15 +130,15 @@ export function RevenueWithdrawalSummary({ db }: { db: DB }) {
       <div className="summary-stats">
         <div className="stat">
           <span className="stat-value">{fmtUSD(totalWithdrawn)}</span>
-          <span className="stat-label">Total Re-invested</span>
+          <span className="stat-label">{t('transactions.revenueWithdrawals.totalReinvested')}</span>
         </div>
         <div className="stat">
           <span className="stat-value">{withdrawals.length}</span>
-          <span className="stat-label">Withdrawals</span>
+          <span className="stat-label">{t('transactions.revenueWithdrawals.withdrawals')}</span>
         </div>
         <div className="stat">
           <span className="stat-value">{fmtUSD(recentAmount)}</span>
-          <span className="stat-label">Last 30 Days</span>
+          <span className="stat-label">{t('transactions.revenueWithdrawals.last30Days')}</span>
         </div>
       </div>
     </div>

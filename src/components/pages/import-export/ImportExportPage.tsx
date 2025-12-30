@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../atoms/Button';
 import { PageHeader } from '../../molecules/PageHeader';
 import { Heading, Text } from '../../atoms/Typography';
@@ -10,32 +11,31 @@ interface ImportExportPageProps {
 }
 
 export function ImportExportPage({ onExport, onImport, onClear }: ImportExportPageProps) {
+  const { t } = useTranslation();
   return (
     <div className="page">
-      <PageHeader title="Data Management" />
+      <PageHeader title={t('importExport.title')} />
 
       <div className="cards two-cols">
         {/* Export Data Card */}
         <div className="card">
           <div className="card-title">
-            <Heading level={3}>📦 Export Data</Heading>
+            <Heading level={3}>{t('importExport.exportData')}</Heading>
           </div>
           <Text variant="muted" className="card-description">
-            Download a backup of all your data including inventory items, sales, purchases,
-            transactions, and revenue information. This creates a complete backup file that can be
-            imported later.
+            {t('importExport.exportDescription')}
           </Text>
 
           <div className="card-features">
-            <Text variant="small">• Complete data backup</Text>
-            <Text variant="small">• JSON format for easy restoration</Text>
-            <Text variant="small">• Includes all database tables</Text>
-            <Text variant="small">• Safe for long-term storage</Text>
+            <Text variant="small">{t('importExport.exportFeatures1')}</Text>
+            <Text variant="small">{t('importExport.exportFeatures2')}</Text>
+            <Text variant="small">{t('importExport.exportFeatures3')}</Text>
+            <Text variant="small">{t('importExport.exportFeatures4')}</Text>
           </div>
 
           <div className="card-actions">
             <Button variant="primary" onClick={onExport}>
-              📥 Export Backup
+              {t('importExport.exportBackup')}
             </Button>
           </div>
         </div>
@@ -43,54 +43,51 @@ export function ImportExportPage({ onExport, onImport, onClear }: ImportExportPa
         {/* Import Data Card */}
         <div className="card">
           <div className="card-title">
-            <Heading level={3}>📤 Import Data</Heading>
+            <Heading level={3}>{t('importExport.importData')}</Heading>
           </div>
           <Text variant="muted" className="card-description">
-            Restore data from a previously exported backup file. This will merge the imported data
-            with your existing data, allowing you to restore from backups or migrate data between
-            devices.
+            {t('importExport.importDescription')}
           </Text>
 
           <div className="card-features">
-            <Text variant="small">• Restore from backup files</Text>
-            <Text variant="small">• Merges with existing data</Text>
-            <Text variant="small">• Handles duplicate prevention</Text>
-            <Text variant="small">• Validates data integrity</Text>
+            <Text variant="small">{t('importExport.importFeatures1')}</Text>
+            <Text variant="small">{t('importExport.importFeatures2')}</Text>
+            <Text variant="small">{t('importExport.importFeatures3')}</Text>
+            <Text variant="small">{t('importExport.importFeatures4')}</Text>
           </div>
 
           <div className="card-actions">
-            <Button onClick={onImport}>📤 Import Backup</Button>
+            <Button onClick={onImport}>{t('importExport.importBackup')}</Button>
           </div>
         </div>
 
         {/* Clear Data Card */}
         <div className="card danger-card">
           <div className="card-title">
-            <Heading level={3}>🗑️ Clear All Data</Heading>
+            <Heading level={3}>{t('importExport.clearData')}</Heading>
           </div>
           <Text variant="muted" className="card-description">
-            Permanently delete all data from the application. This includes all inventory items,
-            sales records, purchases, transactions, and revenue data. This action cannot be undone.
+            {t('importExport.clearDescription')}
           </Text>
 
           <div className="card-features">
             <Text variant="small" className="warning-text">
-              ⚠️ Removes all inventory items
+              {t('importExport.clearWarning1')}
             </Text>
             <Text variant="small" className="warning-text">
-              ⚠️ Deletes all sales records
+              {t('importExport.clearWarning2')}
             </Text>
             <Text variant="small" className="warning-text">
-              ⚠️ Erases transaction history
+              {t('importExport.clearWarning3')}
             </Text>
             <Text variant="small" className="warning-text">
-              ⚠️ Cannot be undone
+              {t('importExport.clearWarning4')}
             </Text>
           </div>
 
           <div className="card-actions">
             <Button variant="danger" onClick={onClear}>
-              🗑️ Clear All Data
+              {t('importExport.clearAllData')}
             </Button>
           </div>
         </div>
@@ -98,23 +95,22 @@ export function ImportExportPage({ onExport, onImport, onClear }: ImportExportPa
         {/* Data Info Card */}
         <div className="card info-card">
           <div className="card-title">
-            <Heading level={3}>ℹ️ Data Information</Heading>
+            <Heading level={3}>{t('importExport.dataInfo')}</Heading>
           </div>
           <Text variant="muted" className="card-description">
-            Your data is stored locally in your browser's storage. Regular backups are recommended
-            to prevent data loss. Data is automatically saved as you make changes.
+            {t('importExport.dataInfoDescription')}
           </Text>
 
           <div className="card-features">
-            <Text variant="small">• Data stored locally in browser</Text>
-            <Text variant="small">• Automatic saving on changes</Text>
-            <Text variant="small">• Export regularly for safety</Text>
-            <Text variant="small">• Works offline</Text>
+            <Text variant="small">{t('importExport.dataInfoFeatures1')}</Text>
+            <Text variant="small">{t('importExport.dataInfoFeatures2')}</Text>
+            <Text variant="small">{t('importExport.dataInfoFeatures3')}</Text>
+            <Text variant="small">{t('importExport.dataInfoFeatures4')}</Text>
           </div>
 
           <div className="card-actions">
             <Text variant="small" className="info-text">
-              💡 Tip: Export your data regularly to prevent accidental loss
+              {t('importExport.dataInfoTip')}
             </Text>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DndContext,
   DragEndEvent,
@@ -33,10 +34,12 @@ function CompactItemCard({
   item,
   pendingMove,
   onDragStart,
+  t,
 }: {
   item: InventoryItem;
   pendingMove?: PendingMove;
   onDragStart: () => void;
+  t: (_key: string) => string;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
@@ -75,9 +78,17 @@ function CompactItemCard({
           <div style={{ flex: 1 }}>
             <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>{item.name}</h4>
             <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-              <div>Stock: {availableStock}</div>
-              <div>Cost: {fmtUSD(unitCost)}</div>
-              {item.category && <div>Category: {item.category}</div>}
+              <div>
+                {t('inventory.moveToBranchDialog.stock')}: {availableStock}
+              </div>
+              <div>
+                {t('inventory.moveToBranchDialog.cost')}: {fmtUSD(unitCost)}
+              </div>
+              {item.category && (
+                <div>
+                  {t('inventory.moveToBranchDialog.category')}: {item.category}
+                </div>
+              )}
             </div>
           </div>
           {pendingMove && (
@@ -193,6 +204,7 @@ function DropZone({
 }
 
 export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProps) {
+  const { t } = useTranslation();
   const [targetBranchId, setTargetBranchId] = useState<string>('');
   const [pendingMoves, setPendingMoves] = useState<PendingMove[]>([]);
   const [draggedItem, setDraggedItem] = useState<InventoryItem | null>(null);
@@ -214,7 +226,7 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
 
   const handleItemClick = (item: InventoryItem) => {
     if (!targetBranchId) {
-      alert('Please select a target branch first');
+      alert(t('inventory.moveToBranchDialog.selectBranch'));
       return;
     }
 
@@ -315,18 +327,20 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
 
   return (
     <>
-      <Modal title="Move Items to Branch" onClose={onClose}>
+      <Modal title={t('inventory.moveToBranchDialog.title')} onClose={onClose}>
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="section-title">Select Target Branch</div>
+          <div className="section-title">
+            {t('inventory.moveToBranchDialog.selectTargetBranch')}
+          </div>
           <div className="grid two row-gap" style={{ marginBottom: '2rem' }}>
             <div>
-              <label>Branch</label>
+              <label>{t('inventory.moveToBranchDialog.branch')}</label>
               <select
                 value={targetBranchId}
                 onChange={e => setTargetBranchId(e.target.value)}
                 disabled={pendingMoves.length > 0}
               >
-                <option value="">Select branch...</option>
+                <option value="">{t('inventory.moveToBranchDialog.selectBranch')}</option>
                 {activeBranches.map(branch => (
                   <option key={branch.id} value={branch.id}>
                     {branch.name}
@@ -335,7 +349,7 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
               </select>
               {pendingMoves.length > 0 && (
                 <p className="text-muted" style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                  Clear pending moves to change branch
+                  {t('inventory.moveToBranchDialog.clearPendingHint')}
                 </p>
               )}
             </div>
@@ -353,7 +367,9 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
               {/* Left Column - Available Items */}
               <div>
                 <div className="section-title" style={{ marginBottom: '0.75rem' }}>
-                  Main Inventory ({mainInventoryItems.length} items)
+                  {t('inventory.moveToBranchDialog.mainInventoryItems', {
+                    count: mainInventoryItems.length,
+                  })}
                 </div>
                 <div
                   style={{
@@ -364,7 +380,7 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
                 >
                   {mainInventoryItems.length === 0 ? (
                     <div className="empty">
-                      <p>No items available in main inventory to move.</p>
+                      <p>{t('inventory.moveToBranchDialog.noItemsAvailable')}</p>
                     </div>
                   ) : (
                     mainInventoryItems.map(item => {
@@ -375,6 +391,7 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
                           item={item}
                           pendingMove={pendingMove}
                           onDragStart={() => handleItemClick(item)}
+                          t={t}
                         />
                       );
                     })
@@ -385,7 +402,7 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
               {/* Right Column - Pending Moves */}
               <div>
                 <div className="section-title" style={{ marginBottom: '0.75rem' }}>
-                  Moving to Branch ({totalPendingUnits} units)
+                  {t('inventory.moveToBranchDialog.movingToBranch', { count: totalPendingUnits })}
                 </div>
                 <DropZone
                   pendingMoves={pendingMoves}
@@ -409,7 +426,7 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
               >
                 <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>{draggedItem.name}</h4>
                 <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                  Stock: {draggedItem.stock}
+                  {t('inventory.moveToBranchDialog.stock')}: {draggedItem.stock}
                 </div>
               </div>
             ) : null}
@@ -419,13 +436,13 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
         <div className="row gap end" style={{ marginTop: '2rem' }}>
           {pendingMoves.length > 0 && (
             <Button variant="secondary" onClick={handleReset}>
-              Reset
+              {t('inventory.moveToBranchDialog.reset')}
             </Button>
           )}
           <Button variant="primary" onClick={handleSave} disabled={pendingMoves.length === 0}>
-            Save ({totalPendingUnits} units)
+            {t('inventory.moveToBranchDialog.saveUnits', { count: totalPendingUnits })}
           </Button>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{t('common.cancel')}</Button>
         </div>
       </Modal>
 

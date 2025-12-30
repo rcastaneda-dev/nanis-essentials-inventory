@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../../shared/Modal';
 import { QuickAddItemForm } from './QuickAddItemForm';
 import { RevenueManager, RevenueSummaryCard } from '../../RevenueManager';
@@ -37,6 +38,7 @@ interface PurchaseFormProps {
 }
 
 export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<InventoryItem[]>(db.items);
   const [lines, setLines] = useState<PurchaseLine[]>(
     initial?.lines ?? [
@@ -129,11 +131,11 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
 
   function save() {
     if (!lines.length) {
-      alert('Add at least one item');
+      alert(t('purchases.addAtLeastOneItem'));
       return;
     }
     if (!lines.every(l => l.itemId)) {
-      alert('Select item for all lines');
+      alert(t('purchases.selectItemForAllLines'));
       return;
     }
 
@@ -290,20 +292,23 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
         onSave(p, itemsUpdated);
       }
     } catch (error) {
-      alert(`Error processing purchase: ${error}`);
+      alert(t('purchases.errorProcessingPurchase', { error: String(error) }));
       return;
     }
   }
 
   return (
-    <Modal title={initial ? 'Edit Purchase' : 'Register Purchase'} onClose={onClose}>
-      <div className="section-title">Purchase Items</div>
+    <Modal
+      title={initial ? t('purchases.editPurchase') : t('purchases.registerPurchase')}
+      onClose={onClose}
+    >
+      <div className="section-title">{t('purchases.purchaseItems')}</div>
 
       {lines.map((l, idx) => (
         <div key={l.id} className="grid-with-delete" data-testid={`purchase-line-${idx}`}>
           <div className="grid four row-gap">
             <div>
-              <label>Select Item</label>
+              <label>{t('purchases.selectItem')}</label>
               <div className="item-selector">
                 <select
                   value={l.itemId}
@@ -333,13 +338,13 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
                   data-testid="item-select"
                 >
                   <option value="" disabled>
-                    Select Item
+                    {t('purchases.selectItem')}
                   </option>
                   <option
                     value="ADD_NEW"
                     style={{ fontWeight: 'bold', borderTop: '1px solid #ccc' }}
                   >
-                    + Add New Item
+                    {t('purchases.addNewItem')}
                   </option>
                   {[...items]
                     .sort((a, b) => a.name.localeCompare(b.name))
@@ -352,7 +357,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
               </div>
             </div>
             <div>
-              <label>Quantity</label>
+              <label>{t('purchases.quantity')}</label>
               <input
                 type="number"
                 value={l.quantity === 0 ? '' : l.quantity}
@@ -384,7 +389,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
               />
             </div>
             <div>
-              <label>Unit Cost</label>
+              <label>{t('purchases.unitCost')}</label>
               <input
                 type="number"
                 step="0.01"
@@ -413,11 +418,11 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
                   }
                   data-testid="sub-items-checkbox"
                 />
-                Sub-items
+                {t('purchases.subItems')}
               </label>
               {l.hasSubItems && (
                 <input
-                  placeholder="Sub-items qty"
+                  placeholder={t('purchases.subItemsQty')}
                   value={(l.subItemsQty ?? 0) === 0 ? '' : (l.subItemsQty ?? 0)}
                   onChange={e => {
                     const value = e.target.value;
@@ -449,7 +454,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             {idx === lines.length - 1 && (
               <div className="col-span-4">
                 <button className="link" onClick={addLine} data-testid="add-purchase-line-btn">
-                  + Add Another Item
+                  {t('purchases.addAnotherItem')}
                 </button>
               </div>
             )}
@@ -459,7 +464,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
               type="button"
               className="delete-line-btn"
               onClick={() => deleteLine(l.id)}
-              title="Remove item"
+              title={t('purchases.removeItem')}
               data-testid="delete-line-btn"
             >
               ✕
@@ -470,7 +475,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
 
       <div className="grid four row-gap">
         <div>
-          <label>Ordered Date</label>
+          <label>{t('purchases.orderedDate')}</label>
           <input
             type="date"
             value={orderedDate}
@@ -479,7 +484,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           />
         </div>
         <div>
-          <label>Payment Date</label>
+          <label>{t('purchases.paymentDate')}</label>
           <input
             type="date"
             value={paymentDate}
@@ -488,7 +493,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           />
         </div>
         <div>
-          <label>Subtotal</label>
+          <label>{t('purchases.subtotal')}</label>
           <input
             type="number"
             step="0.01"
@@ -502,7 +507,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           />
         </div>
         <div>
-          <label>Tax</label>
+          <label>{t('purchases.tax')}</label>
           <input
             type="number"
             step="0.01"
@@ -514,10 +519,10 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             }}
             data-testid="tax-input"
           />
-          <div className="muted tiny">Auto: {taxRate}% of subtotal</div>
+          <div className="muted tiny">{t('purchases.autoTax', { rate: taxRate })}</div>
         </div>
         <div>
-          <label>Shipping (US)</label>
+          <label>{t('purchases.shippingUS')}</label>
           <input
             type="number"
             step="0.01"
@@ -531,7 +536,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           />
         </div>
         <div>
-          <label>Weight (lbs)</label>
+          <label>{t('purchases.weight')}</label>
           <input
             type="number"
             step="1"
@@ -548,7 +553,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           />
         </div>
         <div>
-          <label>Shipping (International)</label>
+          <label>{t('purchases.shippingIntl')}</label>
           <input
             type="number"
             step="0.50"
@@ -561,20 +566,21 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             data-testid="shipping-intl-input"
           />
           <div className="muted tiny">
-            Auto: weight × weight cost (
-            {fmtUSD(db.settings?.weightCostPerLb ?? DEFAULT_SETTINGS.weightCostPerLb)}/lb)
+            {t('purchases.autoShipping', {
+              cost: fmtUSD(db.settings?.weightCostPerLb ?? DEFAULT_SETTINGS.weightCostPerLb),
+            })}
           </div>
         </div>
         <div className="col-span-4 summary">
-          <b>Total Cost:</b> {fmtUSD(subtotal + tax + shipUS + shipIntl)} &nbsp;
-          <span className="muted">Items (incl. sub-items): {totalUnits()}</span>
+          <b>{t('purchases.totalCost')}:</b> {fmtUSD(subtotal + tax + shipUS + shipIntl)} &nbsp;
+          <span className="muted">{t('purchases.itemsInclSubItems', { count: totalUnits() })}</span>
         </div>
       </div>
 
       {/* Revenue Re-investment Section */}
       <div className="section revenue-section">
         <div className="section-header">
-          <h3>Payment & Revenue Re-investment</h3>
+          <h3>{t('purchases.paymentRevenueReinvestment')}</h3>
           <RevenueSummaryCard db={db} />
         </div>
 
@@ -582,15 +588,15 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           <div className="revenue-breakdown">
             <div className="breakdown-info">
               <div className="breakdown-row">
-                <span>Total Cost:</span>
+                <span>{t('purchases.totalCost')}:</span>
                 <span>{fmtUSD(subtotal + tax + shipUS + shipIntl)}</span>
               </div>
               <div className="breakdown-row revenue">
-                <span>Using Revenue:</span>
+                <span>{t('purchases.usingRevenue')}:</span>
                 <span className="green">-{fmtUSD(revenueToUse)}</span>
               </div>
               <div className="breakdown-row external">
-                <span>External Payment:</span>
+                <span>{t('purchases.externalPayment')}:</span>
                 <span className="blue">
                   {fmtUSD(subtotal + tax + shipUS + shipIntl - revenueToUse)}
                 </span>
@@ -606,7 +612,9 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             onClick={() => setShowRevenueManager(true)}
             data-testid="use-revenue-btn"
           >
-            {revenueToUse > 0 ? 'Adjust Revenue Usage' : 'Use Revenue for Purchase'}
+            {revenueToUse > 0
+              ? t('purchases.adjustRevenueUsage')
+              : t('purchases.useRevenueForPurchase')}
           </button>
           {revenueToUse > 0 && (
             <button
@@ -619,7 +627,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
               }}
               data-testid="clear-revenue-btn"
             >
-              Clear Revenue Usage
+              {t('purchases.clearRevenueUsage')}
             </button>
           )}
         </div>
@@ -631,9 +639,9 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           onClick={save}
           data-testid={initial ? 'update-purchase-btn' : 'register-purchase-btn'}
         >
-          {initial ? 'Save Changes' : 'Register Purchase'}
+          {initial ? t('purchases.saveChanges') : t('purchases.registerPurchase')}
         </button>
-        <button onClick={onClose}>Cancel</button>
+        <button onClick={onClose}>{t('common.cancel')}</button>
       </div>
 
       {showAddItem && (

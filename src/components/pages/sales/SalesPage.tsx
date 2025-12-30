@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SaleForm } from './SaleForm';
 import { SearchSection } from './SearchSection';
 import { CustomerGroup, CustomerGroupType } from './CustomerGroup';
@@ -12,6 +13,7 @@ interface SalesPageProps {
 }
 
 export function SalesPage({ db, persist }: SalesPageProps) {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Sale | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,7 +21,7 @@ export function SalesPage({ db, persist }: SalesPageProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const onDelete = (id: string) => {
-    if (!window.confirm('Delete sale?')) return;
+    if (!window.confirm(t('sales.deleteSale'))) return;
     const s = db.sales.find(x => x.id === id);
     let itemsWorking = [...db.items];
     if (s) {
@@ -60,7 +62,7 @@ export function SalesPage({ db, persist }: SalesPageProps) {
   // Generate month options from sales data
   const monthOptions = useMemo(() => {
     const uniqueMonths = getUniqueMonthsFromSales(db.sales);
-    const options = [{ value: '', label: 'All Months' }];
+    const options = [{ value: '', label: t('sales.allMonths') }];
     const monthNames = [
       'January',
       'February',
@@ -82,14 +84,14 @@ export function SalesPage({ db, persist }: SalesPageProps) {
       });
     });
     return options;
-  }, [db.sales]);
+  }, [db.sales, t]);
 
   const groups: CustomerGroupType[] = useMemo(() => {
     const map = new Map<string, Sale[]>();
     db.sales
       .filter(s => matchesSearch(s, searchQuery) && matchesMonthFilter(s, monthFilter))
       .forEach(s => {
-        const name = s.buyerName?.trim() || 'Anonymous';
+        const name = s.buyerName?.trim() || t('sales.anonymous');
         if (!map.has(name)) map.set(name, []);
         map.get(name)!.push(s);
       });
@@ -109,7 +111,7 @@ export function SalesPage({ db, persist }: SalesPageProps) {
       (a, b) => b.totalAmount - a.totalAmount || a.customerName.localeCompare(b.customerName)
     );
     return result;
-  }, [db.sales, searchQuery, monthFilter]);
+  }, [db.sales, searchQuery, monthFilter, t]);
 
   const summaryStats = useMemo(() => {
     const totalSales = groups.reduce((acc, g) => acc + g.salesCount, 0);
@@ -166,7 +168,7 @@ export function SalesPage({ db, persist }: SalesPageProps) {
   return (
     <div className="page">
       <div className="page-header">
-        <h2>Sales Management</h2>
+        <h2>{t('sales.title')}</h2>
         <button
           className="primary"
           onClick={() => {
@@ -174,7 +176,7 @@ export function SalesPage({ db, persist }: SalesPageProps) {
             setShowForm(true);
           }}
         >
-          + Register Sale
+          {t('sales.registerSale')}
         </button>
       </div>
 
@@ -204,7 +206,7 @@ export function SalesPage({ db, persist }: SalesPageProps) {
             onDeleteSale={onDelete}
           />
         ))}
-        {groups.length === 0 && <div className="empty">No sales found.</div>}
+        {groups.length === 0 && <div className="empty">{t('sales.noSales')}</div>}
       </div>
 
       {showForm && (

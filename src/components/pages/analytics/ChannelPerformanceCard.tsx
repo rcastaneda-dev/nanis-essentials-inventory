@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DB, SalesChannel } from '../../../types/models';
 import { fmtUSD, isCurrentMonth, isPreviousMonth } from '../../../lib/utils';
 import { DateFilterOption } from '../../molecules/DateFilters';
@@ -16,21 +17,22 @@ interface ChannelPerformanceCardProps {
   dateFilter: DateFilterOption;
 }
 
-function getChannelLabel(channel: SalesChannel): string {
+function getChannelLabel(channel: SalesChannel, t: any): string {
   const labels: Record<SalesChannel, string> = {
-    facebook_marketplace: 'Facebook Marketplace',
-    instagram: 'Instagram',
-    tiktok: 'TikTok',
-    family_friends: 'Family/Friends',
-    loyal_customer: 'Loyal Customer',
-    referred_to_store: 'Referred to Store',
-    store_customer: 'Store Customer',
-    other: 'Other',
+    facebook_marketplace: t('sales.facebookMarketplace'),
+    instagram: t('sales.instagram'),
+    tiktok: t('sales.tiktok'),
+    family_friends: t('sales.familyFriends'),
+    loyal_customer: t('sales.loyalCustomer'),
+    referred_to_store: t('sales.referredToStore'),
+    store_customer: t('sales.storeCustomer'),
+    other: t('sales.other'),
   };
   return labels[channel];
 }
 
 export function ChannelPerformanceCard({ db, dateFilter }: ChannelPerformanceCardProps) {
+  const { t } = useTranslation();
   const channelStats = useMemo(() => {
     const sales = (() => {
       switch (dateFilter) {
@@ -55,7 +57,7 @@ export function ChannelPerformanceCard({ db, dateFilter }: ChannelPerformanceCar
       if (!statsByChannel[sale.channel]) {
         statsByChannel[sale.channel] = {
           channel: sale.channel,
-          channelLabel: getChannelLabel(sale.channel),
+          channelLabel: getChannelLabel(sale.channel, t),
           salesCount: 0,
           totalAmount: 0,
           averageOrderValue: 0,
@@ -73,7 +75,7 @@ export function ChannelPerformanceCard({ db, dateFilter }: ChannelPerformanceCar
 
     // Sort by total amount descending
     return Object.values(statsByChannel).sort((a, b) => b.totalAmount - a.totalAmount);
-  }, [db.sales, dateFilter]);
+  }, [db.sales, dateFilter, t]);
 
   const totalSales = channelStats.reduce((sum, stats) => sum + stats.totalAmount, 0);
   const totalSalesWithoutChannel = useMemo(() => {
@@ -95,33 +97,37 @@ export function ChannelPerformanceCard({ db, dateFilter }: ChannelPerformanceCar
   const timeframeLabel = (() => {
     switch (dateFilter) {
       case 'current-month':
-        return 'Current Month';
+        return t('analytics.currentMonth');
       case 'previous-month':
-        return 'Previous Month';
+        return t('analytics.previousMonth');
       case 'overall':
-        return 'Overall';
+        return t('analytics.overall');
       default:
-        return 'Current Month';
+        return t('analytics.currentMonth');
     }
   })();
 
   if (channelStats.length === 0) {
     return (
       <div className="card">
-        <div className="card-title">Channel Performance ({timeframeLabel})</div>
-        <span className="muted">No sales with channels tracked yet</span>
+        <div className="card-title">
+          {t('analytics.channelPerformance')} ({timeframeLabel})
+        </div>
+        <span className="muted">{t('analytics.noSalesWithChannelsTracked')}</span>
       </div>
     );
   }
 
   return (
     <div className="card">
-      <div className="card-title">Channel Performance ({timeframeLabel})</div>
+      <div className="card-title">
+        {t('analytics.channelPerformance')} ({timeframeLabel})
+      </div>
 
       <div className="channel-performance-list">
         {channelStats.map((stats, index) => {
           const percentage = totalSales > 0 ? (stats.totalAmount / totalSales) * 100 : 0;
-          const rankingLabel = index === 0 ? '🏆 Top Channel' : `#${index + 1}`;
+          const rankingLabel = index === 0 ? t('analytics.topChannel') : `#${index + 1}`;
 
           return (
             <div key={stats.channel} className="channel-performance-item">
@@ -131,15 +137,15 @@ export function ChannelPerformanceCard({ db, dateFilter }: ChannelPerformanceCar
               </div>
               <div className="channel-performance-stats">
                 <div className="stat">
-                  <span className="stat-label">Sales:</span>
+                  <span className="stat-label">{t('analytics.sales')}:</span>
                   <span className="stat-value">{stats.salesCount}</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-label">Earnings:</span>
+                  <span className="stat-label">{t('analytics.earnings')}:</span>
                   <span className="stat-value green">{fmtUSD(stats.totalAmount)}</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-label">Avg Order:</span>
+                  <span className="stat-label">{t('analytics.avgOrder')}:</span>
                   <span className="stat-value">{fmtUSD(stats.averageOrderValue)}</span>
                 </div>
                 <div className="stat">
@@ -155,11 +161,11 @@ export function ChannelPerformanceCard({ db, dateFilter }: ChannelPerformanceCar
           <div className="channel-performance-item untracked">
             <div className="channel-performance-header">
               <span className="channel-rank">📊</span>
-              <span className="channel-name">Untracked Sales</span>
+              <span className="channel-name">{t('analytics.untrackedSales')}</span>
             </div>
             <div className="channel-performance-stats">
               <div className="stat">
-                <span className="stat-label">Earnings:</span>
+                <span className="stat-label">{t('analytics.earnings')}:</span>
                 <span className="stat-value muted">{fmtUSD(totalSalesWithoutChannel)}</span>
               </div>
             </div>
@@ -171,19 +177,19 @@ export function ChannelPerformanceCard({ db, dateFilter }: ChannelPerformanceCar
         <div className="channel-performance-summary">
           <div className="summary-item">
             <strong>
-              Your top channel{' '}
+              {t('analytics.yourTopChannel')}{' '}
               {dateFilter === 'overall'
-                ? 'overall'
+                ? t('analytics.overall')
                 : dateFilter === 'current-month'
-                  ? 'this month'
-                  : 'last month'}{' '}
-              is:
+                  ? t('analytics.thisMonth')
+                  : t('analytics.lastMonth')}{' '}
+              {t('analytics.is')}:
             </strong>{' '}
             {channelStats[0].channelLabel}
           </div>
           {channelStats[1] && (
             <div className="summary-item">
-              <strong>2nd place:</strong> {channelStats[1].channelLabel}
+              <strong>{t('analytics.secondPlace')}:</strong> {channelStats[1].channelLabel}
             </div>
           )}
         </div>

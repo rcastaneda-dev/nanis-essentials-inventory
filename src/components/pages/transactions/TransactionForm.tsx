@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../../shared/Modal';
 import {
   Transaction,
@@ -9,6 +10,7 @@ import {
 } from '../../../types/models';
 import { RevenueService } from '../../../lib/revenueService';
 import { fmtUSD } from '../../../lib/utils';
+import { getTransactionCategoryTranslationKey } from '../../../lib/transactionUtils';
 
 interface TransactionFormProps {
   initial?: Transaction;
@@ -31,6 +33,7 @@ const TRANSACTION_CATEGORIES = [
 ];
 
 export function TransactionForm({ initial, onClose, onSave, db }: TransactionFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     type: initial?.type || ('expense' as TransactionType),
     amount: initial?.amount?.toString() || '',
@@ -55,22 +58,24 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
     const newErrors: Record<string, string> = {};
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
+      newErrors.description = t('transactions.descriptionRequired');
     }
 
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = 'Amount must be greater than 0';
+      newErrors.amount = t('transactions.amountMustBeGreaterThanZero');
     }
 
     if (!formData.category.trim()) {
-      newErrors.category = 'Category is required';
+      newErrors.category = t('transactions.categoryRequired');
     }
 
     // Revenue validation (only for expenses/fees, not income or discount)
     if (!isNonFinancial && formData.paymentSource === 'revenue') {
       const totalAmt = parseFloat(formData.amount) || 0;
       if (totalAmt > availableRevenue) {
-        newErrors.amount = `Insufficient revenue. Available: ${fmtUSD(availableRevenue)}`;
+        newErrors.amount = t('transactions.insufficientRevenue', {
+          amount: fmtUSD(availableRevenue),
+        });
       }
     }
 
@@ -81,11 +86,13 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
       const totalAmt = parseFloat(formData.amount) || 0;
 
       if (revenueAmt <= 0 && externalAmt <= 0) {
-        newErrors.mixedAmounts = 'Must specify amounts for both revenue and external funds';
+        newErrors.mixedAmounts = t('transactions.mustSpecifyBothAmounts');
       } else if (Math.abs(revenueAmt + externalAmt - totalAmt) > 0.01) {
-        newErrors.mixedAmounts = 'Revenue + External amounts must equal total amount';
+        newErrors.mixedAmounts = t('transactions.amountsMustEqualTotal');
       } else if (revenueAmt > availableRevenue) {
-        newErrors.mixedAmounts = `Revenue amount exceeds available funds. Available: ${fmtUSD(availableRevenue)}`;
+        newErrors.mixedAmounts = t('transactions.revenueAmountExceedsAvailable', {
+          amount: fmtUSD(availableRevenue),
+        });
       }
     }
 
@@ -150,32 +157,35 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
   };
 
   return (
-    <Modal title={initial ? 'Edit Transaction' : 'Add Transaction'} onClose={onClose}>
+    <Modal
+      title={initial ? t('transactions.editTransaction') : t('transactions.addTransaction')}
+      onClose={onClose}
+    >
       <form onSubmit={handleSubmit} className="transaction-form">
         <div className="form-section">
           <label>
-            Transaction Type *
+            {t('transactions.transactionType')}
             <select
               value={formData.type}
               onChange={e => updateField('type', e.target.value)}
               required
             >
-              <option value="expense">Business Expense</option>
-              <option value="fee">Fee Payment</option>
-              <option value="income">Income / Revenue</option>
-              <option value="discount">Discount (Purchase)</option>
+              <option value="expense">{t('transactions.businessExpense')}</option>
+              <option value="fee">{t('transactions.feePayment')}</option>
+              <option value="income">{t('transactions.income')}</option>
+              <option value="discount">{t('transactions.discount')}</option>
             </select>
           </label>
         </div>
 
         <div className="form-section">
           <label>
-            Description *
+            {t('transactions.description')}
             <input
               type="text"
               value={formData.description}
               onChange={e => updateField('description', e.target.value)}
-              placeholder="e.g., Branded shopping bags, Etsy listing fee"
+              placeholder={t('transactions.descriptionPlaceholder')}
               required
             />
             {errors.description && <div className="error">{errors.description}</div>}
@@ -184,7 +194,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
 
         <div className="form-row">
           <label>
-            Total Amount ($) *
+            {t('transactions.totalAmount')}
             <input
               type="number"
               step="0.01"
@@ -198,16 +208,18 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
           </label>
 
           <label>
-            Category *
+            {t('transactions.category')} *
             <select
               value={formData.category}
               onChange={e => updateField('category', e.target.value)}
               required
             >
-              <option value="">Select category</option>
+              <option value="">{t('transactions.selectCategory')}</option>
               {TRANSACTION_CATEGORIES.map(cat => (
                 <option key={cat} value={cat}>
-                  {cat}
+                  {t(
+                    `transactions.transactionCategories.${getTransactionCategoryTranslationKey(cat)}`
+                  )}
                 </option>
               ))}
             </select>
@@ -219,28 +231,28 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
           <>
             <div className="form-row">
               <label>
-                Payment Method
+                {t('transactions.paymentMethod')}
                 <select
                   value={formData.paymentMethod}
                   onChange={e => updateField('paymentMethod', e.target.value as PaymentMethod)}
                 >
-                  <option value="cash">Cash</option>
-                  <option value="transfer">Bank Transfer</option>
-                  <option value="installments">Installments</option>
-                  <option value="payment_link">Payment Link</option>
-                  <option value="credit_card">Credit Card</option>
+                  <option value="cash">{t('transactions.cash')}</option>
+                  <option value="transfer">{t('transactions.transfer')}</option>
+                  <option value="installments">{t('transactions.installments')}</option>
+                  <option value="payment_link">{t('transactions.paymentLink')}</option>
+                  <option value="credit_card">{t('transactions.creditCard')}</option>
                 </select>
               </label>
 
               <label>
-                Payment Source
+                {t('transactions.paymentSource')}
                 <select
                   value={formData.paymentSource}
                   onChange={e => updateField('paymentSource', e.target.value as PaymentSource)}
                 >
-                  <option value="external">External Funds</option>
-                  <option value="revenue">Business Revenue</option>
-                  <option value="mixed">Mixed Sources</option>
+                  <option value="external">{t('transactions.externalFunds')}</option>
+                  <option value="revenue">{t('transactions.businessRevenue')}</option>
+                  <option value="mixed">{t('transactions.mixedSources')}</option>
                 </select>
               </label>
             </div>
@@ -248,17 +260,19 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
             {(formData.paymentSource === 'revenue' || formData.paymentSource === 'mixed') && (
               <div className="revenue-info">
                 <div className="available-revenue">
-                  <strong>Available Business Revenue: {fmtUSD(availableRevenue)}</strong>
+                  <strong>
+                    {t('transactions.availableBusinessRevenue')}: {fmtUSD(availableRevenue)}
+                  </strong>
                 </div>
               </div>
             )}
 
             {isMixed && (
               <div className="form-section mixed-sources-section">
-                <h4>Mixed Source Breakdown</h4>
+                <h4>{t('transactions.mixedSourceBreakdown')}</h4>
                 <div className="form-row">
                   <label>
-                    From Business Revenue ($)
+                    {t('transactions.fromBusinessRevenue')}
                     <input
                       type="number"
                       step="0.01"
@@ -270,7 +284,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
                   </label>
 
                   <label>
-                    From External Funds ($)
+                    {t('transactions.fromExternalFunds')}
                     <input
                       type="number"
                       step="0.01"
@@ -282,9 +296,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
                   </label>
                 </div>
                 {errors.mixedAmounts && <div className="error">{errors.mixedAmounts}</div>}
-                <div className="mixed-hint">
-                  Tip: When you enter one amount, the other will auto-calculate to match your total.
-                </div>
+                <div className="mixed-hint">{t('transactions.mixedHint')}</div>
               </div>
             )}
           </>
@@ -293,8 +305,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
         {isIncome && (
           <div className="revenue-info">
             <div className="available-revenue">
-              <strong>Note:</strong> Income transactions will be added to your business revenue and
-              increase your available funds.
+              <strong>{t('transactions.incomeNote')}</strong>
             </div>
           </div>
         )}
@@ -302,19 +313,18 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
         {isDiscount && (
           <div className="revenue-info">
             <div className="available-revenue">
-              <strong>Note:</strong> Discount transactions are tracked for informational purposes
-              only. They do not affect revenue calculations or financial reports.
+              <strong>{t('transactions.discountNote')}</strong>
             </div>
           </div>
         )}
 
         <div className="form-section">
           <label>
-            Notes
+            {t('transactions.notes')}
             <textarea
               value={formData.notes}
               onChange={e => updateField('notes', e.target.value)}
-              placeholder="Additional details about this transaction..."
+              placeholder={t('transactions.notes')}
               rows={3}
             />
           </label>
@@ -322,10 +332,10 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
 
         <div className="form-actions">
           <button type="button" onClick={onClose}>
-            Cancel
+            {t('transactions.cancel')}
           </button>
           <button type="submit" className="primary">
-            {initial ? 'Update Transaction' : 'Add Transaction'}
+            {initial ? t('transactions.updateTransaction') : t('transactions.addTransaction')}
           </button>
         </div>
       </form>

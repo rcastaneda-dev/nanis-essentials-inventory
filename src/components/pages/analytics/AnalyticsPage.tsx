@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AnalyticsItemCard, AnalyticsSimpleCard, AnalyticsPaymentCard } from './AnalyticsCard';
 import { ChannelPerformanceCard } from './ChannelPerformanceCard';
 import { WeeklySalesSummary } from './WeeklySalesSummary';
@@ -12,6 +13,7 @@ interface AnalyticsPageProps {
 }
 
 export function AnalyticsPage({ db }: AnalyticsPageProps) {
+  const { t } = useTranslation();
   const [dateFilter, setDateFilter] = useState<DateFilterOption>('current-month');
 
   // Filter data based on selected date range
@@ -114,91 +116,91 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
 
   return (
     <div className="page">
-      <h2>Analytics</h2>
+      <h2>{t('analytics.title')}</h2>
 
       <DateFilters activeFilter={dateFilter} onFilterChange={setDateFilter} />
 
       <div className="section">
         <div className="cards two-cols">
           <AnalyticsItemCard
-            title="Most Popular Item"
+            title={t('analytics.mostPopularItem')}
             item={mostPopularItem}
-            emptyMessage="No sales data yet"
+            emptyMessage={t('analytics.noSalesDataYet')}
             testId="most-popular-card"
           />
 
           <AnalyticsSimpleCard
-            title="Total Sales"
+            title={t('analytics.totalSales')}
             value={fmtUSD(totalSales)}
             testId="total-sales-card"
           />
 
           <AnalyticsSimpleCard
-            title="Number of Sales"
+            title={t('analytics.numberOfSales')}
             value={numberOfSales.toString()}
             testId="number-of-sales-card"
           />
 
           <AnalyticsSimpleCard
-            title="Number of Items Sold"
+            title={t('analytics.numberOfItemsSold')}
             value={numberOfItemsSold.toString()}
             testId="number-of-items-sold-card"
           />
 
           <AnalyticsSimpleCard
-            title="Total Expenses"
+            title={t('analytics.totalExpenses')}
             value={fmtUSD(totalExpenses)}
             testId="total-expenses-card"
           />
 
           <AnalyticsSimpleCard
-            title="Total Fees"
+            title={t('analytics.totalFees')}
             value={fmtUSD(totalFees)}
             testId="total-fees-card"
           />
 
           <AnalyticsSimpleCard
-            title="Total Income"
+            title={t('analytics.totalIncome')}
             value={fmtUSD(totalIncome)}
             testId="total-income-card"
           />
 
           <AnalyticsSimpleCard
-            title="Net Profit"
+            title={t('analytics.netProfit')}
             value={fmtUSD(totalSales + totalIncome - totalExpenses - totalFees)}
             testId="net-profit-card"
           />
 
           <div className="card">
-            <div className="card-title">Total Inventory Value (with shipping)</div>
+            <div className="card-title">{t('analytics.totalInventoryValueWithShipping')}</div>
             <div className="blue">{fmtUSD(totalInvWithShipping)}</div>
           </div>
 
           <div className="card">
-            <div className="card-title">Total Inventory Value (without shipping)</div>
+            <div className="card-title">{t('analytics.totalInventoryValueWithoutShipping')}</div>
             <div className="blue">{fmtUSD(totalInvWithoutShipping)}</div>
           </div>
 
           {/* Revenue Analytics */}
           <div className="card" data-testid="available-revenue-card">
-            <div className="card-title">Available Revenue</div>
+            <div className="card-title">{t('analytics.availableRevenue')}</div>
             <div className="green">{fmtUSD(revenueStats.availableRevenue)}</div>
           </div>
 
           <div className="card" data-testid="revenue-reinvested-card">
-            <div className="card-title">Revenue Re-invested</div>
+            <div className="card-title">{t('analytics.revenueReinvested')}</div>
             <div className="orange">{fmtUSD(revenueStats.totalWithdrawn)}</div>
           </div>
 
           <div className="card" data-testid="revenue-utilization-card">
-            <div className="card-title">Revenue Utilization Rate</div>
+            <div className="card-title">{t('analytics.revenueUtilizationRate')}</div>
             <div className="purple">{revenueStats.revenueUtilizationRate.toFixed(1)}%</div>
           </div>
 
           {/* Sales by payment method (only show when count > 0) */}
           {salesByMethod.cash?.count > 0 && (
             <AnalyticsPaymentCard
-              title="Sales by Cash"
+              title={t('analytics.salesByCash')}
               count={salesByMethod.cash.count}
               amount={salesByMethod.cash.amount}
               testId="sales-by-cash-card"
@@ -207,7 +209,7 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
 
           {salesByMethod.transfer?.count > 0 && (
             <AnalyticsPaymentCard
-              title="Sales by Card/Transfer"
+              title={t('analytics.salesByCardTransfer')}
               count={salesByMethod.transfer.count}
               amount={salesByMethod.transfer.amount}
               testId="sales-by-transfer-card"
@@ -216,7 +218,7 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
 
           {salesByMethod.installments?.count > 0 && (
             <AnalyticsPaymentCard
-              title="Sales by Installments"
+              title={t('analytics.salesByInstallments')}
               count={salesByMethod.installments.count}
               amount={salesByMethod.installments.amount}
               testId="sales-by-installments-card"
@@ -225,7 +227,7 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
 
           {salesByMethod.payment_link?.count > 0 && (
             <AnalyticsPaymentCard
-              title="Sales by Payment Link"
+              title={t('analytics.salesByPaymentLink')}
               count={salesByMethod.payment_link.count}
               amount={salesByMethod.payment_link.amount}
               testId="sales-by-payment-link-card"
@@ -234,7 +236,7 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
 
           {salesByMethod.credit_card?.count > 0 && (
             <AnalyticsPaymentCard
-              title="Sales by Credit Card"
+              title={t('analytics.salesByCreditCard')}
               count={salesByMethod.credit_card.count}
               amount={salesByMethod.credit_card.amount}
               testId="sales-by-credit-card-card"

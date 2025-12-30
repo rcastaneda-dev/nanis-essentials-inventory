@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavigationBar, Tab } from '../organisms/NavigationBar';
+import { LanguageSwitcher } from '../atoms/LanguageSwitcher';
 
 interface MainLayoutTemplateProps {
   // Navigation
@@ -20,6 +21,9 @@ export function MainLayoutTemplate({
   return (
     <div className="app">
       <NavigationBar brandTitle={brandTitle} activeTab={activeTab} onTabChange={onTabChange} />
+      <div style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 1000 }}>
+        <LanguageSwitcher />
+      </div>
       <main className="main-content">{children}</main>
     </div>
   );

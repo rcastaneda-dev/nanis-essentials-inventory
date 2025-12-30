@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { InventoryItem, Category } from '../../../types/models';
 import { uid, nowIso } from '../../../lib/utils';
+import { getCategoryTranslationKey } from '../../../lib/i18nUtils';
 
 const CATEGORIES: Category[] = [
   'Hair Care',
@@ -17,6 +19,7 @@ interface QuickAddItemFormProps {
 }
 
 export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [category, setCategory] = useState<Category>('Other');
   const [description, setDescription] = useState('');
@@ -24,7 +27,7 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
 
   const save = () => {
     if (!name.trim()) {
-      window.alert('Item name is required');
+      window.alert(t('inventory.nameRequired'));
       return;
     }
 
@@ -51,7 +54,7 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
   return (
     <div className="quick-add-form">
       <div className="form-header">
-        <h3>Quick Add Item</h3>
+        <h3>{t('inventory.quickAddItem')}</h3>
         <button className="icon" onClick={onCancel}>
           ✕
         </button>
@@ -59,17 +62,17 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
 
       <div className="form-body grid two">
         <div>
-          <label>Item Name *</label>
+          <label>{t('inventory.itemNameRequired')}</label>
           <input
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="Enter item name"
+            placeholder={t('inventory.enterItemName')}
             autoFocus
             data-testid="quick-add-name-input"
           />
         </div>
         <div>
-          <label>Category</label>
+          <label>{t('inventory.category')}</label>
           <select
             value={category}
             onChange={e => setCategory(e.target.value as Category)}
@@ -77,13 +80,13 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
           >
             {CATEGORIES.map(c => (
               <option key={c} value={c}>
-                {c}
+                {t(`categories.${getCategoryTranslationKey(c)}`)}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <label>Weight (lbs per unit)</label>
+          <label>{t('inventory.weight')}</label>
           <input
             type="number"
             step="0.01"
@@ -95,20 +98,20 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
           />
         </div>
         <div>
-          <label>Description (optional)</label>
+          <label>{t('inventory.briefDescription')}</label>
           <input
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder="Brief description"
+            placeholder={t('inventory.briefDescription')}
           />
         </div>
       </div>
 
       <div className="form-footer row gap end">
         <button className="primary" onClick={save} data-testid="quick-add-add-btn">
-          Add Item
+          {t('inventory.addItem')}
         </button>
-        <button onClick={onCancel}>Cancel</button>
+        <button onClick={onCancel}>{t('common.cancel')}</button>
       </div>
     </div>
   );

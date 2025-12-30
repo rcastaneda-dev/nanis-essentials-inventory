@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../../shared/Modal';
 import {
   DB,
@@ -18,6 +19,7 @@ interface SaleFormProps {
 }
 
 export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
+  const { t } = useTranslation();
   const [lines, setLines] = useState<SaleLine[]>(
     initial?.lines ?? [
       {
@@ -153,11 +155,11 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
 
   function save() {
     if (!lines.length) {
-      alert('Add at least one item');
+      alert(t('purchases.addAtLeastOneItem'));
       return;
     }
     if (!lines.every(l => l.itemId)) {
-      alert('Select item for all lines');
+      alert(t('purchases.selectItemForAllLines'));
       return;
     }
 
@@ -194,8 +196,8 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
   }
 
   return (
-    <Modal title={initial ? 'Edit Sale' : 'Register Sale'} onClose={onClose}>
-      <div className="section-title">Sale Items</div>
+    <Modal title={initial ? t('sales.editSale') : t('sales.registerSale')} onClose={onClose}>
+      <div className="section-title">{t('sales.saleItems')}</div>
 
       {lines.map((l, idx) => {
         const selectedItem = db.items.find(i => i.id === l.itemId);
@@ -207,11 +209,11 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
           <div key={l.id} className="grid-with-delete">
             <div className="grid three row-gap">
               <div>
-                <label>Select Item</label>
+                <label>{t('purchases.selectItem')}</label>
                 <div className="autocomplete">
                   <input
                     type="text"
-                    placeholder="Type to search items..."
+                    placeholder={t('sales.typeToSearchItems')}
                     value={
                       itemSearchQueries[l.id] !== undefined
                         ? itemSearchQueries[l.id]
@@ -351,7 +353,7 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
                 </div>
               </div>
               <div>
-                <label>Quantity</label>
+                <label>{t('purchases.quantity')}</label>
                 <input
                   type="number"
                   value={l.quantity}
@@ -366,8 +368,12 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
               </div>
               <div>
                 <label>
-                  Unit Price
-                  {priceRange && <span className="price-range-inline">Range: {priceRange}</span>}
+                  {t('sales.unitPrice')}
+                  {priceRange && (
+                    <span className="price-range-inline">
+                      {t('sales.range')}: {priceRange}
+                    </span>
+                  )}
                 </label>
                 <input
                   type="number"
@@ -386,7 +392,7 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
               {idx === lines.length - 1 && (
                 <div className="col-span-3">
                   <button className="link" onClick={addLine}>
-                    + Add Another Item
+                    {t('purchases.addAnotherItem')}
                   </button>
                 </div>
               )}
@@ -396,7 +402,7 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
                 type="button"
                 className="delete-line-btn"
                 onClick={() => deleteLine(l.id)}
-                title="Remove item"
+                title={t('purchases.removeItem')}
               >
                 ✕
               </button>
@@ -407,11 +413,11 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
 
       <div className="grid three row-gap">
         <div>
-          <label>Buyer Name (optional)</label>
+          <label>{t('sales.buyerName')}</label>
           <div className="autocomplete">
             <input
               type="text"
-              placeholder="Enter customer name..."
+              placeholder={t('sales.enterCustomerName')}
               value={buyerName}
               onFocus={() => {
                 // Cancel any pending blur timeout
@@ -482,23 +488,23 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
           </div>
         </div>
         <div>
-          <label>Sales Channel (optional)</label>
+          <label>{t('sales.salesChannel')}</label>
           <select value={channel} onChange={e => setChannel(e.target.value as SalesChannel | '')}>
-            <option value="">Select Channel</option>
-            <option value="facebook_marketplace">Facebook Marketplace</option>
-            <option value="instagram">Instagram</option>
-            <option value="tiktok">TikTok</option>
-            <option value="family_friends">Family/Friends</option>
-            <option value="loyal_customer">Loyal Customer</option>
-            <option value="referred_to_store">Referred to Store</option>
-            <option value="store_customer">Store Customer</option>
-            <option value="other">Other</option>
+            <option value="">{t('sales.selectChannel')}</option>
+            <option value="facebook_marketplace">{t('sales.facebookMarketplace')}</option>
+            <option value="instagram">{t('sales.instagram')}</option>
+            <option value="tiktok">{t('sales.tiktok')}</option>
+            <option value="family_friends">{t('sales.familyFriends')}</option>
+            <option value="loyal_customer">{t('sales.loyalCustomer')}</option>
+            <option value="referred_to_store">{t('sales.referredToStore')}</option>
+            <option value="store_customer">{t('sales.storeCustomer')}</option>
+            <option value="other">{t('sales.other')}</option>
           </select>
         </div>
         <div>
-          <label>Where was this sold? (optional)</label>
+          <label>{t('sales.whereWasThisSold')}</label>
           <select value={branchId} onChange={e => setBranchId(e.target.value)}>
-            <option value="">Main Inventory</option>
+            <option value="">{t('sales.mainInventory')}</option>
             {db.branches
               ?.filter(b => !b.closedAt)
               .map(branch => (
@@ -509,22 +515,22 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
           </select>
         </div>
         <div>
-          <label>Payment Method</label>
+          <label>{t('sales.paymentMethod')}</label>
           <select
             value={paymentMethod}
             onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
           >
-            <option value="cash">Cash</option>
-            <option value="transfer">Transfer</option>
-            <option value="installments">Installments</option>
-            <option value="payment_link">Payment Link</option>
-            <option value="credit_card">Credit Card</option>
+            <option value="cash">{t('transactions.cash')}</option>
+            <option value="transfer">{t('transactions.transfer')}</option>
+            <option value="installments">{t('transactions.installments')}</option>
+            <option value="payment_link">{t('transactions.paymentLink')}</option>
+            <option value="credit_card">{t('transactions.creditCard')}</option>
           </select>
         </div>
         {paymentMethod === 'installments' && (
           <>
             <div>
-              <label># of Payments</label>
+              <label>{t('sales.numberOfPayments')}</label>
               <input
                 type="number"
                 value={numberOfPayments}
@@ -532,20 +538,20 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
               />
             </div>
             <div className="summary">
-              <b>Amount per payment:</b> {fmtUSD(amountPerPayment)}
+              <b>{t('sales.amountPerPayment')}:</b> {fmtUSD(amountPerPayment)}
             </div>
           </>
         )}
         <div className="col-span-3 summary">
-          <b>Total Amount:</b> {fmtUSD(total)}
+          <b>{t('sales.totalAmount')}:</b> {fmtUSD(total)}
         </div>
       </div>
 
       <div className="row gap end">
         <button className="primary" onClick={save}>
-          {initial ? 'Save Changes' : 'Register Sale'}
+          {initial ? t('purchases.saveChanges') : t('sales.registerSale')}
         </button>
-        <button onClick={onClose}>Cancel</button>
+        <button onClick={onClose}>{t('common.cancel')}</button>
       </div>
     </Modal>
   );
