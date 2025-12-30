@@ -38,6 +38,15 @@
     "quotes": "Quotes",
     "importExport": "Import/Export"
   },
+  "itemCard": {
+    "outOfStock": "OUT OF STOCK",
+    "lastItem": "LAST ITEM",
+    "unitCost": "Unit Cost",
+    "priceRange": "Price Range",
+    "potentialRevenue": "Potential Revenue",
+    "stock": "Stock",
+    "weight": "Weight"
+  },
   "inventory": {
     "title": "Inventory",
     "management": "Inventory Management",

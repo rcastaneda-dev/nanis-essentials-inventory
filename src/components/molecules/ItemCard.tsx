@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 import { Text, Badge } from '../atoms/Typography';
 import { ItemCardImage } from '../ItemImageDisplay';
@@ -14,6 +15,7 @@ interface ItemCardProps {
 }
 
 export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: ItemCardProps) {
+  const { t } = useTranslation();
   const isOutOfStock = item.stock === 0;
   const isLastItem = item.stock === 1;
   const unitCost = item.costPostShipping ?? item.costPreShipping ?? 0;
@@ -55,8 +57,10 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
           </div>
           {(isOutOfStock || isLastItem) && (
             <div className="item-card-status-badges">
-              {isOutOfStock && <Badge variant="danger">OUT OF STOCK</Badge>}
-              {isLastItem && !isOutOfStock && <Badge variant="warning">LAST ITEM</Badge>}
+              {isOutOfStock && <Badge variant="danger">{t('itemCard.outOfStock')}</Badge>}
+              {isLastItem && !isOutOfStock && (
+                <Badge variant="warning">{t('itemCard.lastItem')}</Badge>
+              )}
             </div>
           )}
         </div>
@@ -66,11 +70,11 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
           {/* Pricing Info */}
           <div className="item-card-pricing">
             <div className="item-card-unit-cost">
-              <span className="item-card-label">Unit Cost</span>
+              <span className="item-card-label">{t('itemCard.unitCost')}</span>
               <span className="item-card-value">{fmtUSD(unitCost)}</span>
             </div>
             <div className="item-card-price-range">
-              <span className="item-card-label">Price Range</span>
+              <span className="item-card-label">{t('itemCard.priceRange')}</span>
               <span className="item-card-value price-range-value">
                 {fmtUSD(item.minPrice ?? 0)} - {fmtUSD(item.maxPrice ?? 0)}
               </span>
@@ -79,7 +83,7 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
 
           {/* Potential Revenue */}
           <div className="item-card-revenue">
-            <span className="item-card-label">Potential Revenue</span>
+            <span className="item-card-label">{t('itemCard.potentialRevenue')}</span>
             <span className="item-card-value revenue-value">
               {fmtUSD(item.minRevenue ?? 0)} - {fmtUSD(item.maxRevenue ?? 0)}
             </span>
@@ -88,14 +92,14 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
           {/* Stock & Weight Info */}
           <div className="item-card-stock-weight">
             <div className="item-card-stock">
-              <span className="item-card-label">Stock</span>
+              <span className="item-card-label">{t('itemCard.stock')}</span>
               <div className="item-card-stock-value">
                 <span className="item-card-value stock-number">{item.stock}</span>
               </div>
             </div>
             {item.weightLbs && item.weightLbs > 0 && (
               <div className="item-card-weight">
-                <span className="item-card-label">Weight</span>
+                <span className="item-card-label">{t('itemCard.weight')}</span>
                 <span className="item-card-value">{item.weightLbs.toFixed(2)} lbs</span>
               </div>
             )}
@@ -112,9 +116,9 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
 
       {/* Actions */}
       <div className="item-card-actions">
-        <Button onClick={() => onEdit(item)}>Edit</Button>
+        <Button onClick={() => onEdit(item)}>{t('common.edit')}</Button>
         <Button variant="danger" onClick={() => onDelete(item.id)}>
-          Delete
+          {t('common.delete')}
         </Button>
       </div>
     </div>

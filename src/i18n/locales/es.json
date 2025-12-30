@@ -38,6 +38,15 @@
     "quotes": "Cotizaciones",
     "importExport": "Importar/Exportar"
   },
+  "itemCard": {
+    "outOfStock": "SIN STOCK",
+    "lastItem": "ÚLTIMO ARTÍCULO",
+    "unitCost": "Costo Unitario",
+    "priceRange": "Rango de Precios",
+    "potentialRevenue": "Ingreso Potencial",
+    "stock": "Stock",
+    "weight": "Peso"
+  },
   "inventory": {
     "title": "Inventario",
     "management": "Gestión de Inventario",
