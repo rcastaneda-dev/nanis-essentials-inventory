@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sale, DB } from '../../../types/models';
 import { fmtUSD } from '../../../lib/utils';
 
@@ -27,6 +28,7 @@ export function CustomerGroup({
   onEditSale,
   onDeleteSale,
 }: CustomerGroupProps) {
+  const { t } = useTranslation();
   const initials = group.customerName
     .split(' ')
     .map(p => p[0])
@@ -44,12 +46,13 @@ export function CustomerGroup({
           <div>
             <div className="customer-name">{group.customerName}</div>
             <div className="customer-stats">
-              {group.salesCount} sale{group.salesCount !== 1 ? 's' : ''} •{' '}
+              {group.salesCount}{' '}
+              {group.salesCount !== 1 ? t('sales.sales_plural') : t('sales.sale')} •{' '}
               {fmtUSD(group.totalAmount)}
             </div>
           </div>
         </div>
-        <button className="icon" title={isExpanded ? 'Collapse' : 'Expand'}>
+        <button className="icon" title={isExpanded ? t('sales.collapse') : t('sales.expand')}>
           {isExpanded ? '▾' : '▸'}
         </button>
       </div>
@@ -62,7 +65,7 @@ export function CustomerGroup({
               <div className="sale-date">{new Date(s.createdAt).toLocaleDateString()}</div>
               <div className="sale-payment">{s.paymentMethod}</div>
               <div className="sale-items">
-                {itemCount} item{itemCount !== 1 ? 's' : ''}
+                {itemCount} {itemCount !== 1 ? t('sales.items_plural') : t('sales.item')}
               </div>
               <div className="sale-items-list">
                 {s.lines.map(l => {
@@ -76,15 +79,15 @@ export function CustomerGroup({
               </div>
               <div className="sale-total">{fmtUSD(s.totalAmount)}</div>
               <div className="sale-actions gap">
-                <button onClick={() => onEditSale(s)}>Edit</button>
+                <button onClick={() => onEditSale(s)}>{t('common.edit')}</button>
                 <button className="danger" onClick={() => onDeleteSale(s.id)}>
-                  Delete
+                  {t('common.delete')}
                 </button>
               </div>
             </div>
           );
         })}
-        {group.sales.length === 0 && <div className="empty">No sales for this customer.</div>}
+        {group.sales.length === 0 && <div className="empty">{t('sales.noSalesForCustomer')}</div>}
       </div>
     </div>
   );
