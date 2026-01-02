@@ -40,6 +40,15 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
     initial?.installments?.numberOfPayments ?? 2
   );
 
+  // Convert ISO string to YYYY-MM-DD format for date input
+  const toDateInputValue = (isoString: string) => {
+    return isoString.split('T')[0];
+  };
+
+  const [saleDate, setSaleDate] = useState<string>(
+    initial?.createdAt ? toDateInputValue(initial.createdAt) : toDateInputValue(nowIso())
+  );
+
   // Build unique buyer options from existing sales
   const buyerOptions = useMemo(() => {
     const names = new Set<string>();
@@ -163,9 +172,25 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
       return;
     }
 
+    // Validate sale date is not more than 1 week in the past
+    const selectedDate = new Date(saleDate);
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    oneWeekAgo.setHours(0, 0, 0, 0);
+
+    if (selectedDate < oneWeekAgo) {
+      alert(t('sales.dateCannotBeMoreThanWeekOld'));
+      return;
+    }
+
+    // Convert YYYY-MM-DD to ISO timestamp, preserving time if editing
+    const saleDateISO = initial?.createdAt
+      ? new Date(saleDate + 'T' + initial.createdAt.split('T')[1]).toISOString()
+      : new Date(saleDate).toISOString();
+
     const s: Sale = {
       id: initial?.id ?? uid(),
-      createdAt: initial?.createdAt ?? nowIso(),
+      createdAt: saleDateISO,
       buyerName: buyerName.trim() || undefined,
       paymentMethod,
       channel: channel || undefined,
@@ -412,6 +437,15 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
       })}
 
       <div className="grid three row-gap">
+        <div>
+          <label>{t('sales.saleDate')}</label>
+          <input
+            type="date"
+            value={saleDate}
+            max={toDateInputValue(nowIso())}
+            onChange={e => setSaleDate(e.target.value)}
+          />
+        </div>
         <div>
           <label>{t('sales.buyerName')}</label>
           <div className="autocomplete">

@@ -204,6 +204,8 @@
     "typeToSearchItems": "Type to search items...",
     "unitPrice": "Unit Price",
     "range": "Range",
+    "saleDate": "Sale Date",
+    "dateCannotBeMoreThanWeekOld": "Sale date cannot be more than 1 week in the past",
     "buyerName": "Buyer Name (optional)",
     "enterCustomerName": "Enter customer name...",
     "salesChannel": "Sales Channel (optional)",
