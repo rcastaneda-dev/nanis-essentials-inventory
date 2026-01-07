@@ -97,6 +97,8 @@
     "briefDescription": "Descripción breve",
     "defaultWeight": "Por defecto: 1 libra",
     "downloadInventoryTitle": "Descargar inventario como CSV para {{branch}}",
+    "viewPublicCatalog": "🌐 Ver Catálogo Público",
+    "viewPublicCatalogTitle": "Abrir catálogo público en nueva pestaña",
     "recalculatePricesTitle": "Recalcular todos los costos unitarios usando asignación basada en peso y distribución proporcional de impuestos",
     "manageBranchesTitle": "Crear y administrar sucursales/tiendas",
     "moveToBranchTitle": "Mover artículos del inventario principal a una sucursal",

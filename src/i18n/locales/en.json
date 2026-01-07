@@ -97,6 +97,8 @@
     "briefDescription": "Brief description",
     "defaultWeight": "Default: 1 pound",
     "downloadInventoryTitle": "Download inventory as CSV for {{branch}}",
+    "viewPublicCatalog": "🌐 View Public Catalog",
+    "viewPublicCatalogTitle": "Open public catalog in new tab",
     "recalculatePricesTitle": "Recalculate all unit costs using weight-based shipping allocation and proportional tax distribution",
     "manageBranchesTitle": "Create and manage branch/stores",
     "moveToBranchTitle": "Move items from main inventory to a branch",

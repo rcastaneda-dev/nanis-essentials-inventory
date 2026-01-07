@@ -354,6 +354,12 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
       testId: 'download-inventory-btn',
     },
     {
+      label: t('inventory.viewPublicCatalog'),
+      onClick: () => window.open('https://nanis-essentials-catalog.vercel.app/', '_blank'),
+      title: t('inventory.viewPublicCatalogTitle'),
+      testId: 'view-public-catalog-btn',
+    },
+    {
       label: t('inventory.recalculateUnitCosts'),
       onClick: handleRecalculatePrices,
       title: t('inventory.recalculatePricesTitle'),
