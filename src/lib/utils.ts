@@ -189,8 +189,8 @@ export const getLastSellingPrices = (
     if (!seenPrices.has(item.price)) {
       seenPrices.add(item.price);
       uniquePrices.push(item.price);
-      // Limit to 5 unique prices
-      if (uniquePrices.length >= 5) break;
+      // Limit to 3 unique prices
+      if (uniquePrices.length >= 3) break;
     }
   }
 
