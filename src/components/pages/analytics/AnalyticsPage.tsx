@@ -102,9 +102,9 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
 
   // ROI (Return on Investment)
   const roi = useMemo(() => {
-    const netProfit = totalSales + totalIncome - totalExpenses - totalFees;
+    const netProfit = totalSales + totalIncome - filteredPurchaseCosts - totalExpenses - totalFees;
     return filteredPurchaseCosts > 0 ? (netProfit / filteredPurchaseCosts) * 100 : 0;
-  }, [totalSales, totalIncome, totalExpenses, totalFees, filteredPurchaseCosts]);
+  }, [totalSales, totalIncome, filteredPurchaseCosts, totalExpenses, totalFees]);
 
   // Average Order Value
   const averageOrderValue = useMemo(() => {
@@ -118,9 +118,9 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
 
   // Profit Margin
   const profitMargin = useMemo(() => {
-    const netProfit = totalSales + totalIncome - totalExpenses - totalFees;
+    const netProfit = totalSales + totalIncome - filteredPurchaseCosts - totalExpenses - totalFees;
     return totalSales > 0 ? (netProfit / totalSales) * 100 : 0;
-  }, [totalSales, totalIncome, totalExpenses, totalFees]);
+  }, [totalSales, totalIncome, filteredPurchaseCosts, totalExpenses, totalFees]);
 
   // Current Inventory Value
   const inventoryValue = useMemo(() => {
@@ -248,7 +248,9 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
 
           <AnalyticsSimpleCard
             title={t('analytics.netProfit')}
-            value={fmtUSD(totalSales + totalIncome - totalExpenses - totalFees)}
+            value={fmtUSD(
+              totalSales + totalIncome - filteredPurchaseCosts - totalExpenses - totalFees
+            )}
             testId="net-profit-card"
           />
 
