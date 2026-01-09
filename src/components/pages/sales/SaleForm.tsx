@@ -565,13 +565,12 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
             <option value="credit_card">{t('transactions.creditCard')}</option>
           </select>
         </div>
-        <div>
-          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+        <div className="checkbox">
+          <label>
             <input
               type="checkbox"
               checked={thirdPartyDelivery}
               onChange={e => setThirdPartyDelivery(e.target.checked)}
-              style={{ marginRight: '8px' }}
             />
             {t('sales.thirdPartyDelivery')}
           </label>
