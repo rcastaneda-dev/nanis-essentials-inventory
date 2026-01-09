@@ -228,7 +228,8 @@
     "loyalCustomer": "Loyal Customer",
     "referredToStore": "Referred to Store",
     "storeCustomer": "Store Customer",
-    "other": "Other"
+    "other": "Other",
+    "thirdPartyDelivery": "Third-Party Delivery"
   },
   "transactions": {
     "title": "Business Transactions",

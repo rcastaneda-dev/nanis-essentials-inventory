@@ -39,6 +39,9 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
   const [numberOfPayments, setNumberOfPayments] = useState<number>(
     initial?.installments?.numberOfPayments ?? 2
   );
+  const [thirdPartyDelivery, setThirdPartyDelivery] = useState<boolean>(
+    initial?.thirdPartyDelivery ?? false
+  );
 
   // Convert ISO string to YYYY-MM-DD format for date input
   const toDateInputValue = (isoString: string) => {
@@ -199,6 +202,7 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
         paymentMethod === 'installments' ? { numberOfPayments, amountPerPayment } : undefined,
       lines,
       totalAmount: total,
+      thirdPartyDelivery: thirdPartyDelivery || undefined,
     };
 
     let itemsUpdated = [...db.items];
@@ -560,6 +564,16 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
             <option value="payment_link">{t('transactions.paymentLink')}</option>
             <option value="credit_card">{t('transactions.creditCard')}</option>
           </select>
+        </div>
+        <div className="checkbox">
+          <label>
+            <input
+              type="checkbox"
+              checked={thirdPartyDelivery}
+              onChange={e => setThirdPartyDelivery(e.target.checked)}
+            />
+            {t('sales.thirdPartyDelivery')}
+          </label>
         </div>
         {paymentMethod === 'installments' && (
           <>

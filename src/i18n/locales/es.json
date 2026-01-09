@@ -227,7 +227,8 @@
     "loyalCustomer": "Cliente Leal",
     "referredToStore": "Referido a Tienda",
     "storeCustomer": "Cliente de Tienda",
-    "other": "Otro"
+    "other": "Otro",
+    "thirdPartyDelivery": "Entrega por Terceros"
   },
   "transactions": {
     "title": "Transacciones de Negocio",
