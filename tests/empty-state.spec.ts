@@ -32,14 +32,14 @@ test.describe('Empty State Validations', () => {
 
     test('should display current month empty state', async ({ page }) => {
       await expect(page.getByText('No transactions found for current month.')).toBeVisible();
-      await verifyRevenueWithdrawalsSection(page);
+      await verifyCashWithdrawalsSection(page);
     });
 
     test('should display previous month empty state', async ({ page }) => {
       await page.getByRole('button', { name: 'Previous Month' }).click();
 
       await expect(page.getByText('No transactions found for previous month.')).toBeVisible();
-      await verifyRevenueWithdrawalsSection(page);
+      await verifyCashWithdrawalsSection(page);
     });
 
     test('should display overall empty state', async ({ page }) => {
