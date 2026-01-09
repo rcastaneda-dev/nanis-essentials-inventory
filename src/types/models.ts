@@ -107,6 +107,7 @@ export interface Sale {
   lines: SaleLine[];
   totalAmount: number;
   branchId?: string; // Branch/store where sale occurred - undefined for main inventory
+  thirdPartyDelivery?: boolean; // Whether this sale required third-party delivery service
 }
 
 export interface Branch {
