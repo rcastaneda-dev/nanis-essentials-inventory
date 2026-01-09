@@ -61,11 +61,11 @@ export function RevenueManager({
             <div className="revenue-stats grid two">
               <div className="stat-card">
                 <div className="stat-label">Total Revenue</div>
-                <div className="stat-value green">{fmtUSD(revenueStats.totalRevenue)}</div>
+                <div className="stat-value green">{fmtUSD(cashFlowStats.totalRevenue)}</div>
               </div>
               <div className="stat-card">
                 <div className="stat-label">Available for Re-investment</div>
-                <div className="stat-value blue">{fmtUSD(revenueStats.availableRevenue)}</div>
+                <div className="stat-value blue">{fmtUSD(cashFlowStats.availableCash)}</div>
               </div>
             </div>
           </div>
@@ -128,7 +128,7 @@ export function RevenueManager({
           </div>
 
           {/* Payment Breakdown */}
-          {revenueToUse > 0 && (
+          {cashToUse > 0 && (
             <div className="section">
               <h3>Payment Breakdown</h3>
               <div className="payment-breakdown">
@@ -138,7 +138,7 @@ export function RevenueManager({
                 </div>
                 <div className="breakdown-row revenue">
                   <span>From Revenue:</span>
-                  <span className="amount green">-{fmtUSD(paymentBreakdown.revenueUsed)}</span>
+                  <span className="amount green">-{fmtUSD(paymentBreakdown.cashUsed)}</span>
                 </div>
                 <div className="breakdown-row external">
                   <span>External Payment Needed:</span>
