@@ -73,13 +73,15 @@ export interface Purchase {
   lines: PurchaseLine[];
   // Footer fields
   subtotal: number; // editable, default sum(qty*unitCost)
+  discount?: number; // Total discount amount received on this purchase
   tax: number;
   shippingUS: number;
   shippingIntl: number; // default weight * weightCost
   weightLbs: number;
   // Derived
   totalUnits: number; // includes sub-items
-  totalCost: number; // subtotal + tax + shippingUS + shippingIntl
+  totalCost: number; // subtotal + tax + shippingUS + shippingIntl (before discount)
+  actualCost: number; // totalCost - discount (actual amount paid, used for analytics)
   // Cash reinvestment
   cashUsed?: number; // Amount of business cash used to pay for this purchase
   paymentSource?: PaymentSource; // How this purchase was paid for

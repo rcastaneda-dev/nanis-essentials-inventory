@@ -97,7 +97,9 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
           return true;
       }
     });
-    return filteredPurchases.reduce((acc, p) => acc + p.totalCost, 0);
+    // Use actualCost (actual amount paid after discounts) for accurate ROI calculations
+    // Fallback to totalCost for backward compatibility with old purchases
+    return filteredPurchases.reduce((acc, p) => acc + (p.actualCost ?? p.totalCost), 0);
   }, [db.purchases, dateFilter]);
 
   // ROI (Return on Investment)
