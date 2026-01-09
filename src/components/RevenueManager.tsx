@@ -13,8 +13,8 @@ interface RevenueManagerProps {
 }
 
 /**
- * Revenue Manager Component
- * Allows users to specify how much revenue to use for a purchase
+ * Cash Manager Component
+ * Allows users to specify how much business cash to use for a purchase
  */
 export function RevenueManager({
   db,
@@ -23,25 +23,25 @@ export function RevenueManager({
   totalCost,
   onApplyRevenue,
 }: RevenueManagerProps) {
-  const [revenueToUse, setRevenueToUse] = useState<number>(0);
-  const [reason, setReason] = useState<string>('Business re-investment');
+  const [cashToUse, setCashToUse] = useState<number>(0);
+  const [reason, setReason] = useState<string>('Business reinvestment');
   const [notes, setNotes] = useState<string>('');
 
   if (!isVisible) return null;
 
-  const revenueStats = RevenueService.getRevenueStats(db);
-  const paymentBreakdown = RevenueService.calculatePaymentBreakdown(totalCost, revenueToUse);
-  const canProceed = RevenueService.canWithdrawRevenue(db, revenueToUse);
+  const cashFlowStats = RevenueService.getCashFlowStats(db);
+  const paymentBreakdown = RevenueService.calculatePaymentBreakdown(totalCost, cashToUse);
+  const canProceed = RevenueService.canWithdrawCash(db, cashToUse);
 
   const handleSubmit = () => {
     if (!canProceed) return;
-    onApplyRevenue(revenueToUse, reason, notes);
+    onApplyRevenue(cashToUse, reason, notes);
     onClose();
   };
 
-  const handleUseMaxRevenue = () => {
-    const maxUsable = Math.min(revenueStats.availableRevenue, totalCost);
-    setRevenueToUse(maxUsable);
+  const handleUseMaxCash = () => {
+    const maxUsable = Math.min(cashFlowStats.availableCash, totalCost);
+    setCashToUse(maxUsable);
   };
 
   return (
@@ -70,35 +70,35 @@ export function RevenueManager({
             </div>
           </div>
 
-          {/* Revenue Input */}
+          {/* Cash Input */}
           <div className="section">
-            <h3>Re-investment Amount</h3>
+            <h3>Reinvestment Amount</h3>
             <div className="form">
               <div>
-                <label>Amount to use from revenue</label>
+                <label>Amount to use from business cash</label>
                 <div className="input-group">
                   <input
                     type="number"
                     step="0.01"
                     min="0"
-                    max={revenueStats.availableRevenue}
-                    value={revenueToUse}
-                    onChange={e => setRevenueToUse(parseNumber(e.target.value))}
+                    max={cashFlowStats.availableCash}
+                    value={cashToUse}
+                    onChange={e => setCashToUse(parseNumber(e.target.value))}
                     data-testid="revenue-amount-input"
                     placeholder="0.00"
                   />
                   <button
                     type="button"
-                    onClick={handleUseMaxRevenue}
+                    onClick={handleUseMaxCash}
                     className="btn-secondary"
-                    disabled={revenueStats.availableRevenue === 0}
+                    disabled={cashFlowStats.availableCash === 0}
                   >
                     Use Max Available
                   </button>
                 </div>
-                {revenueToUse > revenueStats.availableRevenue && (
+                {cashToUse > cashFlowStats.availableCash && (
                   <div className="error-text">
-                    Amount exceeds available revenue ({fmtUSD(revenueStats.availableRevenue)})
+                    Amount exceeds available cash ({fmtUSD(cashFlowStats.availableCash)})
                   </div>
                 )}
               </div>
@@ -110,7 +110,7 @@ export function RevenueManager({
                   value={reason}
                   onChange={e => setReason(e.target.value)}
                   data-testid="withdrawal-reason-input"
-                  placeholder="e.g., Business re-investment, Inventory expansion"
+                  placeholder="e.g., Business reinvestment, Inventory expansion"
                 />
               </div>
 

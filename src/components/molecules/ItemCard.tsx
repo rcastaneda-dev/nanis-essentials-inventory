@@ -83,9 +83,9 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
 
           {/* Potential Revenue */}
           <div className="item-card-revenue">
-            <span className="item-card-label">{t('itemCard.potentialRevenue')}</span>
+            <span className="item-card-label">{t('itemCard.potentialProfit')}</span>
             <span className="item-card-value revenue-value">
-              {fmtUSD(item.minRevenue ?? 0)} - {fmtUSD(item.maxRevenue ?? 0)}
+              {fmtUSD(item.minProfit ?? 0)} - {fmtUSD(item.maxProfit ?? 0)}
             </span>
           </div>
 

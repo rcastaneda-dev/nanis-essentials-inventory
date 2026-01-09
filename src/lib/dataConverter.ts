@@ -12,8 +12,8 @@ interface OldItem {
   maxPrice: number;
   competitorAPrice?: number;
   competitorBPrice?: number;
-  minRevenue: number;
-  maxRevenue: number;
+  minProfit: number;
+  maxProfit: number;
   createdAt: string;
 }
 
@@ -101,8 +101,8 @@ export function convertOldBackupToNew(oldData: OldBackup): DB {
       maxPrice: oldItem.maxPrice || costPerUnit + 10,
       competitorAPrice: oldItem.competitorAPrice,
       competitorBPrice: oldItem.competitorBPrice,
-      minRevenue: oldItem.minRevenue || 0,
-      maxRevenue: oldItem.maxRevenue || 0,
+      minProfit: oldItem.minProfit || 0,
+      maxProfit: oldItem.maxProfit || 0,
       createdAt: oldItem.createdAt,
       updatedAt: nowIso(),
     };

@@ -170,8 +170,8 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
             costPostShipping: costPost,
             minPrice: autoMin,
             maxPrice: autoMax,
-            minRevenue: autoMin - costPost,
-            maxRevenue: autoMax - costPost,
+            minProfit: autoMin - costPost,
+            maxProfit: autoMax - costPost,
             updatedAt: nowIso(),
           };
         }
@@ -246,8 +246,8 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
           // Recalculate pricing based on new cost
           minPrice: Math.ceil(branchCostPost * 1.2),
           maxPrice: Math.ceil(branchCostPost * 1.3),
-          minRevenue: Math.ceil(branchCostPost * 1.2) - branchCostPost,
-          maxRevenue: Math.ceil(branchCostPost * 1.3) - branchCostPost,
+          minProfit: Math.ceil(branchCostPost * 1.2) - branchCostPost,
+          maxProfit: Math.ceil(branchCostPost * 1.3) - branchCostPost,
           createdAt: nowIso(),
           updatedAt: nowIso(),
         };
@@ -319,8 +319,8 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
           // Recalculate pricing based on original cost
           minPrice: Math.ceil(originalCostPost * 1.2),
           maxPrice: Math.ceil(originalCostPost * 1.3),
-          minRevenue: Math.ceil(originalCostPost * 1.2) - originalCostPost,
-          maxRevenue: Math.ceil(originalCostPost * 1.3) - originalCostPost,
+          minProfit: Math.ceil(originalCostPost * 1.2) - originalCostPost,
+          maxProfit: Math.ceil(originalCostPost * 1.3) - originalCostPost,
           createdAt: nowIso(),
           updatedAt: nowIso(),
         };

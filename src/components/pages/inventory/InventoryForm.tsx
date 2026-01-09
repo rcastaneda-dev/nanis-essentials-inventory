@@ -55,8 +55,8 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
     setMaxPrice(autoMax);
   }, [autoMin, autoMax]);
 
-  const minRevenue = (minPrice ?? 0) - (costPostShipping || costPreShipping || 0);
-  const maxRevenue = (maxPrice ?? 0) - (costPostShipping || costPreShipping || 0);
+  const minProfit = (minPrice ?? 0) - (costPostShipping || costPreShipping || 0);
+  const maxProfit = (maxPrice ?? 0) - (costPostShipping || costPreShipping || 0);
 
   const save = () => {
     if (!name.trim()) {
@@ -79,8 +79,8 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
       maxPrice,
       competitorAPrice: compA,
       competitorBPrice: compB,
-      minRevenue,
-      maxRevenue,
+      minProfit,
+      maxProfit,
       createdAt: initial?.createdAt ?? nowIso(),
       updatedAt: nowIso(),
     };
@@ -230,10 +230,10 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
 
       <div className="summary grid two">
         <div>
-          <b>{t('inventory.minRevenue')}:</b> {fmtUSD(minRevenue)}
+          <b>{t('inventory.minProfit')}:</b> {fmtUSD(minProfit)}
         </div>
         <div>
-          <b>{t('inventory.maxRevenue')}:</b> {fmtUSD(maxRevenue)}
+          <b>{t('inventory.maxProfit')}:</b> {fmtUSD(maxProfit)}
         </div>
       </div>
 

@@ -1,9 +1,9 @@
-import { DB, RevenueWithdrawal, Purchase, PaymentSource, Transaction } from '../types/models';
+import { DB, CashWithdrawal, Purchase, PaymentSource, Transaction } from '../types/models';
 import { uid, nowIso } from './utils';
 
 /**
- * Revenue Management Service
- * Handles revenue calculations and re-investment operations following clean architecture principles
+ * Cash Management Service
+ * Handles business cash flow calculations and reinvestment operations following clean architecture principles
  */
 export class RevenueService {
   /**
@@ -14,17 +14,17 @@ export class RevenueService {
   }
 
   /**
-   * Calculate total revenue spent (withdrawn for purchases)
+   * Calculate total cash withdrawn (spent on purchases and expenses)
    */
   static calculateTotalWithdrawn(db: DB): number {
-    return db.revenueWithdrawals.reduce((total, withdrawal) => total + withdrawal.amount, 0);
+    return db.cashWithdrawals.reduce((total, withdrawal) => total + withdrawal.amount, 0);
   }
 
   /**
-   * Calculate total transaction withdrawals from revenue
+   * Calculate total transaction withdrawals from business cash
    */
   static calculateTotalTransactionWithdrawals(db: DB): number {
-    return db.revenueWithdrawals
+    return db.cashWithdrawals
       .filter(w => w.reason.startsWith('Transaction:'))
       .reduce((total, withdrawal) => total + withdrawal.amount, 0);
   }
@@ -39,10 +39,11 @@ export class RevenueService {
   }
 
   /**
-   * Calculate available revenue for re-investment
-   * Includes income transactions which add to available funds
+   * Calculate available cash balance for reinvestment
+   * Formula: Sales Revenue + Income - Cash Withdrawals
+   * This represents the business cash available for purchases and expenses
    */
-  static calculateAvailableRevenue(db: DB): number {
+  static calculateAvailableCash(db: DB): number {
     const totalRevenue = this.calculateTotalRevenue(db);
     const totalIncome = this.calculateTotalIncome(db);
     const totalWithdrawn = this.calculateTotalWithdrawn(db);
@@ -50,23 +51,38 @@ export class RevenueService {
   }
 
   /**
-   * Validate if a revenue withdrawal is possible
+   * @deprecated Use calculateAvailableCash() instead
+   * Legacy method name for backward compatibility
    */
-  static canWithdrawRevenue(db: DB, amount: number): boolean {
+  static calculateAvailableRevenue(db: DB): number {
+    return this.calculateAvailableCash(db);
+  }
+
+  /**
+   * Validate if a cash withdrawal is possible
+   */
+  static canWithdrawCash(db: DB, amount: number): boolean {
     if (amount <= 0) return false;
-    const available = this.calculateAvailableRevenue(db);
+    const available = this.calculateAvailableCash(db);
     return amount <= available;
   }
 
   /**
-   * Create a revenue withdrawal for a purchase
+   * @deprecated Use canWithdrawCash() instead
    */
-  static createRevenueWithdrawal(
+  static canWithdrawRevenue(db: DB, amount: number): boolean {
+    return this.canWithdrawCash(db, amount);
+  }
+
+  /**
+   * Create a cash withdrawal record for a purchase
+   */
+  static createCashWithdrawal(
     amount: number,
     reason: string,
     linkedPurchaseId?: string,
     notes?: string
-  ): RevenueWithdrawal {
+  ): CashWithdrawal {
     return {
       id: uid(),
       amount,
@@ -78,21 +94,33 @@ export class RevenueService {
   }
 
   /**
-   * Calculate payment breakdown for a purchase using revenue
+   * @deprecated Use createCashWithdrawal() instead
+   */
+  static createRevenueWithdrawal(
+    amount: number,
+    reason: string,
+    linkedPurchaseId?: string,
+    notes?: string
+  ): CashWithdrawal {
+    return this.createCashWithdrawal(amount, reason, linkedPurchaseId, notes);
+  }
+
+  /**
+   * Calculate payment breakdown for a purchase using business cash
    */
   static calculatePaymentBreakdown(
     totalCost: number,
-    revenueToUse: number
+    cashToUse: number
   ): {
-    revenueUsed: number;
+    cashUsed: number;
     externalPayment: number;
     paymentSource: PaymentSource;
   } {
-    const clampedRevenueUsed = Math.max(0, Math.min(revenueToUse, totalCost));
-    const externalPayment = totalCost - clampedRevenueUsed;
+    const clampedCashUsed = Math.max(0, Math.min(cashToUse, totalCost));
+    const externalPayment = totalCost - clampedCashUsed;
 
     let paymentSource: PaymentSource;
-    if (clampedRevenueUsed === 0) {
+    if (clampedCashUsed === 0) {
       paymentSource = 'external';
     } else if (externalPayment === 0) {
       paymentSource = 'revenue';
@@ -101,52 +129,52 @@ export class RevenueService {
     }
 
     return {
-      revenueUsed: clampedRevenueUsed,
+      cashUsed: clampedCashUsed,
       externalPayment,
       paymentSource,
     };
   }
 
   /**
-   * Process a purchase with revenue re-investment
+   * Process a purchase with cash reinvestment
    */
-  static processPurchaseWithRevenue(
+  static processPurchaseWithCash(
     db: DB,
     purchase: Purchase,
-    revenueToUse: number,
+    cashToUse: number,
     withdrawalReason: string,
     withdrawalNotes?: string
   ): {
     updatedDb: DB;
-    withdrawal: RevenueWithdrawal | null;
+    withdrawal: CashWithdrawal | null;
     paymentBreakdown: ReturnType<typeof RevenueService.calculatePaymentBreakdown>;
   } {
-    // Validate revenue availability
-    if (!this.canWithdrawRevenue(db, revenueToUse)) {
-      throw new Error('Insufficient revenue available for withdrawal');
+    // Validate cash availability
+    if (!this.canWithdrawCash(db, cashToUse)) {
+      throw new Error('Insufficient cash available for withdrawal');
     }
 
     // Calculate payment breakdown
-    const paymentBreakdown = this.calculatePaymentBreakdown(purchase.totalCost, revenueToUse);
+    const paymentBreakdown = this.calculatePaymentBreakdown(purchase.totalCost, cashToUse);
 
-    // Create withdrawal if revenue is used
-    let withdrawal: RevenueWithdrawal | null = null;
-    let updatedWithdrawals = db.revenueWithdrawals;
+    // Create withdrawal if cash is used
+    let withdrawal: CashWithdrawal | null = null;
+    let updatedWithdrawals = db.cashWithdrawals;
 
-    if (paymentBreakdown.revenueUsed > 0) {
-      withdrawal = this.createRevenueWithdrawal(
-        paymentBreakdown.revenueUsed,
+    if (paymentBreakdown.cashUsed > 0) {
+      withdrawal = this.createCashWithdrawal(
+        paymentBreakdown.cashUsed,
         withdrawalReason,
         purchase.id,
         withdrawalNotes
       );
-      updatedWithdrawals = [...db.revenueWithdrawals, withdrawal];
+      updatedWithdrawals = [...db.cashWithdrawals, withdrawal];
     }
 
     // Update purchase with payment information
     const updatedPurchase: Purchase = {
       ...purchase,
-      revenueUsed: paymentBreakdown.revenueUsed,
+      cashUsed: paymentBreakdown.cashUsed,
       paymentSource: paymentBreakdown.paymentSource,
     };
 
@@ -156,7 +184,7 @@ export class RevenueService {
     const updatedDb: DB = {
       ...db,
       purchases: updatedPurchases,
-      revenueWithdrawals: updatedWithdrawals,
+      cashWithdrawals: updatedWithdrawals,
     };
 
     return {
@@ -167,21 +195,34 @@ export class RevenueService {
   }
 
   /**
-   * Process a transaction that uses revenue as payment source
-   * Income transactions don't require withdrawal - they add to revenue
+   * @deprecated Use processPurchaseWithCash() instead
    */
-  static processTransactionWithRevenue(
+  static processPurchaseWithRevenue(
+    db: DB,
+    purchase: Purchase,
+    cashToUse: number,
+    withdrawalReason: string,
+    withdrawalNotes?: string
+  ) {
+    return this.processPurchaseWithCash(db, purchase, cashToUse, withdrawalReason, withdrawalNotes);
+  }
+
+  /**
+   * Process a transaction that uses business cash as payment source
+   * Income transactions don't require withdrawal - they add to available cash
+   */
+  static processTransactionWithCash(
     db: DB,
     transaction: Transaction
   ): {
     updatedDb: DB;
-    withdrawals: RevenueWithdrawal[];
+    withdrawals: CashWithdrawal[];
     error?: string;
   } {
-    const withdrawals: RevenueWithdrawal[] = [];
+    const withdrawals: CashWithdrawal[] = [];
 
     // Income and discount transactions don't need withdrawals
-    // Income adds to revenue, discounts are informational only
+    // Income adds to cash balance, discounts are informational only
     if (transaction.type === 'income' || transaction.type === 'discount') {
       return {
         updatedDb: db,
@@ -189,29 +230,29 @@ export class RevenueService {
       };
     }
 
-    // Calculate revenue amounts to withdraw (for expenses/fees only)
-    let revenueToWithdraw = 0;
+    // Calculate cash amounts to withdraw (for expenses/fees only)
+    let cashToWithdraw = 0;
 
     if (transaction.paymentSource === 'revenue') {
-      revenueToWithdraw = transaction.amount;
-    } else if (transaction.paymentSource === 'mixed' && transaction.revenueAmount) {
-      revenueToWithdraw = transaction.revenueAmount;
+      cashToWithdraw = transaction.amount;
+    } else if (transaction.paymentSource === 'mixed' && transaction.cashAmount) {
+      cashToWithdraw = transaction.cashAmount;
     }
 
-    // Validate revenue availability
-    if (revenueToWithdraw > 0) {
-      if (!this.canWithdrawRevenue(db, revenueToWithdraw)) {
-        const available = this.calculateAvailableRevenue(db);
+    // Validate cash availability
+    if (cashToWithdraw > 0) {
+      if (!this.canWithdrawCash(db, cashToWithdraw)) {
+        const available = this.calculateAvailableCash(db);
         return {
           updatedDb: db,
           withdrawals: [],
-          error: `Insufficient revenue available. Need ${revenueToWithdraw.toFixed(2)}, but only ${available.toFixed(2)} available.`,
+          error: `Insufficient cash available. Need ${cashToWithdraw.toFixed(2)}, but only ${available.toFixed(2)} available.`,
         };
       }
 
       // Create withdrawal record
-      const withdrawal = this.createRevenueWithdrawal(
-        revenueToWithdraw,
+      const withdrawal = this.createCashWithdrawal(
+        cashToWithdraw,
         `Transaction: ${transaction.description}`,
         undefined, // no linked purchase for transactions
         `${transaction.type} - ${transaction.category}`
@@ -222,8 +263,8 @@ export class RevenueService {
 
     const updatedDb: DB = {
       ...db,
-      revenueWithdrawals:
-        revenueToWithdraw > 0 ? [...db.revenueWithdrawals, ...withdrawals] : db.revenueWithdrawals,
+      cashWithdrawals:
+        cashToWithdraw > 0 ? [...db.cashWithdrawals, ...withdrawals] : db.cashWithdrawals,
     };
 
     return {
@@ -233,28 +274,48 @@ export class RevenueService {
   }
 
   /**
-   * Get revenue statistics for analytics
+   * @deprecated Use processTransactionWithCash() instead
    */
-  static getRevenueStats(db: DB) {
+  static processTransactionWithRevenue(db: DB, transaction: Transaction) {
+    return this.processTransactionWithCash(db, transaction);
+  }
+
+  /**
+   * Get cash flow statistics for analytics
+   */
+  static getCashFlowStats(db: DB) {
     const totalRevenue = this.calculateTotalRevenue(db);
     const totalWithdrawn = this.calculateTotalWithdrawn(db);
-    const availableRevenue = this.calculateAvailableRevenue(db);
+    const availableCash = this.calculateAvailableCash(db);
 
-    const revenueUtilizationRate = totalRevenue > 0 ? (totalWithdrawn / totalRevenue) * 100 : 0;
+    // Reinvestment rate: percentage of sales revenue that has been reinvested
+    const reinvestmentRate = totalRevenue > 0 ? (totalWithdrawn / totalRevenue) * 100 : 0;
 
     // Calculate monthly stats
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
-    const monthlyWithdrawals = db.revenueWithdrawals
+    const monthlyWithdrawals = db.cashWithdrawals
       .filter(w => w.withdrawnAt.startsWith(currentMonth))
       .reduce((total, w) => total + w.amount, 0);
 
     return {
       totalRevenue,
       totalWithdrawn,
-      availableRevenue,
-      revenueUtilizationRate,
+      availableCash,
+      reinvestmentRate,
       monthlyWithdrawals,
-      withdrawalCount: db.revenueWithdrawals.length,
+      withdrawalCount: db.cashWithdrawals.length,
+    };
+  }
+
+  /**
+   * @deprecated Use getCashFlowStats() instead
+   */
+  static getRevenueStats(db: DB) {
+    const stats = this.getCashFlowStats(db);
+    return {
+      ...stats,
+      availableRevenue: stats.availableCash,
+      revenueUtilizationRate: stats.reinvestmentRate,
     };
   }
 }

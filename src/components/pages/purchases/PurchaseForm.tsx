@@ -74,7 +74,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
 
   // Revenue re-investment state
   const [showRevenueManager, setShowRevenueManager] = useState(false);
-  const [revenueToUse, setRevenueToUse] = useState<number>(initial?.revenueUsed ?? 0);
+  const [cashToUse, setCashToUse] = useState<number>(initial?.cashUsed ?? 0);
   const [withdrawalReason, setWithdrawalReason] = useState<string>('Business re-investment');
   const [withdrawalNotes, setWithdrawalNotes] = useState<string>('');
 
@@ -191,9 +191,8 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       weightLbs: weight,
       totalUnits: units,
       totalCost,
-      revenueUsed: revenueToUse,
-      paymentSource: RevenueService.calculatePaymentBreakdown(totalCost, revenueToUse)
-        .paymentSource,
+      cashUsed: cashToUse,
+      paymentSource: RevenueService.calculatePaymentBreakdown(totalCost, cashToUse).paymentSource,
     };
 
     let itemsUpdated = [...items];
@@ -233,8 +232,8 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             costPostShipping: costPost,
             minPrice: autoMin,
             maxPrice: autoMax,
-            minRevenue: nextMinRev,
-            maxRevenue: nextMaxRev,
+            minProfit: nextMinRev,
+            maxProfit: nextMaxRev,
             updatedAt: nowIso(),
           };
         });
@@ -256,8 +255,8 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             costPostShipping: costPost,
             minPrice: autoMin,
             maxPrice: autoMax,
-            minRevenue: nextMinRev,
-            maxRevenue: nextMaxRev,
+            minProfit: nextMinRev,
+            maxProfit: nextMaxRev,
             updatedAt: nowIso(),
           };
         });
@@ -266,7 +265,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
 
     // Process revenue withdrawal if revenue is being used
     try {
-      if (revenueToUse > 0) {
+      if (cashToUse > 0) {
         // Create a temporary database with the purchase included for processing
         const exists = db.purchases.find(purchase => purchase.id === p.id);
         const tempPurchases = exists
@@ -276,7 +275,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
         const result = RevenueService.processPurchaseWithRevenue(
           { ...db, items: itemsUpdated, purchases: tempPurchases },
           p,
-          revenueToUse,
+          cashToUse,
           withdrawalReason,
           withdrawalNotes
         );
@@ -577,14 +576,14 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
         </div>
       </div>
 
-      {/* Revenue Re-investment Section */}
+      {/* Cash Reinvestment Section */}
       <div className="section revenue-section">
         <div className="section-header">
-          <h3>{t('purchases.paymentRevenueReinvestment')}</h3>
+          <h3>{t('purchases.paymentCashReinvestment')}</h3>
           <RevenueSummaryCard db={db} />
         </div>
 
-        {revenueToUse > 0 && (
+        {cashToUse > 0 && (
           <div className="revenue-breakdown">
             <div className="breakdown-info">
               <div className="breakdown-row">
@@ -592,13 +591,13 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
                 <span>{fmtUSD(subtotal + tax + shipUS + shipIntl)}</span>
               </div>
               <div className="breakdown-row revenue">
-                <span>{t('purchases.usingRevenue')}:</span>
-                <span className="green">-{fmtUSD(revenueToUse)}</span>
+                <span>{t('purchases.usingCash')}:</span>
+                <span className="green">-{fmtUSD(cashToUse)}</span>
               </div>
               <div className="breakdown-row external">
                 <span>{t('purchases.externalPayment')}:</span>
                 <span className="blue">
-                  {fmtUSD(subtotal + tax + shipUS + shipIntl - revenueToUse)}
+                  {fmtUSD(subtotal + tax + shipUS + shipIntl - cashToUse)}
                 </span>
               </div>
             </div>
@@ -612,22 +611,20 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             onClick={() => setShowRevenueManager(true)}
             data-testid="use-revenue-btn"
           >
-            {revenueToUse > 0
-              ? t('purchases.adjustRevenueUsage')
-              : t('purchases.useRevenueForPurchase')}
+            {cashToUse > 0 ? t('purchases.adjustCashUsage') : t('purchases.useCashForPurchase')}
           </button>
-          {revenueToUse > 0 && (
+          {cashToUse > 0 && (
             <button
               type="button"
               className="btn-link"
               onClick={() => {
-                setRevenueToUse(0);
+                setCashToUse(0);
                 setWithdrawalReason('Business re-investment');
                 setWithdrawalNotes('');
               }}
               data-testid="clear-revenue-btn"
             >
-              {t('purchases.clearRevenueUsage')}
+              {t('purchases.clearCashUsage')}
             </button>
           )}
         </div>
@@ -662,7 +659,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
         onClose={() => setShowRevenueManager(false)}
         totalCost={subtotal + tax + shipUS + shipIntl}
         onApplyRevenue={(amount, reason, notes) => {
-          setRevenueToUse(amount);
+          setCashToUse(amount);
           setWithdrawalReason(reason);
           setWithdrawalNotes(notes || '');
         }}
