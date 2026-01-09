@@ -37,12 +37,12 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
   const [primaryImageId, setPrimaryImageId] = useState<string | undefined>(initial?.primaryImageId);
 
   const autoMin = useMemo(() => {
-    const raw = (costPostShipping || 0) * 1.2;
+    const raw = (costPostShipping || 0) * 1.25;
     return Math.ceil(raw);
   }, [costPostShipping]);
 
   const autoMax = useMemo(() => {
-    const raw = (costPostShipping || 0) * 1.3;
+    const raw = (costPostShipping || 0) * 1.4;
     return Math.ceil(raw);
   }, [costPostShipping]);
 

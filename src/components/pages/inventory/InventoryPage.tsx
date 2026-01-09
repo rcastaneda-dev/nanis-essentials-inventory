@@ -161,8 +161,8 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
         if (itemIndex !== -1) {
           const costPre = l.unitCost;
           const costPost = l.unitCostPostShipping ?? l.unitCost;
-          const autoMin = Math.ceil(costPost * 1.2);
-          const autoMax = Math.ceil(costPost * 1.3);
+          const autoMin = Math.ceil(costPost * 1.25);
+          const autoMax = Math.ceil(costPost * 1.4);
 
           updatedItems[itemIndex] = {
             ...updatedItems[itemIndex],
@@ -244,10 +244,10 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
           costPreShipping: branchCostPre,
           costPostShipping: branchCostPost,
           // Recalculate pricing based on new cost
-          minPrice: Math.ceil(branchCostPost * 1.2),
-          maxPrice: Math.ceil(branchCostPost * 1.3),
-          minProfit: Math.ceil(branchCostPost * 1.2) - branchCostPost,
-          maxProfit: Math.ceil(branchCostPost * 1.3) - branchCostPost,
+          minPrice: Math.ceil(branchCostPost * 1.25),
+          maxPrice: Math.ceil(branchCostPost * 1.4),
+          minProfit: Math.ceil(branchCostPost * 1.25) - branchCostPost,
+          maxProfit: Math.ceil(branchCostPost * 1.4) - branchCostPost,
           createdAt: nowIso(),
           updatedAt: nowIso(),
         };
@@ -317,10 +317,10 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
           costPreShipping: originalCostPre,
           costPostShipping: originalCostPost,
           // Recalculate pricing based on original cost
-          minPrice: Math.ceil(originalCostPost * 1.2),
-          maxPrice: Math.ceil(originalCostPost * 1.3),
-          minProfit: Math.ceil(originalCostPost * 1.2) - originalCostPost,
-          maxProfit: Math.ceil(originalCostPost * 1.3) - originalCostPost,
+          minPrice: Math.ceil(originalCostPost * 1.25),
+          maxPrice: Math.ceil(originalCostPost * 1.4),
+          minProfit: Math.ceil(originalCostPost * 1.25) - originalCostPost,
+          maxProfit: Math.ceil(originalCostPost * 1.4) - originalCostPost,
           createdAt: nowIso(),
           updatedAt: nowIso(),
         };

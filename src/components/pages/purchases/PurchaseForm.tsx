@@ -221,8 +221,8 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           const nextStock = currentStock + unitsLine;
           const costPre = l.unitCost;
           const costPost = l.unitCostPostShipping ?? l.unitCost;
-          const autoMin = Math.ceil(costPost * 1.2);
-          const autoMax = Math.ceil(costPost * 1.3);
+          const autoMin = Math.ceil(costPost * 1.25);
+          const autoMax = Math.ceil(costPost * 1.4);
           const nextMinRev = autoMin - costPost;
           const nextMaxRev = autoMax - costPost;
           return {
@@ -245,8 +245,8 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           if (it.id !== l.itemId) return it;
           const costPre = l.unitCost;
           const costPost = l.unitCostPostShipping ?? l.unitCost;
-          const autoMin = Math.ceil(costPost * 1.2);
-          const autoMax = Math.ceil(costPost * 1.3);
+          const autoMin = Math.ceil(costPost * 1.25);
+          const autoMax = Math.ceil(costPost * 1.4);
           const nextMinRev = autoMin - costPost;
           const nextMaxRev = autoMax - costPost;
           return {
