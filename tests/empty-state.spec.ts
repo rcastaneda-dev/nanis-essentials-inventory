@@ -32,14 +32,14 @@ test.describe('Empty State Validations', () => {
 
     test('should display current month empty state', async ({ page }) => {
       await expect(page.getByText('No transactions found for current month.')).toBeVisible();
-      await verifyRevenueWithdrawalsSection(page);
+      await verifyCashWithdrawalsSection(page);
     });
 
     test('should display previous month empty state', async ({ page }) => {
       await page.getByRole('button', { name: 'Previous Month' }).click();
 
       await expect(page.getByText('No transactions found for previous month.')).toBeVisible();
-      await verifyRevenueWithdrawalsSection(page);
+      await verifyCashWithdrawalsSection(page);
     });
 
     test('should display overall empty state', async ({ page }) => {
@@ -50,7 +50,7 @@ test.describe('Empty State Validations', () => {
           'No transactions yet. Add business expenses, fees, income, discounts, and other transactions.'
         )
       ).toBeVisible();
-      await verifyRevenueWithdrawalsSection(page);
+      await verifyCashWithdrawalsSection(page);
     });
   });
 
@@ -69,12 +69,12 @@ async function navigateToTab(page: Page, tabName: string): Promise<void> {
   await page.getByRole('button', { name: tabName }).click();
 }
 
-async function verifyRevenueWithdrawalsSection(page: Page): Promise<void> {
+async function verifyCashWithdrawalsSection(page: Page): Promise<void> {
   await Promise.all([
-    expect(page.getByText('No Revenue Withdrawals')).toBeVisible(),
+    expect(page.getByText('No Cash Withdrawals')).toBeVisible(),
     expect(
       page.getByText(
-        'When you use revenue to fund purchases, the withdrawal history will appear here.'
+        'When you use business cash to fund purchases, the withdrawal history will appear here.'
       )
     ).toBeVisible(),
   ]);
