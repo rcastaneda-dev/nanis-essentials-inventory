@@ -66,7 +66,7 @@ For the full, canonical set of business rules (pricing, inventory updates, alloc
 ## Import/Export
 
 - Export: creates a JSON backup for download
-- Import: loads backup; if legacy format is detected, it is converted via `dataConverter`
+- Import: loads backup
 
 ## Code Quality
 

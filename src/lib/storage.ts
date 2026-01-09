@@ -1,5 +1,4 @@
 import { DB, DEFAULT_SETTINGS } from '../types/models';
-import { processBackupFile } from './dataConverter';
 
 const STORAGE_KEY = 'nim-db-v1';
 
@@ -133,9 +132,6 @@ export function importBackup(json: string) {
       if (!parsed.transactions) parsed.transactions = [];
       if (!parsed.branches) parsed.branches = [];
       dbData = parsed as DB;
-    } else if ('items' in parsed) {
-      // Old format - convert it
-      dbData = processBackupFile(json);
     } else {
       throw new Error('Invalid backup file - missing required items field');
     }
