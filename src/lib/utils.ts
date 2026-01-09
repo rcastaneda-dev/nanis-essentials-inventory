@@ -152,3 +152,47 @@ export const downloadCSV = (csvContent: string, filename: string) => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+
+/**
+ * Get unique selling prices for a specific item from sales history
+ * Returns up to 5 unique prices, sorted from most recent to oldest
+ */
+export const getLastSellingPrices = (
+  itemId: string,
+  sales: Array<{
+    createdAt: string;
+    lines: Array<{ itemId: string; unitPrice: number }>;
+  }>
+): number[] => {
+  const pricesWithDate: Array<{ price: number; date: Date }> = [];
+
+  // Collect all selling prices for this item with their dates
+  sales.forEach(sale => {
+    sale.lines.forEach(line => {
+      if (line.itemId === itemId) {
+        pricesWithDate.push({
+          price: line.unitPrice,
+          date: new Date(sale.createdAt),
+        });
+      }
+    });
+  });
+
+  // Sort by date (most recent first)
+  pricesWithDate.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  // Extract unique prices while maintaining order
+  const uniquePrices: number[] = [];
+  const seenPrices = new Set<number>();
+
+  for (const item of pricesWithDate) {
+    if (!seenPrices.has(item.price)) {
+      seenPrices.add(item.price);
+      uniquePrices.push(item.price);
+      // Limit to 5 unique prices
+      if (uniquePrices.length >= 5) break;
+    }
+  }
+
+  return uniquePrices;
+};

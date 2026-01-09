@@ -45,7 +45,9 @@
     "priceRange": "Rango de Precios",
     "potentialProfit": "Ganancia Potencial",
     "stock": "Stock",
-    "weight": "Peso"
+    "weight": "Peso",
+    "lastSellingPrices": "Últimos Precios de Venta",
+    "noSalesYet": "Sin ventas aún"
   },
   "inventory": {
     "title": "Inventario",

@@ -4,7 +4,7 @@ import { Button } from '../atoms/Button';
 import { Text, Badge } from '../atoms/Typography';
 import { ItemCardImage } from '../ItemImageDisplay';
 import { InventoryItem, DB } from '../../types/models';
-import { fmtUSD } from '../../lib/utils';
+import { fmtUSD, getLastSellingPrices } from '../../lib/utils';
 
 interface ItemCardProps {
   item: InventoryItem;
@@ -20,6 +20,9 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
   const isLastItem = item.stock === 1;
   const unitCost = item.costPostShipping ?? item.costPreShipping ?? 0;
   const branchName = item.branchId && db?.branches?.find(b => b.id === item.branchId)?.name;
+
+  // Get last selling prices for this item
+  const lastSellingPrices = db?.sales ? getLastSellingPrices(item.id, db.sales) : [];
 
   return (
     <div
@@ -63,6 +66,24 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
               )}
             </div>
           )}
+
+          {/* Last Selling Prices Section */}
+          <div className="item-card-selling-prices">
+            <span className="item-card-label">{t('itemCard.lastSellingPrices')}</span>
+            {lastSellingPrices.length > 0 ? (
+              <div className="item-card-price-list">
+                {lastSellingPrices.map((price, index) => (
+                  <span key={index} className="item-card-selling-price">
+                    {fmtUSD(price)}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="item-card-no-sales">
+                <Text variant="muted">{t('itemCard.noSalesYet')}</Text>
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Details Section */}
