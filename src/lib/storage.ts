@@ -11,7 +11,7 @@ export function loadDB(): DB {
       purchases: [],
       sales: [],
       settings: { ...DEFAULT_SETTINGS },
-      revenueWithdrawals: [],
+      cashWithdrawals: [],
       transactions: [],
       branches: [],
     };
@@ -19,21 +19,48 @@ export function loadDB(): DB {
     return empty;
   }
   try {
-    const parsed: DB = JSON.parse(raw);
+    const parsed: any = JSON.parse(raw);
     if (!parsed.settings) parsed.settings = { ...DEFAULT_SETTINGS };
-    if (!parsed.revenueWithdrawals) parsed.revenueWithdrawals = [];
+
+    // Backward compatibility: migrate revenueWithdrawals to cashWithdrawals
+    if (parsed.revenueWithdrawals && !parsed.cashWithdrawals) {
+      parsed.cashWithdrawals = parsed.revenueWithdrawals;
+      delete parsed.revenueWithdrawals;
+    }
+    if (!parsed.cashWithdrawals) parsed.cashWithdrawals = [];
+
+    // Backward compatibility: migrate revenueUsed to cashUsed in purchases
+    if (parsed.purchases) {
+      parsed.purchases = parsed.purchases.map((p: any) => {
+        if (p.revenueUsed !== undefined && p.cashUsed === undefined) {
+          return { ...p, cashUsed: p.revenueUsed, revenueUsed: undefined };
+        }
+        return p;
+      });
+    }
+
+    // Backward compatibility: migrate revenueAmount to cashAmount in transactions
+    if (parsed.transactions) {
+      parsed.transactions = parsed.transactions.map((t: any) => {
+        if (t.revenueAmount !== undefined && t.cashAmount === undefined) {
+          return { ...t, cashAmount: t.revenueAmount, revenueAmount: undefined };
+        }
+        return t;
+      });
+    }
+
     if (!parsed.transactions) parsed.transactions = [];
     if (!parsed.branches) parsed.branches = [];
     // Ensure backward compatibility: add branchId to items if missing
     if (parsed.items) {
-      parsed.items = parsed.items.map(item => ({
+      parsed.items = parsed.items.map((item: any) => ({
         ...item,
         branchId: item.branchId ?? undefined,
       }));
     }
     // Ensure backward compatibility: add branchId to sales if missing
     if (parsed.sales) {
-      parsed.sales = parsed.sales.map(sale => ({
+      parsed.sales = parsed.sales.map((sale: any) => ({
         ...sale,
         branchId: sale.branchId ?? undefined,
       }));
@@ -45,7 +72,7 @@ export function loadDB(): DB {
       purchases: [],
       sales: [],
       settings: { ...DEFAULT_SETTINGS },
-      revenueWithdrawals: [],
+      cashWithdrawals: [],
       transactions: [],
       branches: [],
     };
@@ -75,7 +102,34 @@ export function importBackup(json: string) {
     if ('settings' in parsed && 'items' in parsed && 'purchases' in parsed && 'sales' in parsed) {
       // New format - validate and use directly
       if (!parsed.settings) parsed.settings = { ...DEFAULT_SETTINGS };
-      if (!parsed.revenueWithdrawals) parsed.revenueWithdrawals = [];
+
+      // Backward compatibility: migrate revenueWithdrawals to cashWithdrawals
+      if (parsed.revenueWithdrawals && !parsed.cashWithdrawals) {
+        parsed.cashWithdrawals = parsed.revenueWithdrawals;
+        delete parsed.revenueWithdrawals;
+      }
+      if (!parsed.cashWithdrawals) parsed.cashWithdrawals = [];
+
+      // Backward compatibility: migrate revenueUsed to cashUsed in purchases
+      if (parsed.purchases) {
+        parsed.purchases = parsed.purchases.map((p: any) => {
+          if (p.revenueUsed !== undefined && p.cashUsed === undefined) {
+            return { ...p, cashUsed: p.revenueUsed, revenueUsed: undefined };
+          }
+          return p;
+        });
+      }
+
+      // Backward compatibility: migrate revenueAmount to cashAmount in transactions
+      if (parsed.transactions) {
+        parsed.transactions = parsed.transactions.map((t: any) => {
+          if (t.revenueAmount !== undefined && t.cashAmount === undefined) {
+            return { ...t, cashAmount: t.revenueAmount, revenueAmount: undefined };
+          }
+          return t;
+        });
+      }
+
       if (!parsed.transactions) parsed.transactions = [];
       if (!parsed.branches) parsed.branches = [];
       dbData = parsed as DB;

@@ -44,8 +44,8 @@ export interface InventoryItem {
   maxPrice?: number;
   competitorAPrice?: number;
   competitorBPrice?: number;
-  minRevenue?: number;
-  maxRevenue?: number;
+  minProfit?: number;
+  maxProfit?: number;
   createdAt: string; // ISO
   updatedAt?: string; // ISO
   branchId?: string; // Branch/store ID - undefined for main inventory
@@ -80,8 +80,8 @@ export interface Purchase {
   // Derived
   totalUnits: number; // includes sub-items
   totalCost: number; // subtotal + tax + shippingUS + shippingIntl
-  // Revenue re-investment
-  revenueUsed?: number; // Amount of revenue used to pay for this purchase
+  // Cash reinvestment
+  cashUsed?: number; // Amount of business cash used to pay for this purchase
   paymentSource?: PaymentSource; // How this purchase was paid for
 }
 
@@ -127,12 +127,12 @@ export interface DB {
   purchases: Purchase[];
   sales: Sale[];
   settings: Settings;
-  revenueWithdrawals: RevenueWithdrawal[]; // Track revenue withdrawals for re-investment
+  cashWithdrawals: CashWithdrawal[]; // Track cash withdrawals for reinvestment
   transactions: Transaction[]; // Track business expenses and fees
   branches: Branch[]; // Branch/store locations
 }
 
-export interface RevenueWithdrawal {
+export interface CashWithdrawal {
   id: string;
   amount: number;
   reason: string;
@@ -140,6 +140,9 @@ export interface RevenueWithdrawal {
   linkedPurchaseId?: string; // Optional link to the purchase this funded
   notes?: string;
 }
+
+// Legacy type alias for backward compatibility during migration
+export type RevenueWithdrawal = CashWithdrawal;
 
 export type TransactionType = 'expense' | 'fee' | 'income' | 'discount';
 
@@ -154,7 +157,7 @@ export interface Transaction {
   paymentMethod?: PaymentMethod;
   paymentSource?: PaymentSource;
   // Mixed source breakdown (only when paymentSource === 'mixed')
-  revenueAmount?: number; // Amount paid from business revenue
+  cashAmount?: number; // Amount paid from business cash
   externalAmount?: number; // Amount paid from external funds
 }
 

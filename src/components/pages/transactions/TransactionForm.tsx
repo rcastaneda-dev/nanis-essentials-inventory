@@ -42,7 +42,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
     notes: initial?.notes || '',
     paymentMethod: initial?.paymentMethod || ('cash' as PaymentMethod),
     paymentSource: initial?.paymentSource || ('external' as PaymentSource),
-    revenueAmount: initial?.revenueAmount?.toString() || '',
+    cashAmount: initial?.cashAmount?.toString() || '',
     externalAmount: initial?.externalAmount?.toString() || '',
   });
 
@@ -52,7 +52,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const isMixed = formData.paymentSource === 'mixed';
-  const availableRevenue = RevenueService.calculateAvailableRevenue(db);
+  const availableCash = RevenueService.calculateAvailableCash(db);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -69,29 +69,29 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
       newErrors.category = t('transactions.categoryRequired');
     }
 
-    // Revenue validation (only for expenses/fees, not income or discount)
+    // Cash validation (only for expenses/fees, not income or discount)
     if (!isNonFinancial && formData.paymentSource === 'revenue') {
       const totalAmt = parseFloat(formData.amount) || 0;
-      if (totalAmt > availableRevenue) {
-        newErrors.amount = t('transactions.insufficientRevenue', {
-          amount: fmtUSD(availableRevenue),
+      if (totalAmt > availableCash) {
+        newErrors.amount = t('transactions.insufficientCash', {
+          amount: fmtUSD(availableCash),
         });
       }
     }
 
     // Mixed source validation (only for expenses/fees, not income or discount)
     if (!isNonFinancial && isMixed) {
-      const revenueAmt = parseFloat(formData.revenueAmount) || 0;
+      const cashAmt = parseFloat(formData.cashAmount) || 0;
       const externalAmt = parseFloat(formData.externalAmount) || 0;
       const totalAmt = parseFloat(formData.amount) || 0;
 
-      if (revenueAmt <= 0 && externalAmt <= 0) {
+      if (cashAmt <= 0 && externalAmt <= 0) {
         newErrors.mixedAmounts = t('transactions.mustSpecifyBothAmounts');
-      } else if (Math.abs(revenueAmt + externalAmt - totalAmt) > 0.01) {
+      } else if (Math.abs(cashAmt + externalAmt - totalAmt) > 0.01) {
         newErrors.mixedAmounts = t('transactions.amountsMustEqualTotal');
-      } else if (revenueAmt > availableRevenue) {
-        newErrors.mixedAmounts = t('transactions.revenueAmountExceedsAvailable', {
-          amount: fmtUSD(availableRevenue),
+      } else if (cashAmt > availableCash) {
+        newErrors.mixedAmounts = t('transactions.cashAmountExceedsAvailable', {
+          amount: fmtUSD(availableCash),
         });
       }
     }
@@ -121,7 +121,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
             paymentSource: formData.paymentSource,
             // Include mixed source breakdown only if mixed
             ...(isMixed && {
-              revenueAmount: parseFloat(formData.revenueAmount),
+              cashAmount: parseFloat(formData.cashAmount),
               externalAmount: parseFloat(formData.externalAmount),
             }),
           }),
@@ -135,16 +135,16 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
       const newData = { ...prev, [field]: value };
 
       // Auto-calculate remaining amount for mixed sources
-      if (field === 'revenueAmount' || field === 'externalAmount') {
+      if (field === 'cashAmount' || field === 'externalAmount') {
         const totalAmount = parseFloat(prev.amount) || 0;
-        if (field === 'revenueAmount') {
-          const revenueAmount = parseFloat(value) || 0;
-          const remainingExternal = Math.max(0, totalAmount - revenueAmount);
+        if (field === 'cashAmount') {
+          const cashAmount = parseFloat(value) || 0;
+          const remainingExternal = Math.max(0, totalAmount - cashAmount);
           newData.externalAmount = remainingExternal.toFixed(2);
         } else if (field === 'externalAmount') {
           const externalAmount = parseFloat(value) || 0;
-          const remainingRevenue = Math.max(0, totalAmount - externalAmount);
-          newData.revenueAmount = remainingRevenue.toFixed(2);
+          const remainingCash = Math.max(0, totalAmount - externalAmount);
+          newData.cashAmount = remainingCash.toFixed(2);
         }
       }
 
@@ -251,7 +251,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
                   onChange={e => updateField('paymentSource', e.target.value as PaymentSource)}
                 >
                   <option value="external">{t('transactions.externalFunds')}</option>
-                  <option value="revenue">{t('transactions.businessRevenue')}</option>
+                  <option value="revenue">{t('transactions.businessCash')}</option>
                   <option value="mixed">{t('transactions.mixedSources')}</option>
                 </select>
               </label>
@@ -261,7 +261,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
               <div className="revenue-info">
                 <div className="available-revenue">
                   <strong>
-                    {t('transactions.availableBusinessRevenue')}: {fmtUSD(availableRevenue)}
+                    {t('transactions.availableBusinessCash')}: {fmtUSD(availableCash)}
                   </strong>
                 </div>
               </div>
@@ -272,13 +272,13 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
                 <h4>{t('transactions.mixedSourceBreakdown')}</h4>
                 <div className="form-row">
                   <label>
-                    {t('transactions.fromBusinessRevenue')}
+                    {t('transactions.fromBusinessCash')}
                     <input
                       type="number"
                       step="0.01"
                       min="0"
-                      value={formData.revenueAmount}
-                      onChange={e => updateField('revenueAmount', e.target.value)}
+                      value={formData.cashAmount}
+                      onChange={e => updateField('cashAmount', e.target.value)}
                       placeholder="0.00"
                     />
                   </label>

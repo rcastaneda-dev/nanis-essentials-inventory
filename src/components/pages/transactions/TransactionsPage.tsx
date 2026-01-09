@@ -37,18 +37,18 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
     }
   }, [db.transactions, dateFilter]);
 
-  // Filter revenue withdrawals based on selected date range
+  // Filter cash withdrawals based on selected date range
   const filteredWithdrawals = useMemo(() => {
     switch (dateFilter) {
       case 'current-month':
-        return db.revenueWithdrawals.filter(w => isCurrentMonth(w.withdrawnAt));
+        return db.cashWithdrawals.filter(w => isCurrentMonth(w.withdrawnAt));
       case 'previous-month':
-        return db.revenueWithdrawals.filter(w => isPreviousMonth(w.withdrawnAt));
+        return db.cashWithdrawals.filter(w => isPreviousMonth(w.withdrawnAt));
       case 'overall':
       default:
-        return db.revenueWithdrawals;
+        return db.cashWithdrawals;
     }
-  }, [db.revenueWithdrawals, dateFilter]);
+  }, [db.cashWithdrawals, dateFilter]);
 
   const handleSave = (transaction: Transaction) => {
     const exists = db.transactions.find(t => t.id === transaction.id);
@@ -209,11 +209,10 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
                         : t('transactions.externalFunds')}
                   </div>
                   {transaction.paymentSource === 'mixed' &&
-                    transaction.revenueAmount &&
+                    transaction.cashAmount &&
                     transaction.externalAmount && (
                       <div>
-                        <b>{t('transactions.breakdownLabel')}:</b>{' '}
-                        {fmtUSD(transaction.revenueAmount)}{' '}
+                        <b>{t('transactions.breakdownLabel')}:</b> {fmtUSD(transaction.cashAmount)}{' '}
                         {t('transactions.businessRevenue').toLowerCase()} +{' '}
                         {fmtUSD(transaction.externalAmount)}{' '}
                         {t('transactions.externalFunds').toLowerCase()}
@@ -254,7 +253,7 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
 
       {/* Revenue Withdrawals Section */}
       <div className="revenue-withdrawals-section">
-        <RevenueWithdrawals db={{ ...db, revenueWithdrawals: filteredWithdrawals }} />
+        <RevenueWithdrawals db={{ ...db, cashWithdrawals: filteredWithdrawals }} />
       </div>
 
       {showForm && (

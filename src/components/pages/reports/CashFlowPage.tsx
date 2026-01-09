@@ -28,12 +28,12 @@ export function CashFlowPage({ db }: CashFlowPageProps) {
   const inventoryPurchases = db.purchases.reduce((sum, purchase) => sum + purchase.totalCost, 0);
   const investingCashFlow = -inventoryPurchases;
 
-  // Revenue withdrawals (cash taken out of business)
-  const revenueWithdrawals = db.revenueWithdrawals.reduce(
+  // Cash withdrawals (cash taken out of business)
+  const cashWithdrawalsTotal = db.cashWithdrawals.reduce(
     (sum, withdrawal) => sum + withdrawal.amount,
     0
   );
-  const financingCashFlow = -revenueWithdrawals;
+  const financingCashFlow = -cashWithdrawalsTotal;
 
   const netCashFlow = operatingCashFlow + investingCashFlow + financingCashFlow;
 
@@ -90,8 +90,8 @@ export function CashFlowPage({ db }: CashFlowPageProps) {
         <div className="statement-section">
           <div className="section-header">Cash Flows from Financing Activities</div>
           <div className="line-item">
-            <span>Revenue withdrawals</span>
-            <span className="amount negative">({fmtUSD(revenueWithdrawals)})</span>
+            <span>Cash withdrawals</span>
+            <span className="amount negative">({fmtUSD(cashWithdrawalsTotal)})</span>
           </div>
           <div className="line-item total">
             <span>

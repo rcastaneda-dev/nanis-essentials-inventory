@@ -61,13 +61,13 @@ export function PurchasesPage({ db, persist }: PurchasesPageProps) {
       ? db.purchases.map(p => (p.id === purchase.id ? purchase : p))
       : [...db.purchases, purchase];
 
-    const nextWithdrawals = updatedWithdrawals ?? db.revenueWithdrawals;
+    const nextWithdrawals = updatedWithdrawals ?? db.cashWithdrawals;
 
     persist({
       ...db,
       items: itemsWorking,
       purchases: nextPurchases,
-      revenueWithdrawals: nextWithdrawals,
+      cashWithdrawals: nextWithdrawals,
     });
     setShowForm(false);
   };

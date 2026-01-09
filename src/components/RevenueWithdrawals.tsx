@@ -13,7 +13,7 @@ interface RevenueWithdrawalsProps {
  */
 export function RevenueWithdrawals({ db }: RevenueWithdrawalsProps) {
   const { t } = useTranslation();
-  const sortedWithdrawals = [...db.revenueWithdrawals].sort(
+  const sortedWithdrawals = [...db.cashWithdrawals].sort(
     (a, b) => new Date(b.withdrawnAt).getTime() - new Date(a.withdrawnAt).getTime()
   );
 
@@ -35,15 +35,15 @@ export function RevenueWithdrawals({ db }: RevenueWithdrawalsProps) {
   if (sortedWithdrawals.length === 0) {
     return (
       <div className="empty-state" data-testid="no-withdrawals">
-        <h3>{t('transactions.revenueWithdrawals.noWithdrawals')}</h3>
-        <p className="muted">{t('transactions.revenueWithdrawals.noWithdrawalsDescription')}</p>
+        <h3>{t('transactions.cashWithdrawals.noWithdrawals')}</h3>
+        <p className="muted">{t('transactions.cashWithdrawals.noWithdrawalsDescription')}</p>
       </div>
     );
   }
 
   return (
     <div className="revenue-withdrawals" data-testid="revenue-withdrawals-list">
-      <h3>{t('transactions.revenueWithdrawals.title')}</h3>
+      <h3>{t('transactions.cashWithdrawals.title')}</h3>
 
       <div className="withdrawals-list">
         {sortedWithdrawals.map(withdrawal => {
@@ -64,20 +64,20 @@ export function RevenueWithdrawals({ db }: RevenueWithdrawalsProps) {
 
               <div className="withdrawal-details">
                 <div className="detail-row">
-                  <span className="label">{t('transactions.revenueWithdrawals.reason')}:</span>
+                  <span className="label">{t('transactions.cashWithdrawals.reason')}:</span>
                   <span className="value">{withdrawal.reason}</span>
                 </div>
 
                 {linkedPurchase && (
                   <div className="detail-row">
                     <span className="label">
-                      {t('transactions.revenueWithdrawals.linkedPurchase')}:
+                      {t('transactions.cashWithdrawals.linkedPurchase')}:
                     </span>
                     <span className="value">
                       {formatDate(linkedPurchase.createdAt)} - {fmtUSD(linkedPurchase.totalCost)}
                       {linkedPurchase.lines.length === 1
-                        ? ` (${linkedPurchase.lines.length} ${t('transactions.revenueWithdrawals.item')})`
-                        : ` (${linkedPurchase.lines.length} ${t('transactions.revenueWithdrawals.items')})`}
+                        ? ` (${linkedPurchase.lines.length} ${t('transactions.cashWithdrawals.item')})`
+                        : ` (${linkedPurchase.lines.length} ${t('transactions.cashWithdrawals.items')})`}
                     </span>
                   </div>
                 )}
@@ -96,11 +96,11 @@ export function RevenueWithdrawals({ db }: RevenueWithdrawalsProps) {
 
       <div className="withdrawals-summary">
         <div className="summary-item">
-          <span className="label">{t('transactions.revenueWithdrawals.totalWithdrawals')}:</span>
+          <span className="label">{t('transactions.cashWithdrawals.totalWithdrawals')}:</span>
           <span className="value">{sortedWithdrawals.length}</span>
         </div>
         <div className="summary-item">
-          <span className="label">{t('transactions.revenueWithdrawals.totalAmount')}:</span>
+          <span className="label">{t('transactions.cashWithdrawals.totalAmount')}:</span>
           <span className="value amount">
             {fmtUSD(sortedWithdrawals.reduce((sum, w) => sum + w.amount, 0))}
           </span>
@@ -116,7 +116,7 @@ export function RevenueWithdrawals({ db }: RevenueWithdrawalsProps) {
  */
 export function RevenueWithdrawalSummary({ db }: { db: DB }) {
   const { t } = useTranslation();
-  const withdrawals = db.revenueWithdrawals;
+  const withdrawals = db.cashWithdrawals;
   const totalWithdrawn = withdrawals.reduce((sum, w) => sum + w.amount, 0);
 
   // Get recent withdrawals (last 30 days)
@@ -130,15 +130,15 @@ export function RevenueWithdrawalSummary({ db }: { db: DB }) {
       <div className="summary-stats">
         <div className="stat">
           <span className="stat-value">{fmtUSD(totalWithdrawn)}</span>
-          <span className="stat-label">{t('transactions.revenueWithdrawals.totalReinvested')}</span>
+          <span className="stat-label">{t('transactions.cashWithdrawals.totalReinvested')}</span>
         </div>
         <div className="stat">
           <span className="stat-value">{withdrawals.length}</span>
-          <span className="stat-label">{t('transactions.revenueWithdrawals.withdrawals')}</span>
+          <span className="stat-label">{t('transactions.cashWithdrawals.withdrawals')}</span>
         </div>
         <div className="stat">
           <span className="stat-value">{fmtUSD(recentAmount)}</span>
-          <span className="stat-label">{t('transactions.revenueWithdrawals.last30Days')}</span>
+          <span className="stat-label">{t('transactions.cashWithdrawals.last30Days')}</span>
         </div>
       </div>
     </div>
