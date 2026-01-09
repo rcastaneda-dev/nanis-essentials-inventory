@@ -50,6 +50,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
   );
   const [weight, setWeight] = useState<number>(initial?.weightLbs ?? 1);
   const [subtotal, setSubtotal] = useState<number>(initial?.subtotal ?? calcSubtotal(lines));
+  const [discount, setDiscount] = useState<number>(initial?.discount ?? 0);
   const taxRate = db.settings?.taxRatePercent ?? DEFAULT_SETTINGS.taxRatePercent;
   const autoTax = Math.round(subtotal * (taxRate / 100) * 100) / 100; // Round to 2 decimal places
   const [tax, setTax] = useState<number>(initial?.tax ?? autoTax);
@@ -173,6 +174,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
     });
 
     const totalCost = subtotal + tax + shipUS + shipIntl;
+    const actualCost = totalCost - discount;
 
     const p: Purchase = {
       id: initial?.id ?? uid(),
@@ -181,14 +183,16 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       paymentDate,
       lines: enriched,
       subtotal,
+      discount,
       tax,
       shippingUS: shipUS,
       shippingIntl: shipIntl,
       weightLbs: weight,
       totalUnits: units,
       totalCost,
+      actualCost,
       cashUsed: cashToUse,
-      paymentSource: RevenueService.calculatePaymentBreakdown(totalCost, cashToUse).paymentSource,
+      paymentSource: RevenueService.calculatePaymentBreakdown(actualCost, cashToUse).paymentSource,
     };
 
     let itemsUpdated = [...items];
@@ -502,6 +506,21 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           />
         </div>
         <div>
+          <label>{t('purchases.discount')}</label>
+          <input
+            type="number"
+            step="0.01"
+            inputMode="decimal"
+            value={discount === 0 ? '' : discount}
+            onChange={e => {
+              const value = e.target.value;
+              setDiscount(value === '' ? 0 : parseNumber(value));
+            }}
+            data-testid="discount-input"
+          />
+          <div className="muted tiny">{t('purchases.discountHelp')}</div>
+        </div>
+        <div>
           <label>{t('purchases.tax')}</label>
           <input
             type="number"
@@ -567,7 +586,19 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           </div>
         </div>
         <div className="col-span-4 summary">
-          <b>{t('purchases.totalCost')}:</b> {fmtUSD(subtotal + tax + shipUS + shipIntl)} &nbsp;
+          <b>{t('purchases.totalCost')}:</b> {fmtUSD(subtotal + tax + shipUS + shipIntl)}
+          {discount > 0 && (
+            <>
+              {' '}
+              <span className="muted">
+                - {fmtUSD(discount)} ={' '}
+                <span className="green">
+                  {fmtUSD(subtotal + tax + shipUS + shipIntl - discount)}
+                </span>
+              </span>
+            </>
+          )}{' '}
+          &nbsp;
           <span className="muted">{t('purchases.itemsInclSubItems', { count: totalUnits() })}</span>
         </div>
       </div>
@@ -583,8 +614,8 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           <div className="revenue-breakdown">
             <div className="breakdown-info">
               <div className="breakdown-row">
-                <span>{t('purchases.totalCost')}:</span>
-                <span>{fmtUSD(subtotal + tax + shipUS + shipIntl)}</span>
+                <span>{t('purchases.actualCost')}:</span>
+                <span>{fmtUSD(subtotal + tax + shipUS + shipIntl - discount)}</span>
               </div>
               <div className="breakdown-row revenue">
                 <span>{t('purchases.usingCash')}:</span>
@@ -593,7 +624,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
               <div className="breakdown-row external">
                 <span>{t('purchases.externalPayment')}:</span>
                 <span className="blue">
-                  {fmtUSD(subtotal + tax + shipUS + shipIntl - cashToUse)}
+                  {fmtUSD(subtotal + tax + shipUS + shipIntl - discount - cashToUse)}
                 </span>
               </div>
             </div>
@@ -653,7 +684,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
         db={db}
         isVisible={showRevenueManager}
         onClose={() => setShowRevenueManager(false)}
-        totalCost={subtotal + tax + shipUS + shipIntl}
+        totalCost={subtotal + tax + shipUS + shipIntl - discount}
         onApplyRevenue={(amount, reason, notes) => {
           setCashToUse(amount);
           setWithdrawalReason(reason);
