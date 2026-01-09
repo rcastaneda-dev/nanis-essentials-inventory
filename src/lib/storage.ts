@@ -53,14 +53,14 @@ export function loadDB(): DB {
     if (!parsed.branches) parsed.branches = [];
     // Ensure backward compatibility: add branchId to items if missing
     if (parsed.items) {
-      parsed.items = parsed.items.map(item => ({
+      parsed.items = parsed.items.map((item: any) => ({
         ...item,
         branchId: item.branchId ?? undefined,
       }));
     }
     // Ensure backward compatibility: add branchId to sales if missing
     if (parsed.sales) {
-      parsed.sales = parsed.sales.map(sale => ({
+      parsed.sales = parsed.sales.map((sale: any) => ({
         ...sale,
         branchId: sale.branchId ?? undefined,
       }));
