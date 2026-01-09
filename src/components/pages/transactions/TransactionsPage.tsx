@@ -209,11 +209,10 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
                         : t('transactions.externalFunds')}
                   </div>
                   {transaction.paymentSource === 'mixed' &&
-                    transaction.revenueAmount &&
+                    transaction.cashAmount &&
                     transaction.externalAmount && (
                       <div>
-                        <b>{t('transactions.breakdownLabel')}:</b>{' '}
-                        {fmtUSD(transaction.revenueAmount)}{' '}
+                        <b>{t('transactions.breakdownLabel')}:</b> {fmtUSD(transaction.cashAmount)}{' '}
                         {t('transactions.businessRevenue').toLowerCase()} +{' '}
                         {fmtUSD(transaction.externalAmount)}{' '}
                         {t('transactions.externalFunds').toLowerCase()}
