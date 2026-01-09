@@ -30,11 +30,7 @@ interface PurchaseFormProps {
   db: DB;
   initial?: Purchase;
   onClose: () => void;
-  onSave: (
-    _purchase: Purchase,
-    _updatedItems: InventoryItem[],
-    _revenueWithdrawals?: any[]
-  ) => void;
+  onSave: (_purchase: Purchase, _updatedItems: InventoryItem[], _cashWithdrawals?: any[]) => void;
 }
 
 export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps) {
@@ -286,7 +282,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           throw new Error('Failed to process purchase with revenue');
         }
 
-        onSave(updatedPurchase, itemsUpdated, result.updatedDb.revenueWithdrawals);
+        onSave(updatedPurchase, itemsUpdated, result.updatedDb.cashWithdrawals);
       } else {
         onSave(p, itemsUpdated);
       }
