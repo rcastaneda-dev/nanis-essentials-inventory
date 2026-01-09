@@ -67,30 +67,12 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
 
         {/* Details Section */}
         <div className="item-card-details">
-          {/* Pricing Info */}
+          {/* Pricing & Inventory Info */}
           <div className="item-card-pricing">
             <div className="item-card-unit-cost">
               <span className="item-card-label">{t('itemCard.unitCost')}</span>
               <span className="item-card-value">{fmtUSD(unitCost)}</span>
             </div>
-            <div className="item-card-price-range">
-              <span className="item-card-label">{t('itemCard.priceRange')}</span>
-              <span className="item-card-value price-range-value">
-                {fmtUSD(item.minPrice ?? 0)} - {fmtUSD(item.maxPrice ?? 0)}
-              </span>
-            </div>
-          </div>
-
-          {/* Potential Revenue */}
-          <div className="item-card-revenue">
-            <span className="item-card-label">{t('itemCard.potentialProfit')}</span>
-            <span className="item-card-value revenue-value">
-              {fmtUSD(item.minProfit ?? 0)} - {fmtUSD(item.maxProfit ?? 0)}
-            </span>
-          </div>
-
-          {/* Stock & Weight Info */}
-          <div className="item-card-stock-weight">
             <div className="item-card-stock">
               <span className="item-card-label">{t('itemCard.stock')}</span>
               <div className="item-card-stock-value">
@@ -103,6 +85,22 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
                 <span className="item-card-value">{item.weightLbs.toFixed(2)} lbs</span>
               </div>
             )}
+          </div>
+
+          {/* Potential Revenue Container */}
+          <div className="item-card-revenue">
+            <div className="item-card-price-range">
+              <span className="item-card-label">{t('itemCard.priceRange')}</span>
+              <span className="item-card-value price-range-value">
+                {fmtUSD(item.minPrice ?? 0)} - {fmtUSD(item.maxPrice ?? 0)}
+              </span>
+            </div>
+            <div className="item-card-profit-range">
+              <span className="item-card-label">{t('itemCard.potentialProfit')}</span>
+              <span className="item-card-value revenue-value">
+                {fmtUSD(item.minProfit ?? 0)} - {fmtUSD(item.maxProfit ?? 0)}
+              </span>
+            </div>
           </div>
 
           {/* Description */}
