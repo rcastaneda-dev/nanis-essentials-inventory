@@ -24,9 +24,9 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
     initial?.lines ?? [
       {
         id: uid(),
-        itemId: db.items[0]?.id ?? '',
+        itemId: '',
         quantity: 1,
-        unitPrice: db.items[0]?.minPrice ?? 0,
+        unitPrice: 0,
       },
     ]
   );
