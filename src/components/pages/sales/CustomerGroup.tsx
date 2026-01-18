@@ -61,7 +61,6 @@ export function CustomerGroup({
           const itemCount = s.lines.reduce((acc, l) => acc + l.quantity, 0);
           return (
             <div key={s.id} className="sale-item-grouped">
-              <div className="sale-id">#{s.id}</div>
               <div className="sale-date">{new Date(s.createdAt).toLocaleDateString()}</div>
               <div className="sale-payment">{s.paymentMethod}</div>
               <div className="sale-items">
