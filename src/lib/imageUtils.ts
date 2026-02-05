@@ -64,7 +64,9 @@ export function compressImage(
     };
 
     img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    img.src = objectUrl;
+    img.onload = () => URL.revokeObjectURL(objectUrl); // Clean up memory
   });
 }
 
@@ -111,11 +113,13 @@ export async function processImageFile(file: File): Promise<ItemImage> {
   }
 
   const compressedDataUrl = await compressImage(file);
+  const thumbnailUrl = await generateThumbnail(compressedDataUrl);
 
   return {
     id: uid(),
     name: file.name,
     dataUrl: compressedDataUrl,
+    thumbnailUrl,
     size: compressedDataUrl.length,
     type: file.type,
     uploadedAt: nowIso(),

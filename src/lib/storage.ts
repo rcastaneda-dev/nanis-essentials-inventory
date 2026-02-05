@@ -1,6 +1,23 @@
 import { DB, DEFAULT_SETTINGS } from '../types/models';
+import { createDebouncedIdleScheduler } from './debounce';
 
 const STORAGE_KEY = 'nim-db-v1';
+
+// Create a buffered writer that debounces and schedules writes during idle time
+let pendingDB: DB | null = null;
+
+const flushToDisk = () => {
+  if (pendingDB !== null) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingDB));
+      pendingDB = null;
+    } catch (error) {
+      console.error('Failed to save to localStorage:', error);
+    }
+  }
+};
+
+const scheduleSave = createDebouncedIdleScheduler(flushToDisk, 300, 2000);
 
 export function loadDB(): DB {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -80,8 +97,21 @@ export function loadDB(): DB {
   }
 }
 
+/**
+ * Save DB with buffered/debounced writes to avoid blocking the main thread
+ * Updates are scheduled during idle time and debounced to batch rapid changes
+ */
 export function saveDB(db: DB) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  pendingDB = db;
+  scheduleSave();
+}
+
+/**
+ * Immediately flush any pending writes to disk
+ * Use this before critical operations like navigation or backup export
+ */
+export function flushDB() {
+  flushToDisk();
 }
 
 export function exportBackup(): string {

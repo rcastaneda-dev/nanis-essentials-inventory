@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { InventoryForm } from './InventoryForm';
 import { BranchManager } from './BranchManager';
@@ -7,7 +7,13 @@ import { MoveToMainModal } from './MoveToMainModal';
 import { InventoryPageTemplate } from '../../templates/InventoryPageTemplate';
 import { SortOption } from '../../molecules/SearchFilters';
 import { DB, InventoryItem } from '../../../types/models';
-import { nowIso, uid, generateInventoryCSV, downloadCSV } from '../../../lib/utils';
+import {
+  nowIso,
+  uid,
+  generateInventoryCSV,
+  downloadCSV,
+  buildLastSellingPricesMap,
+} from '../../../lib/utils';
 import { CATEGORIES } from '../../../constants/categories';
 import { getCategoryTranslationKey } from '../../../lib/i18nUtils';
 
@@ -28,6 +34,18 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('inStock');
   const [selectedBranchId, setSelectedBranchId] = useState<string | 'main'>('main');
+
+  // Precompute last selling prices for all items (computed once, reused for all cards)
+  const lastSellingPricesByItemId = useMemo(() => buildLastSellingPricesMap(db.sales), [db.sales]);
+
+  // Precompute branch names map for efficient lookup
+  const branchNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    db.branches?.forEach(branch => {
+      map.set(branch.id, branch.name);
+    });
+    return map;
+  }, [db.branches]);
 
   // Filter items by selected branch
   const items = useMemo(() => {
@@ -97,10 +115,21 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
     }
   }, [filteredItems, sortBy]);
 
-  const onDelete = (id: string) => {
-    if (!window.confirm(t('inventory.deleteItem'))) return;
-    persist({ ...db, items: db.items.filter(i => i.id !== id) });
-  };
+  const onDelete = useCallback(
+    (id: string) => {
+      if (!window.confirm(t('inventory.deleteItem'))) return;
+      persist({ ...db, items: db.items.filter(i => i.id !== id) });
+    },
+    [db, persist, t]
+  );
+
+  const handleEditItem = useCallback(
+    (item: InventoryItem) => {
+      setEditing(item);
+      setShowForm(true);
+    },
+    [setEditing, setShowForm]
+  );
 
   const handleRecalculatePrices = () => {
     // Recalculate unit costs for all items using weight-based allocation
@@ -445,10 +474,7 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
         totalCount={items.length}
         filteredCount={filteredItems.length}
         items={sortedItems}
-        onEditItem={item => {
-          setEditing(item);
-          setShowForm(true);
-        }}
+        onEditItem={handleEditItem}
         onDeleteItem={onDelete}
         showEmptyState={filteredItems.length === 0 && items.length === 0}
         showNoResults={filteredItems.length === 0 && items.length > 0}
@@ -466,7 +492,8 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
           ...activeBranches.map(b => ({ value: b.id, label: b.name })),
         ]}
         branchName={selectedBranch?.name}
-        db={db}
+        lastSellingPricesByItemId={lastSellingPricesByItemId}
+        branchNameById={branchNameById}
       />
 
       {showBranchManager && (

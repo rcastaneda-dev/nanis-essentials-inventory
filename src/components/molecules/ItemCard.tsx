@@ -3,26 +3,30 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 import { Text, Badge } from '../atoms/Typography';
 import { ItemCardImage } from '../ItemImageDisplay';
-import { InventoryItem, DB } from '../../types/models';
-import { fmtUSD, getLastSellingPrices } from '../../lib/utils';
+import { InventoryItem } from '../../types/models';
+import { fmtUSD } from '../../lib/utils';
 
 interface ItemCardProps {
   item: InventoryItem;
   onEdit: (_item: InventoryItem) => void;
   onDelete: (_id: string) => void;
   testId?: string;
-  db?: DB; // Optional DB for branch name lookup
+  lastSellingPrices?: number[];
+  branchName?: string;
 }
 
-export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: ItemCardProps) {
+export const ItemCard = React.memo(function ItemCard({
+  item,
+  onEdit,
+  onDelete,
+  testId = 'item-card',
+  lastSellingPrices = [],
+  branchName,
+}: ItemCardProps) {
   const { t } = useTranslation();
   const isOutOfStock = item.stock === 0;
   const isLastItem = item.stock === 1;
   const unitCost = item.costPostShipping ?? item.costPreShipping ?? 0;
-  const branchName = item.branchId && db?.branches?.find(b => b.id === item.branchId)?.name;
-
-  // Get last selling prices for this item
-  const lastSellingPrices = db?.sales ? getLastSellingPrices(item.id, db.sales) : [];
 
   return (
     <div
@@ -142,4 +146,4 @@ export function ItemCard({ item, onEdit, onDelete, testId = 'item-card', db }: I
       </div>
     </div>
   );
-}
+});

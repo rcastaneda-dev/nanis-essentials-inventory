@@ -18,6 +18,7 @@ export interface ItemImage {
   id: string;
   name: string; // Original filename
   dataUrl: string; // Base64 encoded image data
+  thumbnailUrl?: string; // Base64 encoded thumbnail (smaller for grid views)
   size: number; // File size in bytes
   type: string; // MIME type (image/jpeg, image/png)
   uploadedAt: string; // ISO timestamp
