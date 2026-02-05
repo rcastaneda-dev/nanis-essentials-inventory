@@ -18,6 +18,7 @@ root.render(
 if (process.env.NODE_ENV === 'development') {
   reportWebVitals(metric => {
     // Remove 'metric.rating' as it's not a property on the Metric type
+    // eslint-disable-next-line no-console
     console.log('[Web Vitals]', metric.name, Math.round(metric.value));
   });
 } else {

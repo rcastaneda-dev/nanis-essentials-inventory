@@ -12,6 +12,7 @@ const flushToDisk = () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingDB));
       pendingDB = null;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to save to localStorage:', error);
     }
   }
