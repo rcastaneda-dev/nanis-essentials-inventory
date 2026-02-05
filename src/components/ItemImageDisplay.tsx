@@ -30,14 +30,22 @@ export function ItemImageDisplay({
   };
 
   if (primaryImage) {
+    // Use thumbnail for small/medium sizes in grid views, full image for large/detail views
+    const imageSrc =
+      size !== 'large' && primaryImage.thumbnailUrl
+        ? primaryImage.thumbnailUrl
+        : primaryImage.dataUrl;
+
     return (
       <img
-        src={primaryImage.dataUrl}
+        src={imageSrc}
         alt={itemName}
         className={`item-image ${sizeClasses[size]} ${className}`}
         onClick={onClick}
         style={{ cursor: onClick ? 'pointer' : 'default' }}
         title={itemName}
+        loading="lazy"
+        decoding="async"
       />
     );
   }

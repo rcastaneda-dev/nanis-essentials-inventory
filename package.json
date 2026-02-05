@@ -13,12 +13,14 @@
     "@types/jest": "^27.5.2",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
+    "@types/react-window": "^1.8.8",
     "i18next": "^25.7.3",
     "i18next-browser-languagedetector": "^8.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-i18next": "^16.5.0",
     "react-scripts": "5.0.1",
+    "react-window": "^1.8.11",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
@@ -37,7 +39,8 @@
     "format:check": "prettier --check .",
     "type-check": "tsc --noEmit",
     "pre-commit": "lint-staged",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "analyze": "source-map-explorer 'build/static/js/*.js'"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -70,7 +73,8 @@
     "eslint-plugin-prettier": "^5.5.4",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "source-map-explorer": "^2.5.3"
   },
   "packageManager": "yarn@4.4.1+sha512.f825273d0689cc9ead3259c14998037662f1dcd06912637b21a450e8da7cfeb4b1965bbee73d16927baa1201054126bc385c6f43ff4aa705c8631d26e12460f1"
 }

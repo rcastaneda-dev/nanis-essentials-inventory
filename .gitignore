@@ -22,6 +22,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# npm lockfile (using Yarn)
+package-lock.json
+
 # Playwright
 node_modules/
 /test-results/

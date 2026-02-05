@@ -1,7 +1,9 @@
-import { exportBackup, importBackup, clearAll } from '../lib/storage';
+import { exportBackup, importBackup, clearAll, flushDB } from '../lib/storage';
 
 export function useBackupImport(onDataChange: () => void) {
   const handleExport = () => {
+    // Flush any pending writes before exporting to ensure we get the latest data
+    flushDB();
     const data = exportBackup();
     const blob = new Blob([data], { type: 'application/json' });
     const a = document.createElement('a');
@@ -19,6 +21,8 @@ export function useBackupImport(onDataChange: () => void) {
       if (!file) return;
 
       try {
+        // Flush any pending writes before importing
+        flushDB();
         const text = await file.text();
         importBackup(text);
         onDataChange();
@@ -32,6 +36,8 @@ export function useBackupImport(onDataChange: () => void) {
 
   const handleClear = () => {
     if (!window.confirm('Clear all data? This cannot be undone.')) return;
+    // Flush any pending writes before clearing
+    flushDB();
     clearAll();
     onDataChange();
   };

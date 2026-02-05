@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { loadDB, saveDB } from '../lib/storage';
+import { useState, useEffect } from 'react';
+import { loadDB, saveDB, flushDB } from '../lib/storage';
 import { DB } from '../types/models';
 
 export function useAppData() {
@@ -13,6 +13,19 @@ export function useAppData() {
   const refreshData = () => {
     setDb(loadDB());
   };
+
+  // Flush pending writes before page unload to ensure data is saved
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      flushDB();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      flushDB(); // Also flush when component unmounts
+    };
+  }, []);
 
   return {
     db,

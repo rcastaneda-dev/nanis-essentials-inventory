@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import './App.css';
 import { MainLayoutTemplate } from './components/templates/MainLayoutTemplate';
 import { Tab } from './components/organisms/NavigationBar';
-import { InventoryPage } from './components/pages/inventory';
-import { PurchasesPage } from './components/pages/purchases';
-import { SalesPage } from './components/pages/sales';
-import { TransactionsPage } from './components/pages/transactions';
-import { AnalyticsPage } from './components/pages/analytics';
-import { FinancialDashboard } from './components/pages/reports';
-import { ImportExportPage } from './components/pages/import-export';
-import { QuotesPage } from './components/pages/quotes';
+import { PageLoader } from './components/shared/PageLoader';
 import { useAppData } from './hooks/useAppData';
 import { useBackupImport } from './hooks/useBackupImport';
+
+// Lazy-load page components for code splitting
+const InventoryPage = lazy(() =>
+  import('./components/pages/inventory').then(m => ({ default: m.InventoryPage }))
+);
+const PurchasesPage = lazy(() =>
+  import('./components/pages/purchases').then(m => ({ default: m.PurchasesPage }))
+);
+const SalesPage = lazy(() =>
+  import('./components/pages/sales').then(m => ({ default: m.SalesPage }))
+);
+const TransactionsPage = lazy(() =>
+  import('./components/pages/transactions').then(m => ({ default: m.TransactionsPage }))
+);
+const AnalyticsPage = lazy(() =>
+  import('./components/pages/analytics').then(m => ({ default: m.AnalyticsPage }))
+);
+const FinancialDashboard = lazy(() =>
+  import('./components/pages/reports').then(m => ({ default: m.FinancialDashboard }))
+);
+const ImportExportPage = lazy(() =>
+  import('./components/pages/import-export').then(m => ({ default: m.ImportExportPage }))
+);
+const QuotesPage = lazy(() =>
+  import('./components/pages/quotes').then(m => ({ default: m.QuotesPage }))
+);
 
 export default function App() {
   const { db, persist, refreshData } = useAppData();
@@ -45,7 +64,7 @@ export default function App() {
 
   return (
     <MainLayoutTemplate brandTitle="Nani's Essentials" activeTab={tab} onTabChange={setTab}>
-      {renderPageContent()}
+      <Suspense fallback={<PageLoader />}>{renderPageContent()}</Suspense>
     </MainLayoutTemplate>
   );
 }

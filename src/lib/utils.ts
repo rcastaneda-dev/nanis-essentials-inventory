@@ -196,3 +196,54 @@ export const getLastSellingPrices = (
 
   return uniquePrices;
 };
+
+/**
+ * Build a map of itemId -> last selling prices for all items
+ * This is more efficient than calling getLastSellingPrices for each item individually
+ */
+export const buildLastSellingPricesMap = (
+  sales: Array<{
+    createdAt: string;
+    lines: Array<{ itemId: string; unitPrice: number }>;
+  }>
+): Map<string, number[]> => {
+  // First, collect all prices by item with dates
+  const pricesByItem = new Map<string, Array<{ price: number; date: Date }>>();
+
+  sales.forEach(sale => {
+    const saleDate = new Date(sale.createdAt);
+    sale.lines.forEach(line => {
+      const existing = pricesByItem.get(line.itemId) || [];
+      existing.push({
+        price: line.unitPrice,
+        date: saleDate,
+      });
+      pricesByItem.set(line.itemId, existing);
+    });
+  });
+
+  // Now process each item to get unique prices
+  const result = new Map<string, number[]>();
+
+  pricesByItem.forEach((pricesWithDate, itemId) => {
+    // Sort by date (most recent first)
+    pricesWithDate.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    // Extract unique prices while maintaining order
+    const uniquePrices: number[] = [];
+    const seenPrices = new Set<number>();
+
+    for (const item of pricesWithDate) {
+      if (!seenPrices.has(item.price)) {
+        seenPrices.add(item.price);
+        uniquePrices.push(item.price);
+        // Limit to 3 unique prices
+        if (uniquePrices.length >= 3) break;
+      }
+    }
+
+    result.set(itemId, uniquePrices);
+  });
+
+  return result;
+};

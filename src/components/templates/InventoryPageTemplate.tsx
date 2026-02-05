@@ -4,7 +4,7 @@ import { PageHeader } from '../molecules/PageHeader';
 import { SearchFilters, SortOption } from '../molecules/SearchFilters';
 import { ItemGrid } from '../organisms/ItemGrid';
 import { Modal } from '../molecules/Modal';
-import { InventoryItem, DB } from '../../types/models';
+import { InventoryItem } from '../../types/models';
 
 interface InventoryPageTemplateProps {
   // Page Header
@@ -33,7 +33,8 @@ interface InventoryPageTemplateProps {
   onBranchChange?: (_branchId: string | 'main') => void;
   branchOptions?: Array<{ value: string; label: string }>;
   branchName?: string;
-  db?: DB; // DB for branch name lookup
+  lastSellingPricesByItemId?: Map<string, number[]>;
+  branchNameById?: Map<string, string>;
 
   // Items Grid
   items: InventoryItem[];
@@ -74,7 +75,8 @@ export function InventoryPageTemplate({
   onBranchChange,
   branchOptions,
   branchName,
-  db,
+  lastSellingPricesByItemId,
+  branchNameById,
 }: InventoryPageTemplateProps) {
   const { t } = useTranslation();
   const pageTitle = branchName
@@ -133,7 +135,8 @@ export function InventoryPageTemplate({
         showNoResults={showNoResults}
         testId="inventory-cards"
         columns="two"
-        db={db}
+        lastSellingPricesByItemId={lastSellingPricesByItemId}
+        branchNameById={branchNameById}
       />
 
       {showForm && (
