@@ -42,6 +42,9 @@ test.describe('Login page', () => {
     const inventoryManagementPage = new InventoryManagementPage(page);
     await loginPage.navigate();
     await loginPage.submitWithCredentials(email, password);
+
+    // Assert: authenticated user lands on inventory page
+    await expect(inventoryManagementPage.signOutButton).toBeVisible();
     await expect(inventoryManagementPage.pageTitle).toBeVisible();
   });
 
