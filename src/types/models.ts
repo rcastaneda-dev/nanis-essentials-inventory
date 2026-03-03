@@ -29,7 +29,6 @@ export interface InventoryItem {
   id: string;
   name: string;
   description?: string;
-  notes?: string;
   category: Category;
   stock: number;
   // Physical properties

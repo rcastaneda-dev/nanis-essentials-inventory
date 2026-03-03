@@ -24,7 +24,6 @@ export async function fetchAllProducts(): Promise<InventoryItem[]> {
         name,
         sku,
         description,
-        notes,
         category,
         weight_lbs,
         cost_pre_shipping,

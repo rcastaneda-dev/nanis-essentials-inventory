@@ -54,7 +54,6 @@ export interface ProductRow {
   name: string;
   sku: string | null;
   description: string | null;
-  notes: string | null;
   category: Category;
   weight_lbs: number | null;
   cost_pre_shipping: number | null;
@@ -94,7 +93,6 @@ export function toInventoryItem(row: LocationWithProduct): InventoryItem {
     id: p.id,
     name: p.name,
     description: p.description ?? undefined,
-    notes: p.notes ?? undefined,
     category: p.category,
     stock: row.stock,
     weightLbs: p.weight_lbs ?? undefined,
@@ -130,7 +128,6 @@ export function toSupabaseProduct(item: InventoryItem) {
     id: item.id,
     name: item.name,
     description: item.description ?? null,
-    notes: item.notes ?? null,
     category: item.category,
     weight_lbs: item.weightLbs ?? null,
     cost_pre_shipping: item.costPreShipping ?? null,

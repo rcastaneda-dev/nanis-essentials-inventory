@@ -26,7 +26,6 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
   const [name, setName] = useState(initial?.name ?? '');
   const [category, setCategory] = useState<Category>(initial?.category ?? 'Other');
   const [description, setDescription] = useState(initial?.description ?? '');
-  const [notes, setNotes] = useState(initial?.notes ?? '');
   const [stock, setStock] = useState<number>(initial?.stock ?? 0);
   const [weightLbs, setWeightLbs] = useState<number>(initial?.weightLbs ?? 0);
   const [costPostShipping, setCostPostShipping] = useState<number>(initial?.costPostShipping ?? 0);
@@ -67,7 +66,6 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
       name: name.trim(),
       category,
       description: description.trim() || undefined,
-      notes: notes.trim() || undefined,
       stock,
       weightLbs: weightLbs || undefined,
       images,
@@ -204,11 +202,6 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
             }
             data-testid="item-catalog-price-input"
           />
-        </div>
-
-        <div className="col-span-2">
-          <label>{t('inventory.notes')}</label>
-          <input value={notes} onChange={e => setNotes(e.target.value)} />
         </div>
       </div>
 

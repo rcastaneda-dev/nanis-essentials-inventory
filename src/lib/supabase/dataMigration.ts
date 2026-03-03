@@ -112,7 +112,6 @@ export async function migrateBackupToSupabase(
       id: idMap[item.id],
       name: item.name,
       description: item.description ?? null,
-      notes: item.notes ?? null,
       category: item.category ?? 'Other',
       weight_lbs: item.weightLbs ?? null,
       cost_pre_shipping: item.costPreShipping ?? null,
