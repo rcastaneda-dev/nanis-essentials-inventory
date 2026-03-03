@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import type { Page, Locator } from '@playwright/test';
 
 /**
@@ -23,6 +24,12 @@ export class LoginPage {
 
   async navigate(): Promise<void> {
     await this.page.goto('/');
+    await this.assertLoaded();
+  }
+
+  async assertLoaded(): Promise<void> {
+    await expect(this.emailInput).toBeVisible();
+    await expect(this.submitButton).toBeVisible();
   }
 
   async fillEmail(email: string): Promise<void> {
