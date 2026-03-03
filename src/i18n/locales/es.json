@@ -484,6 +484,17 @@
     "usePassword": "Iniciar sesión con contraseña",
     "magicLinkSent": "¡Revisa tu correo para el enlace mágico!",
     "error": "Error de autenticación. Inténtalo de nuevo.",
-    "welcome": "Bienvenido a Nani's Essentials"
+    "welcome": "Bienvenido a Nani's Essentials",
+    "resetPassword": {
+      "title": "Nueva Contraseña",
+      "subtitle": "Ingresa tu nueva contraseña.",
+      "newPassword": "Nueva Contraseña",
+      "confirmPassword": "Confirmar Contraseña",
+      "submit": "Actualizar Contraseña",
+      "mismatch": "Las contraseñas no coinciden.",
+      "minLength": "La contraseña debe tener al menos 6 caracteres.",
+      "error": "Error al actualizar la contraseña. Inténtalo de nuevo.",
+      "success": "¡Contraseña actualizada exitosamente! Redirigiendo..."
+    }
   }
 }

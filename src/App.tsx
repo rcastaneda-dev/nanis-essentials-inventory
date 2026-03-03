@@ -6,7 +6,7 @@ import { PageLoader } from './components/shared/PageLoader';
 import { useAppData } from './hooks/useAppData';
 import { useBackupImport } from './hooks/useBackupImport';
 import { useAuth } from './hooks/useAuth';
-import { LoginPage } from './components/pages/auth';
+import { LoginPage, ResetPasswordPage } from './components/pages/auth';
 
 const InventoryPage = lazy(() =>
   import('./components/pages/inventory').then(m => ({ default: m.InventoryPage }))
@@ -34,7 +34,15 @@ const QuotesPage = lazy(() =>
 );
 
 export default function App() {
-  const { session, loading: authLoading, signInWithPassword, signInWithOtp, signOut } = useAuth();
+  const {
+    session,
+    loading: authLoading,
+    isPasswordRecovery,
+    signInWithPassword,
+    signInWithOtp,
+    updatePassword,
+    signOut,
+  } = useAuth();
   const {
     db,
     persist,
@@ -59,6 +67,10 @@ export default function App() {
 
   if (!session) {
     return <LoginPage onSignInWithPassword={signInWithPassword} onSignInWithOtp={signInWithOtp} />;
+  }
+
+  if (isPasswordRecovery) {
+    return <ResetPasswordPage onUpdatePassword={updatePassword} />;
   }
 
   const renderPageContent = () => {

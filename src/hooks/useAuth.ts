@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase/client';
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -14,7 +15,10 @@ export function useAuth() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, s) => {
+    } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true);
+      }
       setSession(s);
     });
 
@@ -31,10 +35,25 @@ export function useAuth() {
     if (error) throw error;
   };
 
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    setIsPasswordRecovery(false);
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+    setIsPasswordRecovery(false);
   };
 
-  return { session, loading, signInWithPassword, signInWithOtp, signOut };
+  return {
+    session,
+    loading,
+    isPasswordRecovery,
+    signInWithPassword,
+    signInWithOtp,
+    updatePassword,
+    signOut,
+  };
 }
