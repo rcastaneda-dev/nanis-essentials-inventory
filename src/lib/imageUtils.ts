@@ -37,8 +37,11 @@ export function compressImage(
     const ctx = canvas.getContext('2d');
     const img = new Image();
 
+    const objectUrl = URL.createObjectURL(file);
+
     img.onload = () => {
-      // Calculate new dimensions to keep aspect ratio
+      URL.revokeObjectURL(objectUrl);
+
       const maxDimension = 800;
       let { width, height } = img;
 
@@ -63,10 +66,12 @@ export function compressImage(
       resolve(compressedDataUrl);
     };
 
-    img.onerror = () => reject(new Error('Failed to load image'));
-    const objectUrl = URL.createObjectURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Failed to load image'));
+    };
+
     img.src = objectUrl;
-    img.onload = () => URL.revokeObjectURL(objectUrl); // Clean up memory
   });
 }
 
