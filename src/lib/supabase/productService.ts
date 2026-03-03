@@ -31,8 +31,6 @@ export async function fetchAllProducts(): Promise<InventoryItem[]> {
         cost_post_shipping,
         min_price,
         max_price,
-        competitor_a_price,
-        competitor_b_price,
         min_revenue,
         max_revenue,
         images,

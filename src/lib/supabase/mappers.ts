@@ -61,8 +61,6 @@ export interface ProductRow {
   cost_post_shipping: number | null;
   min_price: number | null;
   max_price: number | null;
-  competitor_a_price: number | null;
-  competitor_b_price: number | null;
   min_revenue: number | null;
   max_revenue: number | null;
   images: unknown;
@@ -107,8 +105,6 @@ export function toInventoryItem(row: LocationWithProduct): InventoryItem {
     minPrice: p.min_price ?? undefined,
     maxPrice: p.max_price ?? undefined,
     catalogPrice: p.catalog_price ?? undefined,
-    competitorAPrice: p.competitor_a_price ?? undefined,
-    competitorBPrice: p.competitor_b_price ?? undefined,
     minProfit: p.min_revenue ?? undefined,
     maxProfit: p.max_revenue ?? undefined,
     createdAt: p.created_at,
@@ -142,8 +138,6 @@ export function toSupabaseProduct(item: InventoryItem) {
     min_price: item.minPrice ?? null,
     max_price: item.maxPrice ?? null,
     catalog_price: item.catalogPrice ?? null,
-    competitor_a_price: item.competitorAPrice ?? null,
-    competitor_b_price: item.competitorBPrice ?? null,
     min_revenue: item.minProfit ?? null,
     max_revenue: item.maxProfit ?? null,
     images: serializedImages,
