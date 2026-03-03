@@ -106,6 +106,7 @@ export function toInventoryItem(row: LocationWithProduct): InventoryItem {
     costPostShipping: p.cost_post_shipping ?? undefined,
     minPrice: p.min_price ?? undefined,
     maxPrice: p.max_price ?? undefined,
+    catalogPrice: p.catalog_price ?? undefined,
     competitorAPrice: p.competitor_a_price ?? undefined,
     competitorBPrice: p.competitor_b_price ?? undefined,
     minProfit: p.min_revenue ?? undefined,
@@ -129,7 +130,7 @@ export function toSupabaseProduct(item: InventoryItem) {
 
   const primaryUrl = sorted.length > 0 ? sorted[0].dataUrl : null;
 
-  const product: Omit<ProductRow, 'sku' | 'brand_id' | 'catalog_price' | 'is_active'> = {
+  const product: Omit<ProductRow, 'sku' | 'brand_id' | 'is_active'> = {
     id: item.id,
     name: item.name,
     description: item.description ?? null,
@@ -140,6 +141,7 @@ export function toSupabaseProduct(item: InventoryItem) {
     cost_post_shipping: item.costPostShipping ?? null,
     min_price: item.minPrice ?? null,
     max_price: item.maxPrice ?? null,
+    catalog_price: item.catalogPrice ?? null,
     competitor_a_price: item.competitorAPrice ?? null,
     competitor_b_price: item.competitorBPrice ?? null,
     min_revenue: item.minProfit ?? null,

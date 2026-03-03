@@ -31,6 +31,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
   const [weightLbs, setWeightLbs] = useState<number>(initial?.weightLbs ?? 0);
   const [costPostShipping, setCostPostShipping] = useState<number>(initial?.costPostShipping ?? 0);
   const [costPreShipping, setCostPreShipping] = useState<number>(initial?.costPreShipping ?? 0);
+  const [catalogPrice, setCatalogPrice] = useState<number | undefined>(initial?.catalogPrice);
   const [compA, setCompA] = useState<number | undefined>(initial?.competitorAPrice);
   const [compB, setCompB] = useState<number | undefined>(initial?.competitorBPrice);
   const [images, setImages] = useState<ItemImage[]>(initial?.images || []);
@@ -77,6 +78,7 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
       costPostShipping: costPostShipping || undefined,
       minPrice,
       maxPrice,
+      catalogPrice: catalogPrice || undefined,
       competitorAPrice: compA,
       competitorBPrice: compB,
       minProfit,
@@ -194,6 +196,19 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
           />
         </div>
 
+        <div>
+          <label>{t('inventory.catalogPrice')}</label>
+          <input
+            type="number"
+            step="0.01"
+            inputMode="decimal"
+            value={catalogPrice ?? ''}
+            onChange={e =>
+              setCatalogPrice(e.target.value ? parseNumber(e.target.value) : undefined)
+            }
+            data-testid="item-catalog-price-input"
+          />
+        </div>
         <div>
           <label>{t('inventory.competitorAPrice')}</label>
           <input
