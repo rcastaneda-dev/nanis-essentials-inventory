@@ -398,7 +398,7 @@ export function InventoryPage({
     },
     {
       label: t('inventory.viewPublicCatalog'),
-      onClick: () => window.open('https://nanis-essentials-catalog.vercel.app/', '_blank'),
+      onClick: () => window.open('https://nanisessentials-catalog.vercel.app/', '_blank'),
       title: t('inventory.viewPublicCatalogTitle'),
       testId: 'view-public-catalog-btn',
     },

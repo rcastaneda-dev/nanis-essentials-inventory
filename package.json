@@ -1,5 +1,5 @@
 {
-  "name": "nanis-essentials-inv",
+  "name": "nanisessentials-inventory",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -30,9 +30,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:e2e": "npx playwright test",
-    "test:e2e:headed": "npx playwright test --headed",
-    "test:e2e:ui": "npx playwright test --ui",
-    "test:e2e:debug": "npx playwright test --debug",
+    "test:e2e:headed": "npx playwright test --headed --trace on",
+    "test:e2e:ui": "npx playwright test --ui --trace on",
+    "test:e2e:debug": "npx playwright test --debug --trace on",
     "eject": "react-scripts eject",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
@@ -69,6 +69,7 @@
     "@types/node": "^24.9.2",
     "@typescript-eslint/eslint-plugin": "^6",
     "@typescript-eslint/parser": "^6",
+    "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
