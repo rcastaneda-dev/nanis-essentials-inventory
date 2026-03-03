@@ -67,6 +67,7 @@
     "costPreShipping": "Costo (por unidad, pre-envío)",
     "minPrice": "Precio Mínimo",
     "maxPrice": "Precio Máximo",
+    "catalogPrice": "Precio de Catálogo (opcional)",
     "competitorAPrice": "Precio Competidor A (opcional)",
     "competitorBPrice": "Precio Competidor B (opcional)",
     "notes": "Notas",
