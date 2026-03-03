@@ -485,6 +485,17 @@
     "usePassword": "Sign in with password instead",
     "magicLinkSent": "Check your email for the magic link!",
     "error": "Authentication failed. Please try again.",
-    "welcome": "Welcome to Nani's Essentials"
+    "welcome": "Welcome to Nani's Essentials",
+    "resetPassword": {
+      "title": "Set New Password",
+      "subtitle": "Enter your new password below.",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "submit": "Update Password",
+      "mismatch": "Passwords do not match.",
+      "minLength": "Password must be at least 6 characters.",
+      "error": "Failed to update password. Please try again.",
+      "success": "Password updated successfully! Redirecting..."
+    }
   }
 }
