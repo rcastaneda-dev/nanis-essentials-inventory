@@ -44,4 +44,10 @@ test.describe('Login page', () => {
     await loginPage.submitWithCredentials(email, password);
     await expect(inventoryManagementPage.pageTitle).toBeVisible();
   });
+
+  test('should have a magic link button', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.navigate();
+    await expect(loginPage.toggleModeButton).toBeVisible();
+  });
 });

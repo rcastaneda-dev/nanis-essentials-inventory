@@ -17,7 +17,7 @@ export class LoginPage {
     this.emailInput = page.getByTestId('auth-email-input');
     this.passwordInput = page.getByTestId('auth-password-input');
     this.submitButton = page.getByTestId('auth-submit-btn');
-    this.toggleModeButton = page.getByTestId('auth-toggle-mode');
+    this.toggleModeButton = page.getByRole('button', { name: 'Sign in with magic link instead' });
     this.errorMessage = page.getByText(/Authentication failed|Error de autenticación/);
   }
 
