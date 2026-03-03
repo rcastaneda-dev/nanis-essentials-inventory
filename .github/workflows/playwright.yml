@@ -26,6 +26,10 @@ jobs:
       - run: corepack enable
       - run: yarn install --immutable
       - run: yarn playwright install chromium --with-deps
+      - name: Debug env vars
+        run: |
+          echo "Email length: ${#PLAYWRIGHT_TEST_EMAIL}"
+          echo "Password length: ${#PLAYWRIGHT_TEST_PASSWORD}"
       - run: yarn playwright test --project=chromium --shard=${{ matrix.shard }}/3
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
