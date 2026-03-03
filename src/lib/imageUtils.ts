@@ -5,7 +5,7 @@ import { uid, nowIso } from './utils';
 export const IMAGE_CONFIG = {
   maxFileSize: 2 * 1024 * 1024, // 2MB
   maxImagesPerItem: 5,
-  allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'],
   thumbnailSize: 80,
   mediumSize: 200,
   compressionQuality: 0.8,
