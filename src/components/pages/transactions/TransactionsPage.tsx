@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DB, Transaction } from '../../../types/models';
+import { DB, Transaction, CashWithdrawal } from '../../../types/models';
 import { fmtUSD, isCurrentMonth, isPreviousMonth } from '../../../lib/utils';
 import { RevenueService } from '../../../lib/revenueService';
 import { TransactionForm } from './TransactionForm';
@@ -11,9 +11,18 @@ import { getTransactionCategoryTranslationKey } from '../../../lib/transactionUt
 interface TransactionsPageProps {
   db: DB;
   persist: (_db: DB) => void;
+  saveTransaction: (tx: Transaction) => Promise<void>;
+  removeTransaction: (id: string) => Promise<void>;
+  saveCashWithdrawal: (cw: CashWithdrawal) => Promise<void>;
 }
 
-export function TransactionsPage({ db, persist }: TransactionsPageProps) {
+export function TransactionsPage({
+  db,
+  persist,
+  saveTransaction,
+  removeTransaction,
+  saveCashWithdrawal,
+}: TransactionsPageProps) {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
@@ -21,7 +30,7 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
 
   const onDelete = (id: string) => {
     if (!window.confirm(t('transactions.deleteTransaction'))) return;
-    persist({ ...db, transactions: db.transactions.filter(x => x.id !== id) });
+    removeTransaction(id);
   };
 
   // Filter transactions based on selected date range
@@ -51,9 +60,6 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
   }, [db.cashWithdrawals, dateFilter]);
 
   const handleSave = (transaction: Transaction) => {
-    const exists = db.transactions.find(t => t.id === transaction.id);
-    let updatedDb = { ...db };
-
     // Process revenue deduction if payment source uses business revenue (not for income or discount)
     if (
       transaction.type !== 'income' &&
@@ -70,15 +76,17 @@ export function TransactionsPage({ db, persist }: TransactionsPageProps) {
         return;
       }
 
-      updatedDb = dbWithRevenue;
+      // Persist any new cash withdrawals created by the revenue service
+      const newWithdrawals = dbWithRevenue.cashWithdrawals.filter(
+        cw => !db.cashWithdrawals.find(existing => existing.id === cw.id)
+      );
+      newWithdrawals.forEach(cw => saveCashWithdrawal(cw));
+
+      // Also update local db state with the revenue changes
+      persist(dbWithRevenue);
     }
 
-    // Update transactions
-    const nextTransactions = exists
-      ? updatedDb.transactions.map(t => (t.id === transaction.id ? transaction : t))
-      : [...updatedDb.transactions, transaction];
-
-    persist({ ...updatedDb, transactions: nextTransactions });
+    saveTransaction(transaction);
     setShowForm(false);
     setEditing(null);
   };

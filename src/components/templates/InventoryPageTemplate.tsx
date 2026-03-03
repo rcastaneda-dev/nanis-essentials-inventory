@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../molecules/PageHeader';
 import { SearchFilters, SortOption } from '../molecules/SearchFilters';
@@ -79,6 +79,16 @@ export function InventoryPageTemplate({
   branchNameById,
 }: InventoryPageTemplateProps) {
   const { t } = useTranslation();
+  const ITEMS_PER_PAGE = 20;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedItems = items.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [items.length]);
+
   const pageTitle = branchName
     ? `${t('inventory.title')} - ${branchName}`
     : t('inventory.management');
@@ -128,7 +138,7 @@ export function InventoryPageTemplate({
       />
 
       <ItemGrid
-        items={items}
+        items={paginatedItems}
         onEdit={onEditItem}
         onDelete={onDeleteItem}
         showEmptyState={showEmptyState}
@@ -138,6 +148,58 @@ export function InventoryPageTemplate({
         lastSellingPricesByItemId={lastSellingPricesByItemId}
         branchNameById={branchNameById}
       />
+
+      {!showEmptyState && !showNoResults && items.length > ITEMS_PER_PAGE && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '1rem',
+            marginTop: '1.5rem',
+            padding: '0 1rem',
+          }}
+          data-testid="inventory-pagination"
+        >
+          <button
+            type="button"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              border: '1px solid var(--border)',
+              background: currentPage === 1 ? 'var(--border-light)' : 'var(--card)',
+              color: currentPage === 1 ? 'var(--muted)' : 'var(--text)',
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              fontWeight: 500,
+            }}
+            data-testid="pagination-prev"
+          >
+            {t('common.previous')}
+          </button>
+          <span style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+            {t('inventory.pageOf', { current: currentPage, total: totalPages })}
+          </span>
+          <button
+            type="button"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              border: '1px solid var(--border)',
+              background: currentPage === totalPages ? 'var(--border-light)' : 'var(--card)',
+              color: currentPage === totalPages ? 'var(--muted)' : 'var(--text)',
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+              fontWeight: 500,
+            }}
+            data-testid="pagination-next"
+          >
+            {t('common.next')}
+          </button>
+        </div>
+      )}
 
       {showForm && (
         <Modal title={formTitle} onClose={onCloseForm}>

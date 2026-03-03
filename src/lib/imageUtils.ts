@@ -127,12 +127,12 @@ export async function processImageFile(file: File): Promise<ItemImage> {
   };
 }
 
-// Get primary image from item
+// Get primary image from item. primaryImageId can be an image id or URL (from Supabase).
 export function getPrimaryImage(images: ItemImage[], primaryImageId?: string): ItemImage | null {
   if (!images.length) return null;
 
   if (primaryImageId) {
-    const primary = images.find(img => img.id === primaryImageId);
+    const primary = images.find(img => img.id === primaryImageId || img.dataUrl === primaryImageId);
     if (primary) return primary;
   }
 

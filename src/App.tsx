@@ -5,8 +5,9 @@ import { Tab } from './components/organisms/NavigationBar';
 import { PageLoader } from './components/shared/PageLoader';
 import { useAppData } from './hooks/useAppData';
 import { useBackupImport } from './hooks/useBackupImport';
+import { useAuth } from './hooks/useAuth';
+import { LoginPage } from './components/pages/auth';
 
-// Lazy-load page components for code splitting
 const InventoryPage = lazy(() =>
   import('./components/pages/inventory').then(m => ({ default: m.InventoryPage }))
 );
@@ -33,20 +34,62 @@ const QuotesPage = lazy(() =>
 );
 
 export default function App() {
-  const { db, persist, refreshData } = useAppData();
+  const { session, loading: authLoading, signInWithPassword, signInWithOtp, signOut } = useAuth();
+  const {
+    db,
+    persist,
+    refreshData,
+    loading,
+    saveProduct,
+    saveBranch,
+    savePurchase,
+    removePurchase,
+    saveSale,
+    removeSale,
+    saveTransaction,
+    removeTransaction,
+    saveCashWithdrawal,
+  } = useAppData();
   const [tab, setTab] = useState<Tab>('inventory');
   const { handleExport, handleImport, handleClear } = useBackupImport(refreshData);
+
+  if (authLoading) {
+    return <PageLoader />;
+  }
+
+  if (!session) {
+    return <LoginPage onSignInWithPassword={signInWithPassword} onSignInWithOtp={signInWithOtp} />;
+  }
 
   const renderPageContent = () => {
     switch (tab) {
       case 'inventory':
-        return <InventoryPage db={db} persist={persist} onRefresh={refreshData} />;
+        return (
+          <InventoryPage
+            db={db}
+            persist={persist}
+            onRefresh={refreshData}
+            saveProduct={saveProduct}
+            productsLoading={loading}
+            saveBranch={saveBranch}
+          />
+        );
       case 'purchases':
-        return <PurchasesPage db={db} persist={persist} />;
+        return (
+          <PurchasesPage db={db} savePurchase={savePurchase} removePurchase={removePurchase} />
+        );
       case 'sales':
-        return <SalesPage db={db} persist={persist} />;
+        return <SalesPage db={db} saveSale={saveSale} removeSale={removeSale} />;
       case 'transactions':
-        return <TransactionsPage db={db} persist={persist} />;
+        return (
+          <TransactionsPage
+            db={db}
+            persist={persist}
+            saveTransaction={saveTransaction}
+            removeTransaction={removeTransaction}
+            saveCashWithdrawal={saveCashWithdrawal}
+          />
+        );
       case 'analytics':
         return <AnalyticsPage db={db} />;
       case 'reports':
@@ -58,12 +101,26 @@ export default function App() {
           <ImportExportPage onExport={handleExport} onImport={handleImport} onClear={handleClear} />
         );
       default:
-        return <InventoryPage db={db} persist={persist} onRefresh={refreshData} />;
+        return (
+          <InventoryPage
+            db={db}
+            persist={persist}
+            onRefresh={refreshData}
+            saveProduct={saveProduct}
+            productsLoading={loading}
+            saveBranch={saveBranch}
+          />
+        );
     }
   };
 
   return (
-    <MainLayoutTemplate brandTitle="Nani's Essentials" activeTab={tab} onTabChange={setTab}>
+    <MainLayoutTemplate
+      brandTitle="Nani's Essentials"
+      activeTab={tab}
+      onTabChange={setTab}
+      onSignOut={signOut}
+    >
       <Suspense fallback={<PageLoader />}>{renderPageContent()}</Suspense>
     </MainLayoutTemplate>
   );

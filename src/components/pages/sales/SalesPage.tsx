@@ -5,14 +5,15 @@ import { SearchSection } from './SearchSection';
 import { CustomerGroup, CustomerGroupType } from './CustomerGroup';
 import { DB, Sale, InventoryItem } from '../../../types/models';
 import { isInMonthYear, getUniqueMonthsFromSales } from '../../../lib/utils';
-// import { fmtUSD } from '../../../lib/utils';
 
 interface SalesPageProps {
   db: DB;
-  persist: (_db: DB) => void;
+
+  saveSale: (sale: Sale, updatedItems: InventoryItem[]) => Promise<void>;
+  removeSale: (id: string, restoredItems: InventoryItem[]) => Promise<void>;
 }
 
-export function SalesPage({ db, persist }: SalesPageProps) {
+export function SalesPage({ db, saveSale, removeSale }: SalesPageProps) {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Sale | null>(null);
@@ -23,22 +24,19 @@ export function SalesPage({ db, persist }: SalesPageProps) {
   const onDelete = (id: string) => {
     if (!window.confirm(t('sales.deleteSale'))) return;
     const s = db.sales.find(x => x.id === id);
-    let itemsWorking = [...db.items];
+    const restoredItems: InventoryItem[] = [];
     if (s) {
       s.lines.forEach(l => {
-        // Find the item in the correct inventory (main or branch) based on sale's branchId
         const itemToRestore = s.branchId
-          ? itemsWorking.find(it => it.id === l.itemId && it.branchId === s.branchId)
-          : itemsWorking.find(it => it.id === l.itemId && !it.branchId);
+          ? db.items.find(it => it.id === l.itemId && it.branchId === s.branchId)
+          : db.items.find(it => it.id === l.itemId && !it.branchId);
 
         if (itemToRestore) {
-          itemsWorking = itemsWorking.map(it =>
-            it.id === itemToRestore.id ? { ...it, stock: it.stock + l.quantity } : it
-          );
+          restoredItems.push({ ...itemToRestore, stock: itemToRestore.stock + l.quantity });
         }
       });
     }
-    persist({ ...db, items: itemsWorking, sales: db.sales.filter(x => x.id !== id) });
+    removeSale(id, restoredItems);
   };
 
   function matchesSearch(sale: Sale, query: string): boolean {
@@ -138,30 +136,7 @@ export function SalesPage({ db, persist }: SalesPageProps) {
   }
 
   const handleSave = (sale: Sale, updatedItems: InventoryItem[]) => {
-    const exists = db.sales.find(s => s.id === sale.id);
-    let itemsWorking = [...db.items];
-    if (exists) {
-      // Restore stock from the old sale (based on old sale's branchId)
-      exists.lines.forEach(l => {
-        const itemToRestore = exists.branchId
-          ? itemsWorking.find(it => it.id === l.itemId && it.branchId === exists.branchId)
-          : itemsWorking.find(it => it.id === l.itemId && !it.branchId);
-
-        if (itemToRestore) {
-          itemsWorking = itemsWorking.map(it =>
-            it.id === itemToRestore.id ? { ...it, stock: it.stock + l.quantity } : it
-          );
-        }
-      });
-    }
-    // Apply the new sale's stock changes
-    updatedItems.forEach(ui => {
-      itemsWorking = itemsWorking.map(it => (it.id === ui.id ? ui : it));
-    });
-    const nextSales = exists
-      ? db.sales.map(s => (s.id === sale.id ? sale : s))
-      : [...db.sales, sale];
-    persist({ ...db, items: itemsWorking, sales: nextSales });
+    saveSale(sale, updatedItems);
     setShowForm(false);
   };
 

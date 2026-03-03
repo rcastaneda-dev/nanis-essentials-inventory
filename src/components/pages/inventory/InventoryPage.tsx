@@ -5,6 +5,7 @@ import { BranchManager } from './BranchManager';
 import { MoveToBranchModal } from './MoveToBranchModal';
 import { MoveToMainModal } from './MoveToMainModal';
 import { InventoryPageTemplate } from '../../templates/InventoryPageTemplate';
+import { PageLoader } from '../../shared/PageLoader';
 import { SortOption } from '../../molecules/SearchFilters';
 import { DB, InventoryItem } from '../../../types/models';
 import {
@@ -21,9 +22,18 @@ interface InventoryPageProps {
   db: DB;
   persist: (_db: DB) => void;
   onRefresh: () => void;
+  saveProduct: (_item: InventoryItem) => Promise<void>;
+  productsLoading: boolean;
+  saveBranch: (_branch: import('../../../types/models').Branch) => Promise<void>;
 }
 
-export function InventoryPage({ db, persist }: InventoryPageProps) {
+export function InventoryPage({
+  db,
+  persist,
+  saveProduct,
+  productsLoading,
+  saveBranch,
+}: InventoryPageProps) {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [showBranchManager, setShowBranchManager] = useState(false);
@@ -130,6 +140,10 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
     },
     [setEditing, setShowForm]
   );
+
+  if (productsLoading) {
+    return <PageLoader />;
+  }
 
   const handleRecalculatePrices = () => {
     // Recalculate unit costs for all items using weight-based allocation
@@ -452,11 +466,11 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
       initial={editing ?? undefined}
       onClose={() => setShowForm(false)}
       onSave={item => {
-        const exists = db.items.find(i => i.id === item.id);
-        const nextItems = exists
-          ? db.items.map(i => (i.id === item.id ? item : i))
-          : [...db.items, item];
-        persist({ ...db, items: nextItems });
+        saveProduct(item).catch(err => {
+          // eslint-disable-next-line no-console
+          console.error('Failed to save product to Supabase:', err);
+          alert(err.message);
+        });
         setShowForm(false);
       }}
     />
@@ -500,6 +514,12 @@ export function InventoryPage({ db, persist }: InventoryPageProps) {
         <BranchManager
           db={db}
           onSave={branches => {
+            branches.forEach(branch => {
+              saveBranch(branch).catch(err => {
+                // eslint-disable-next-line no-console
+                console.error('Failed to save branch to Supabase:', err);
+              });
+            });
             persist({ ...db, branches });
             setShowBranchManager(false);
           }}

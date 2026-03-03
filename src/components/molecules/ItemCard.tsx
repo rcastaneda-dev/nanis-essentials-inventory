@@ -131,7 +131,11 @@ export const ItemCard = React.memo(function ItemCard({
           {/* Description */}
           {item.description && (
             <div className="item-card-description">
-              <Text variant="muted">{item.description}</Text>
+              <Text variant="muted">
+                {item.description.length > 200
+                  ? `${item.description.slice(0, 200)}...`
+                  : item.description}
+              </Text>
             </div>
           )}
         </div>

@@ -1,40 +1,49 @@
 module.exports = {
-  extends: ['react-app', 'react-app/jest', 'prettier'],
-  plugins: ['prettier'],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: 'module',
+    ecmaFeatures: { jsx: true },
+  },
+  settings: {
+    react: { version: 'detect' },
+  },
+  extends: [
+    'eslint:recommended',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+    'prettier',
+  ],
+  plugins: ['@typescript-eslint', 'react', 'react-hooks', 'prettier'],
+  env: {
+    browser: true,
+    es2020: true,
+    node: true,
+  },
   rules: {
     'prettier/prettier': 'error',
-    // Disable console warnings in development
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    // Enforce consistent return statements (warn instead of error for flexibility)
     'consistent-return': 'warn',
-    // Prefer const over let when possible
     'prefer-const': 'error',
-    // Require === instead of ==
     eqeqeq: ['error', 'always'],
-    // Disallow unused variables except for arguments with underscore prefix
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': [
       'error',
       { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
     ],
-    // Enforce consistent spacing
     'object-curly-spacing': ['error', 'always'],
-    // Enforce semicolons
     semi: ['error', 'always'],
-    // Enforce single quotes
     quotes: ['error', 'single'],
-    // React specific rules
     'react/jsx-uses-react': 'off',
     'react/react-in-jsx-scope': 'off',
+    'react/prop-types': 'off',
+    'no-undef': 'off',
     'react-hooks/exhaustive-deps': 'warn',
-    // Testing Library rules
-    'testing-library/prefer-screen-queries': 'off',
   },
   overrides: [
     {
       files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
       rules: {
-        // Allow console.log in tests
         'no-console': 'off',
       },
     },
