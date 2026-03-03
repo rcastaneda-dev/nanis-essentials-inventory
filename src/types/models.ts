@@ -44,8 +44,6 @@ export interface InventoryItem {
   minPrice?: number;
   maxPrice?: number;
   catalogPrice?: number; // Catalog/list price
-  competitorAPrice?: number;
-  competitorBPrice?: number;
   minProfit?: number;
   maxProfit?: number;
   createdAt: string; // ISO

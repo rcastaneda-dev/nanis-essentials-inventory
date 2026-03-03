@@ -32,8 +32,6 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
   const [costPostShipping, setCostPostShipping] = useState<number>(initial?.costPostShipping ?? 0);
   const [costPreShipping, setCostPreShipping] = useState<number>(initial?.costPreShipping ?? 0);
   const [catalogPrice, setCatalogPrice] = useState<number | undefined>(initial?.catalogPrice);
-  const [compA, setCompA] = useState<number | undefined>(initial?.competitorAPrice);
-  const [compB, setCompB] = useState<number | undefined>(initial?.competitorBPrice);
   const [images, setImages] = useState<ItemImage[]>(initial?.images || []);
   const [primaryImageId, setPrimaryImageId] = useState<string | undefined>(initial?.primaryImageId);
 
@@ -79,8 +77,6 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
       minPrice,
       maxPrice,
       catalogPrice: catalogPrice || undefined,
-      competitorAPrice: compA,
-      competitorBPrice: compB,
       minProfit,
       maxProfit,
       createdAt: initial?.createdAt ?? nowIso(),
@@ -145,17 +141,6 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
           />
         </div>
         <div>
-          <label>{t('inventory.costPostShipping')}</label>
-          <input
-            type="number"
-            step="0.01"
-            inputMode="decimal"
-            value={costPostShipping}
-            onChange={e => setCostPostShipping(parseNumber(e.target.value))}
-            data-testid="item-cost-post-shipping-input"
-          />
-        </div>
-        <div>
           <label>{t('inventory.costPreShipping')}</label>
           <input
             type="number"
@@ -164,6 +149,17 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
             value={costPreShipping}
             onChange={e => setCostPreShipping(parseNumber(e.target.value))}
             data-testid="item-cost-pre-shipping-input"
+          />
+        </div>
+        <div>
+          <label>{t('inventory.costPostShipping')}</label>
+          <input
+            type="number"
+            step="0.01"
+            inputMode="decimal"
+            value={costPostShipping}
+            onChange={e => setCostPostShipping(parseNumber(e.target.value))}
+            data-testid="item-cost-post-shipping-input"
           />
         </div>
 
@@ -207,26 +203,6 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
               setCatalogPrice(e.target.value ? parseNumber(e.target.value) : undefined)
             }
             data-testid="item-catalog-price-input"
-          />
-        </div>
-        <div>
-          <label>{t('inventory.competitorAPrice')}</label>
-          <input
-            type="number"
-            step="0.01"
-            inputMode="decimal"
-            value={compA ?? ''}
-            onChange={e => setCompA(e.target.value ? parseNumber(e.target.value) : undefined)}
-          />
-        </div>
-        <div>
-          <label>{t('inventory.competitorBPrice')}</label>
-          <input
-            type="number"
-            step="0.01"
-            inputMode="decimal"
-            value={compB ?? ''}
-            onChange={e => setCompB(e.target.value ? parseNumber(e.target.value) : undefined)}
           />
         </div>
 

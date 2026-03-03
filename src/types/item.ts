@@ -7,8 +7,6 @@ export interface Item {
   totalCost: number;
   minPrice: number;
   maxPrice: number;
-  competitorAPrice?: number;
-  competitorBPrice?: number;
   minProfit: number;
   maxProfit: number;
   createdAt: Date;
