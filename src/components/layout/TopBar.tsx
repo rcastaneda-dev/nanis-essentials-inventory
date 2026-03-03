@@ -14,7 +14,7 @@ export function TopBar({ active, setActive, onExport, onImport, onClear }: TopBa
   return (
     <div className="topbar">
       <div className="brand">
-        <div className="title">Nani's Essentials</div>
+        <div className="title">Nani&apos;s Essentials</div>
       </div>
       <div className="tabs">
         <button

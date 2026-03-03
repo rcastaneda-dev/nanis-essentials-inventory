@@ -18,6 +18,8 @@
     "clear": "Clear",
     "download": "Download",
     "upload": "Upload",
+    "previous": "Previous",
+    "next": "Next",
     "export": "Export",
     "import": "Import",
     "name": "Name",
@@ -87,6 +89,7 @@
     "minPriceLowHigh": "Min Price (Low → High)",
     "minPriceHighLow": "Min Price (High → Low)",
     "mainInventory": "Main Inventory",
+    "pageOf": "Page {{current}} of {{total}}",
     "emptyState": "No items in inventory",
     "noResults": "No items found matching filters",
     "productImages": "Product Images",
@@ -470,5 +473,18 @@
     "switch": "Switch Language",
     "spanish": "Spanish",
     "english": "English"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "signInWithPassword": "Sign In",
+    "sendMagicLink": "Send Magic Link",
+    "useMagicLink": "Sign in with magic link instead",
+    "usePassword": "Sign in with password instead",
+    "magicLinkSent": "Check your email for the magic link!",
+    "error": "Authentication failed. Please try again.",
+    "welcome": "Welcome to Nani's Essentials"
   }
 }

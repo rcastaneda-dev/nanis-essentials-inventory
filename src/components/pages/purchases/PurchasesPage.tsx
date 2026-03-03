@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PurchaseForm } from './PurchaseForm';
-import { DB, Purchase, InventoryItem } from '../../../types/models';
+import { DB, Purchase, InventoryItem, CashWithdrawal } from '../../../types/models';
 import { fmtUSD } from '../../../lib/utils';
 
 interface PurchasesPageProps {
   db: DB;
-  persist: (_db: DB) => void;
+
+  savePurchase: (
+    purchase: Purchase,
+    updatedItems: InventoryItem[],
+    updatedWithdrawals?: CashWithdrawal[]
+  ) => Promise<void>;
+  removePurchase: (id: string, restoredItems: InventoryItem[]) => Promise<void>;
 }
 
-export function PurchasesPage({ db, persist }: PurchasesPageProps) {
+export function PurchasesPage({ db, savePurchase, removePurchase }: PurchasesPageProps) {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Purchase | null>(null);
@@ -18,57 +24,29 @@ export function PurchasesPage({ db, persist }: PurchasesPageProps) {
     if (!window.confirm(t('purchases.deletePurchase'))) return;
     const p = db.purchases.find(x => x.id === id);
     if (p) {
-      const nextItems = db.items.map(it => {
-        const qty = p.lines
-          .filter(l => l.itemId === it.id)
-          .reduce((acc, l) => acc + l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0), 0);
-        return { ...it, stock: Math.max(0, it.stock - qty) };
-      });
-      persist({ ...db, items: nextItems, purchases: db.purchases.filter(x => x.id !== id) });
+      const restoredItems = db.items
+        .map(it => {
+          const qty = p.lines
+            .filter(l => l.itemId === it.id)
+            .reduce((acc, l) => acc + l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0), 0);
+          return qty > 0 ? { ...it, stock: Math.max(0, it.stock - qty) } : it;
+        })
+        .filter(it => {
+          const original = db.items.find(o => o.id === it.id);
+          return original && original.stock !== it.stock;
+        });
+      removePurchase(id, restoredItems);
     } else {
-      persist({ ...db, purchases: db.purchases.filter(x => x.id !== id) });
+      removePurchase(id, []);
     }
   };
 
   const handleSave = (
     purchase: Purchase,
     updatedItems: InventoryItem[],
-    updatedWithdrawals?: any[]
+    updatedWithdrawals?: CashWithdrawal[]
   ) => {
-    const exists = db.purchases.find(p => p.id === purchase.id);
-    const itemsWorking = [...db.items];
-
-    // Remove the old purchase quantity subtraction logic since PurchaseForm now handles it
-    // if (exists) {
-    //   exists.lines.forEach(l => {
-    //     const units = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
-    //     itemsWorking = itemsWorking.map(it =>
-    //       it.id === l.itemId ? { ...it, stock: Math.max(0, it.stock - units) } : it
-    //     );
-    //   });
-    // }
-
-    updatedItems.forEach(ui => {
-      const existingIdx = itemsWorking.findIndex(it => it.id === ui.id);
-      if (existingIdx >= 0) {
-        itemsWorking[existingIdx] = ui;
-      } else {
-        // New item added during purchase
-        itemsWorking.push(ui);
-      }
-    });
-    const nextPurchases = exists
-      ? db.purchases.map(p => (p.id === purchase.id ? purchase : p))
-      : [...db.purchases, purchase];
-
-    const nextWithdrawals = updatedWithdrawals ?? db.cashWithdrawals;
-
-    persist({
-      ...db,
-      items: itemsWorking,
-      purchases: nextPurchases,
-      cashWithdrawals: nextWithdrawals,
-    });
+    savePurchase(purchase, updatedItems, updatedWithdrawals);
     setShowForm(false);
   };
 
