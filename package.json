@@ -65,11 +65,11 @@
     ]
   },
   "devDependencies": {
-    "dotenv": "^16.4.5",
     "@playwright/test": "^1.56.1",
     "@types/node": "^24.9.2",
     "@typescript-eslint/eslint-plugin": "^6",
     "@typescript-eslint/parser": "^6",
+    "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
