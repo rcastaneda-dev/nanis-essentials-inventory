@@ -117,6 +117,18 @@ export function toInventoryItem(row: LocationWithProduct): InventoryItem {
 }
 
 export function toSupabaseProduct(item: InventoryItem) {
+  const primaryId = item.primaryImageId;
+  const sorted = [...item.images].sort((a, b) => {
+    const aIsPrimary = a.id === primaryId ? 1 : 0;
+    const bIsPrimary = b.id === primaryId ? 1 : 0;
+    return bIsPrimary - aIsPrimary;
+  });
+
+  const serializedImages =
+    sorted.length > 0 ? sorted.map((img, i) => ({ url: img.dataUrl, isPrimary: i === 0 })) : null;
+
+  const primaryUrl = sorted.length > 0 ? sorted[0].dataUrl : null;
+
   const product: Omit<ProductRow, 'sku' | 'brand_id' | 'catalog_price' | 'is_active'> = {
     id: item.id,
     name: item.name,
@@ -132,8 +144,8 @@ export function toSupabaseProduct(item: InventoryItem) {
     competitor_b_price: item.competitorBPrice ?? null,
     min_revenue: item.minProfit ?? null,
     max_revenue: item.maxProfit ?? null,
-    images: item.images.length > 0 ? item.images : null,
-    primary_image_url: item.primaryImageId ?? null,
+    images: serializedImages,
+    primary_image_url: primaryUrl,
     created_at: item.createdAt,
     updated_at: item.updatedAt ?? new Date().toISOString(),
   };

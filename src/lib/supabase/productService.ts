@@ -1,6 +1,7 @@
 import { supabase } from './client';
 import { InventoryItem } from '../../types/models';
 import { toInventoryItem, toSupabaseProduct, LocationWithProduct } from './mappers';
+import { uploadProductImages, isBase64Image } from './storageService';
 
 /**
  * Fetch all products joined with their location inventory from Supabase.
@@ -58,6 +59,22 @@ export async function fetchAllProducts(): Promise<InventoryItem[]> {
  * Handles both insert (new product) and update (existing product) cases.
  */
 export async function upsertProduct(item: InventoryItem): Promise<void> {
+  const hasNewImages = item.images.some(img => isBase64Image(img.dataUrl));
+
+  if (hasNewImages) {
+    const uploadedImages = await uploadProductImages(item.id, item.images);
+
+    const oldPrimaryId = item.primaryImageId;
+    if (oldPrimaryId) {
+      const match = item.images.findIndex(img => img.id === oldPrimaryId);
+      if (match !== -1) {
+        item = { ...item, primaryImageId: uploadedImages[match].id };
+      }
+    }
+
+    item = { ...item, images: uploadedImages };
+  }
+
   const { product, locationInventory } = toSupabaseProduct(item);
 
   const { error: productError } = await supabase
