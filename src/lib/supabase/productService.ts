@@ -85,6 +85,45 @@ export async function upsertProduct(item: InventoryItem): Promise<void> {
   await upsertLocationInventory(locationInventory);
 }
 
+/** Pending move from MoveToBranchModal: itemId is product id. */
+export type PendingMoveToBranch = {
+  itemId: string;
+  quantity: number;
+  item: InventoryItem;
+};
+
+/**
+ * Persist "Move Items to Branch" to Supabase: update source (main) and target (branch)
+ * location_inventory so data survives refresh.
+ */
+export async function persistMoveToBranch(
+  pendingMoves: PendingMoveToBranch[],
+  targetBranchId: string,
+  updatedItems: InventoryItem[]
+): Promise<void> {
+  for (const move of pendingMoves) {
+    const sourceItem = updatedItems.find(i => i.id === move.itemId && !i.branchId);
+    if (!sourceItem) continue;
+
+    await upsertLocationInventory({
+      product_id: move.itemId,
+      branch_id: null,
+      stock: sourceItem.stock,
+    });
+
+    const branchItem = updatedItems.find(
+      i => i.id === move.itemId && i.branchId === targetBranchId
+    );
+    if (branchItem) {
+      await upsertLocationInventory({
+        product_id: move.itemId,
+        branch_id: targetBranchId,
+        stock: branchItem.stock,
+      });
+    }
+  }
+}
+
 /**
  * Handles the location_inventory upsert with proper NULL branch_id handling.
  * PostgreSQL unique indexes don't match NULLs by default, so we manually

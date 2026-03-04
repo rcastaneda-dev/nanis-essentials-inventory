@@ -10,7 +10,12 @@ import {
   Settings,
   DEFAULT_SETTINGS,
 } from '../types/models';
-import { fetchAllProducts, upsertProduct } from '../lib/supabase/productService';
+import {
+  fetchAllProducts,
+  upsertProduct,
+  persistMoveToBranch,
+  PendingMoveToBranch,
+} from '../lib/supabase/productService';
 import {
   fetchAllBranches,
   upsertBranch as upsertBranchApi,
@@ -126,6 +131,18 @@ export function useAppData() {
     });
     await upsertBranchApi(branch);
   }, []);
+
+  const saveMoveToBranch = useCallback(
+    async (
+      pendingMoves: PendingMoveToBranch[],
+      targetBranchId: string,
+      updatedItems: InventoryItem[]
+    ) => {
+      await persistMoveToBranch(pendingMoves, targetBranchId, updatedItems);
+      setDb(prev => ({ ...prev, items: updatedItems }));
+    },
+    []
+  );
 
   const removeBranch = useCallback(async (id: string) => {
     setDb(prev => ({ ...prev, branches: prev.branches.filter(b => b.id !== id) }));
@@ -257,6 +274,7 @@ export function useAppData() {
     saveProduct,
     // Branch
     saveBranch,
+    saveMoveToBranch,
     removeBranch,
     // Settings
     saveSettings,

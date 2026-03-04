@@ -84,6 +84,7 @@ export default function App() {
             saveProduct={saveProduct}
             productsLoading={loading}
             saveBranch={saveBranch}
+            saveMoveToBranch={saveMoveToBranch}
           />
         );
       case 'purchases':
@@ -121,6 +122,7 @@ export default function App() {
             saveProduct={saveProduct}
             productsLoading={loading}
             saveBranch={saveBranch}
+            saveMoveToBranch={saveMoveToBranch}
           />
         );
     }
