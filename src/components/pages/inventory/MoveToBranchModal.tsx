@@ -1,21 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  useSensor,
-  useSensors,
-  PointerSensor,
-  useDraggable,
-  useDroppable,
-} from '@dnd-kit/core';
 import { Modal } from '../../molecules/Modal';
 import { Button } from '../../atoms/Button';
 import { QuantityInputModal } from './QuantityInputModal';
 import { DB, InventoryItem } from '../../../types/models';
 import { fmtUSD } from '../../../lib/utils';
+import { useIsMobile } from '../../../hooks/useMediaQuery';
 
 interface PendingMove {
   itemId: string;
@@ -33,64 +23,55 @@ interface MoveToBranchModalProps {
 function CompactItemCard({
   item,
   pendingMove,
-  onDragStart,
+  onClick,
   t,
 }: {
   item: InventoryItem;
   pendingMove?: PendingMove;
-  onDragStart: () => void;
+  onClick: () => void;
   t: (_key: string) => string;
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: item.id,
-  });
-
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
-
   const availableStock = pendingMove ? item.stock - pendingMove.quantity : item.stock;
   const unitCost = item.costPostShipping ?? item.costPreShipping ?? 0;
 
   return (
     <div
-      ref={setNodeRef}
+      className="card transfer-item-card"
       style={{
-        ...style,
-        opacity: isDragging ? 0.5 : availableStock === 0 ? 0.5 : 1,
-        cursor: availableStock > 0 ? 'grab' : 'not-allowed',
+        opacity: availableStock === 0 ? 0.5 : 1,
+        cursor: availableStock > 0 ? 'pointer' : 'not-allowed',
+        padding: '0.75rem',
+        marginBottom: '0.5rem',
+        minHeight: 'auto',
       }}
-      {...listeners}
-      {...attributes}
-      onClick={availableStock > 0 ? onDragStart : undefined}
+      onClick={availableStock > 0 ? onClick : undefined}
+      role="button"
+      tabIndex={availableStock > 0 ? 0 : -1}
+      onKeyDown={e => {
+        if ((e.key === 'Enter' || e.key === ' ') && availableStock > 0) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
     >
-      <div
-        className="card"
-        style={{
-          padding: '0.75rem',
-          marginBottom: '0.5rem',
-          minHeight: 'auto',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ flex: 1 }}>
-            <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>{item.name}</h4>
-            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-              <div>
-                {t('inventory.moveToBranchDialog.stock')}: {availableStock}
-              </div>
-              <div>
-                {t('inventory.moveToBranchDialog.cost')}: {fmtUSD(unitCost)}
-              </div>
-              {item.category && (
-                <div>
-                  {t('inventory.moveToBranchDialog.category')}: {item.category}
-                </div>
-              )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>{item.name}</h4>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+            <div>
+              {t('inventory.moveToBranchDialog.stock')}: {availableStock}
             </div>
+            <div>
+              {t('inventory.moveToBranchDialog.cost')}: {fmtUSD(unitCost)}
+            </div>
+            {item.category && (
+              <div>
+                {t('inventory.moveToBranchDialog.category')}: {item.category}
+              </div>
+            )}
           </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem' }}>
           {pendingMove && (
             <div
               style={{
@@ -100,10 +81,27 @@ function CompactItemCard({
                 borderRadius: '4px',
                 fontSize: '0.75rem',
                 fontWeight: '600',
-                marginLeft: '0.5rem',
               }}
             >
               {pendingMove.quantity}
+            </div>
+          )}
+          {availableStock > 0 && (
+            <div
+              style={{
+                background: '#e5e7eb',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1rem',
+                fontWeight: '700',
+                color: '#374151',
+              }}
+            >
+              +
             </div>
           )}
         </div>
@@ -112,30 +110,30 @@ function CompactItemCard({
   );
 }
 
-function DropZone({
+function PendingMovesList({
   pendingMoves,
   onRemoveMove,
-  mainInventoryItems,
+  sourceItems,
+  costAdjustment,
+  t,
 }: {
   pendingMoves: PendingMove[];
   onRemoveMove: (_itemId: string) => void;
-  mainInventoryItems: InventoryItem[];
+  sourceItems: InventoryItem[];
+  costAdjustment: number;
+  t: (_key: string, _fallback?: string) => string;
 }) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: 'drop-zone',
-  });
-
   return (
     <div
-      ref={setNodeRef}
+      className="transfer-pending-list"
       style={{
-        minHeight: '400px',
+        minHeight: '200px',
         maxHeight: '600px',
         overflowY: 'auto',
-        border: isOver ? '3px dashed #4CAF50' : '2px solid #e5e7eb',
+        border: '2px solid #e5e7eb',
         borderRadius: '8px',
         padding: '1rem',
-        background: isOver ? '#f0f8f0' : '#f9f9f9',
+        background: '#f9f9f9',
       }}
     >
       {pendingMoves.length === 0 ? (
@@ -145,17 +143,17 @@ function DropZone({
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
-            minHeight: '200px',
+            minHeight: '150px',
             color: '#999',
             textAlign: 'center',
           }}
         >
-          <p>Drag items here or click to add</p>
+          <p>{t('inventory.moveToBranchDialog.tapToAdd', 'Tap items to add them here')}</p>
         </div>
       ) : (
         <div>
           {pendingMoves.map(move => {
-            const item = mainInventoryItems.find(i => i.id === move.itemId);
+            const item = sourceItems.find(i => i.id === move.itemId);
             if (!item) return null;
 
             return (
@@ -182,7 +180,9 @@ function DropZone({
                       <div>Qty: {move.quantity}</div>
                       <div>
                         Unit Cost:{' '}
-                        {fmtUSD((item.costPostShipping ?? item.costPreShipping ?? 0) + 1)}
+                        {fmtUSD(
+                          (item.costPostShipping ?? item.costPreShipping ?? 0) + costAdjustment
+                        )}
                       </div>
                     </div>
                   </div>
@@ -203,27 +203,118 @@ function DropZone({
   );
 }
 
+function PendingMovesSummaryBar({
+  pendingMoves,
+  onRemoveMove,
+  sourceItems,
+  totalUnits,
+  costAdjustment,
+  t,
+}: {
+  pendingMoves: PendingMove[];
+  onRemoveMove: (_itemId: string) => void;
+  sourceItems: InventoryItem[];
+  totalUnits: number;
+  costAdjustment: number;
+  t: (_key: string, _opts?: Record<string, unknown>) => string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div
+      style={{
+        background: '#f0f8f0',
+        border: '2px solid #4CAF50',
+        borderRadius: '8px',
+        marginBottom: '1rem',
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '0.75rem 1rem',
+          cursor: 'pointer',
+        }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+      >
+        <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>
+          {t('inventory.moveToBranchDialog.movingToBranch', { count: totalUnits } as never)}
+        </span>
+        <span style={{ fontSize: '1.2rem' }}>{expanded ? '\u25B2' : '\u25BC'}</span>
+      </div>
+      {expanded && (
+        <div style={{ padding: '0 1rem 0.75rem 1rem', maxHeight: '40vh', overflowY: 'auto' }}>
+          {pendingMoves.map(move => {
+            const item = sourceItems.find(i => i.id === move.itemId);
+            if (!item) return null;
+            return (
+              <div
+                key={move.itemId}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '0.5rem 0',
+                  borderBottom: '1px solid #e5e7eb',
+                  fontSize: '0.85rem',
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div>
+                    {item.name} x{move.quantity}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                    {fmtUSD((item.costPostShipping ?? item.costPreShipping ?? 0) + costAdjustment)}{' '}
+                    ea
+                  </div>
+                </div>
+                <Button
+                  variant="danger"
+                  onClick={() => onRemoveMove(move.itemId)}
+                  style={{ padding: '0.15rem 0.4rem', fontSize: '0.7rem' }}
+                >
+                  ✕
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [targetBranchId, setTargetBranchId] = useState<string>('');
   const [pendingMoves, setPendingMoves] = useState<PendingMove[]>([]);
   const [saving, setSaving] = useState(false);
-  const [draggedItem, setDraggedItem] = useState<InventoryItem | null>(null);
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [quantityModalItem, setQuantityModalItem] = useState<InventoryItem | null>(null);
-
-  const sensors = useSensors(useSensor(PointerSensor));
+  const [searchQuery, setSearchQuery] = useState('');
 
   const activeBranches = db.branches?.filter(b => !b.closedAt) || [];
   const mainInventoryItems = db.items.filter(item => !item.branchId && item.stock > 0);
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const itemId = event.active.id as string;
-    const item = mainInventoryItems.find(i => i.id === itemId);
-    if (item) {
-      setDraggedItem(item);
-    }
-  };
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return mainInventoryItems;
+    const q = searchQuery.toLowerCase();
+    return mainInventoryItems.filter(
+      item => item.name.toLowerCase().includes(q) || item.category?.toLowerCase().includes(q)
+    );
+  }, [mainInventoryItems, searchQuery]);
 
   const handleItemClick = (item: InventoryItem) => {
     if (!targetBranchId) {
@@ -239,27 +330,8 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
       return;
     }
 
-    // Show quantity input modal
     setQuantityModalItem(item);
     setShowQuantityModal(true);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    setDraggedItem(null);
-    const { active, over } = event;
-
-    if (!over || over.id !== 'drop-zone' || !targetBranchId) {
-      return;
-    }
-
-    const itemId = active.id as string;
-    const item = mainInventoryItems.find(i => i.id === itemId);
-
-    if (!item || item.stock === 0) {
-      return;
-    }
-
-    handleItemClick(item);
   };
 
   const handleQuantityConfirm = (quantity: number) => {
@@ -338,52 +410,80 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
   return (
     <>
       <Modal title={t('inventory.moveToBranchDialog.title')} onClose={onClose}>
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="section-title">
-            {t('inventory.moveToBranchDialog.selectTargetBranch')}
+        <div className="section-title">{t('inventory.moveToBranchDialog.selectTargetBranch')}</div>
+        <div className="grid two row-gap" style={{ marginBottom: '2rem' }}>
+          <div>
+            <label>{t('inventory.moveToBranchDialog.branch')}</label>
+            <select
+              value={targetBranchId}
+              onChange={e => setTargetBranchId(e.target.value)}
+              disabled={pendingMoves.length > 0}
+            >
+              <option value="">{t('inventory.moveToBranchDialog.selectBranch')}</option>
+              {activeBranches.map(branch => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+            {pendingMoves.length > 0 && (
+              <p className="text-muted" style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                {t('inventory.moveToBranchDialog.clearPendingHint')}
+              </p>
+            )}
           </div>
-          <div className="grid two row-gap" style={{ marginBottom: '2rem' }}>
-            <div>
-              <label>{t('inventory.moveToBranchDialog.branch')}</label>
-              <select
-                value={targetBranchId}
-                onChange={e => setTargetBranchId(e.target.value)}
-                disabled={pendingMoves.length > 0}
-              >
-                <option value="">{t('inventory.moveToBranchDialog.selectBranch')}</option>
-                {activeBranches.map(branch => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name}
-                  </option>
-                ))}
-              </select>
-              {pendingMoves.length > 0 && (
-                <p className="text-muted" style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                  {t('inventory.moveToBranchDialog.clearPendingHint')}
-                </p>
-              )}
-            </div>
-          </div>
+        </div>
 
-          {targetBranchId && (
+        {targetBranchId && (
+          <>
+            {isMobile && pendingMoves.length > 0 && (
+              <PendingMovesSummaryBar
+                pendingMoves={pendingMoves}
+                onRemoveMove={handleRemovePendingMove}
+                sourceItems={mainInventoryItems}
+                totalUnits={totalPendingUnits}
+                costAdjustment={1}
+                t={t as (_key: string, _opts?: Record<string, unknown>) => string}
+              />
+            )}
+
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
                 gap: '1.5rem',
                 marginTop: '1rem',
               }}
             >
-              {/* Left Column - Available Items */}
+              {/* Available Items */}
               <div>
                 <div className="section-title" style={{ marginBottom: '0.75rem' }}>
                   {t('inventory.moveToBranchDialog.mainInventoryItems', {
                     count: mainInventoryItems.length,
                   })}
                 </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder={t(
+                    'inventory.moveToBranchDialog.searchPlaceholder',
+                    'Search items...'
+                  )}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem 0.75rem',
+                    marginBottom: '0.75rem',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
                 <div
                   style={{
-                    maxHeight: '500px',
+                    maxHeight: isMobile ? '60vh' : '500px',
                     overflowY: 'auto',
                     paddingRight: '0.5rem',
                   }}
@@ -392,15 +492,21 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
                     <div className="empty">
                       <p>{t('inventory.moveToBranchDialog.noItemsAvailable')}</p>
                     </div>
+                  ) : filteredItems.length === 0 ? (
+                    <div className="empty">
+                      <p style={{ color: '#999' }}>
+                        {t('inventory.moveToBranchDialog.noResults', 'No items match your search')}
+                      </p>
+                    </div>
                   ) : (
-                    mainInventoryItems.map(item => {
+                    filteredItems.map(item => {
                       const pendingMove = pendingMoves.find(m => m.itemId === item.id);
                       return (
                         <CompactItemCard
                           key={item.id}
                           item={item}
                           pendingMove={pendingMove}
-                          onDragStart={() => handleItemClick(item)}
+                          onClick={() => handleItemClick(item)}
                           t={t}
                         />
                       );
@@ -409,39 +515,26 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
                 </div>
               </div>
 
-              {/* Right Column - Pending Moves */}
-              <div>
-                <div className="section-title" style={{ marginBottom: '0.75rem' }}>
-                  {t('inventory.moveToBranchDialog.movingToBranch', { count: totalPendingUnits })}
+              {/* Pending Moves - desktop only */}
+              {!isMobile && (
+                <div>
+                  <div className="section-title" style={{ marginBottom: '0.75rem' }}>
+                    {t('inventory.moveToBranchDialog.movingToBranch', {
+                      count: totalPendingUnits,
+                    })}
+                  </div>
+                  <PendingMovesList
+                    pendingMoves={pendingMoves}
+                    onRemoveMove={handleRemovePendingMove}
+                    sourceItems={mainInventoryItems}
+                    costAdjustment={1}
+                    t={t}
+                  />
                 </div>
-                <DropZone
-                  pendingMoves={pendingMoves}
-                  onRemoveMove={handleRemovePendingMove}
-                  mainInventoryItems={mainInventoryItems}
-                />
-              </div>
+              )}
             </div>
-          )}
-
-          <DragOverlay>
-            {draggedItem ? (
-              <div
-                className="card"
-                style={{
-                  opacity: 0.8,
-                  transform: 'rotate(5deg)',
-                  padding: '0.75rem',
-                  maxWidth: '200px',
-                }}
-              >
-                <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>{draggedItem.name}</h4>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                  {t('inventory.moveToBranchDialog.stock')}: {draggedItem.stock}
-                </div>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+          </>
+        )}
 
         <div className="row gap end" style={{ marginTop: '2rem' }}>
           {pendingMoves.length > 0 && (
