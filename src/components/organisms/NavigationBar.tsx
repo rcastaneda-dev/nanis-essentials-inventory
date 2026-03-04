@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 import { Heading } from '../atoms/Typography';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 
 export type Tab =
   | 'inventory'
@@ -17,10 +18,19 @@ interface NavigationBarProps {
   brandTitle: string;
   activeTab: Tab;
   onTabChange: (_tab: Tab) => void;
+  drawerFooter?: React.ReactNode;
 }
 
-export function NavigationBar({ brandTitle, activeTab, onTabChange }: NavigationBarProps) {
+export function NavigationBar({
+  brandTitle,
+  activeTab,
+  onTabChange,
+  drawerFooter,
+}: NavigationBarProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   const tabs: { key: Tab; label: string; disabled?: boolean }[] = [
     { key: 'inventory', label: t('navigation.inventory') },
     { key: 'purchases', label: t('navigation.purchases') },
@@ -31,6 +41,66 @@ export function NavigationBar({ brandTitle, activeTab, onTabChange }: Navigation
     { key: 'quotes', label: t('navigation.quotes') },
     { key: 'import-export', label: t('navigation.importExport') },
   ];
+
+  const handleTabChange = useCallback(
+    (tab: Tab) => {
+      onTabChange(tab);
+      setDrawerOpen(false);
+    },
+    [onTabChange]
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <div className="topbar topbar-mobile">
+          <div className="brand">
+            <div className="title">
+              <Heading level={1}>{brandTitle}</Heading>
+            </div>
+          </div>
+          <button
+            className="hamburger-btn"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open menu"
+          >
+            <span className="hamburger-line" />
+            <span className="hamburger-line" />
+            <span className="hamburger-line" />
+          </button>
+        </div>
+
+        {drawerOpen && (
+          <div className="mobile-drawer-backdrop" onClick={() => setDrawerOpen(false)} />
+        )}
+        <nav className={`mobile-drawer ${drawerOpen ? 'open' : ''}`}>
+          <div className="mobile-drawer-header">
+            <Heading level={2}>{brandTitle}</Heading>
+            <button
+              className="drawer-close-btn"
+              onClick={() => setDrawerOpen(false)}
+              aria-label="Close menu"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="mobile-drawer-tabs">
+            {tabs.map(tab => (
+              <Button
+                key={tab.key}
+                className={activeTab === tab.key ? 'drawer-tab active' : 'drawer-tab'}
+                onClick={() => handleTabChange(tab.key)}
+                disabled={tab.disabled}
+              >
+                {tab.label}
+              </Button>
+            ))}
+          </div>
+          {drawerFooter && <div className="mobile-drawer-footer">{drawerFooter}</div>}
+        </nav>
+      </>
+    );
+  }
 
   return (
     <div className="topbar">
