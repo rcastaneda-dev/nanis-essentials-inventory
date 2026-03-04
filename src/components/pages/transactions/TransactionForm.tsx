@@ -106,7 +106,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
     if (!validateForm()) return;
 
     const transaction: Transaction = {
-      id: initial?.id || `txn-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      id: initial?.id ?? crypto.randomUUID(),
       type: formData.type,
       amount: parseFloat(formData.amount),
       description: formData.description.trim(),

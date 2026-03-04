@@ -25,6 +25,11 @@ interface InventoryPageProps {
   saveProduct: (_item: InventoryItem) => Promise<void>;
   productsLoading: boolean;
   saveBranch: (_branch: import('../../../types/models').Branch) => Promise<void>;
+  saveMoveToBranch: (
+    _pendingMoves: Array<{ itemId: string; quantity: number; item: InventoryItem }>,
+    _targetBranchId: string,
+    _updatedItems: InventoryItem[]
+  ) => Promise<void>;
 }
 
 export function InventoryPage({
@@ -33,6 +38,7 @@ export function InventoryPage({
   saveProduct,
   productsLoading,
   saveBranch,
+  saveMoveToBranch,
 }: InventoryPageProps) {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
@@ -235,7 +241,7 @@ export function InventoryPage({
     downloadCSV(csvContent, filename);
   };
 
-  const handleMoveToBranch = (
+  const handleMoveToBranch = async (
     pendingMoves: Array<{ itemId: string; quantity: number; item: InventoryItem }>,
     targetBranchId: string
   ) => {
@@ -261,9 +267,9 @@ export function InventoryPage({
         ? sourceItem.costPostShipping + 1
         : baseCost + 1;
 
-      // Check if branch item already exists (match by name and branchId)
+      // Match by product id and branch (same product at target branch)
       const existingBranchItem = updatedItems.find(
-        i => i.name === sourceItem.name && i.branchId === targetBranchId
+        i => i.id === sourceItem.id && i.branchId === targetBranchId
       );
 
       if (existingBranchItem) {
@@ -278,15 +284,14 @@ export function InventoryPage({
             : item
         );
       } else {
-        // Create new branch item
+        // New branch row: same product (id), different location (branchId)
         const branchItem: InventoryItem = {
           ...sourceItem,
-          id: uid(), // New ID for branch item
+          id: sourceItem.id,
           branchId: targetBranchId,
           stock: move.quantity,
           costPreShipping: branchCostPre,
           costPostShipping: branchCostPost,
-          // Recalculate pricing based on new cost
           minPrice: Math.ceil(branchCostPost * 1.25),
           maxPrice: Math.ceil(branchCostPost * 1.4),
           minProfit: Math.ceil(branchCostPost * 1.25) - branchCostPost,
@@ -303,7 +308,7 @@ export function InventoryPage({
       );
     });
 
-    persist({ ...db, items: updatedItems });
+    await saveMoveToBranch(pendingMoves, targetBranchId, updatedItems);
     setShowMoveToBranch(false);
   };
 
