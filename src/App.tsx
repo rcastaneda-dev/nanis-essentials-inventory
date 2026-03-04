@@ -50,6 +50,7 @@ export default function App() {
     loading,
     saveProduct,
     saveBranch,
+    saveMoveToBranch,
     savePurchase,
     removePurchase,
     saveSale,
