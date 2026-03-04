@@ -3559,3 +3559,27 @@ input::placeholder {
     font-size: 18px;
   }
 }
+
+/* Transfer Modal - Clickable Item Cards */
+.transfer-item-card {
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.transfer-item-card:hover {
+  background: #f0f8f0;
+  box-shadow: 0 0 0 2px #4caf50;
+  transform: none;
+}
+
+.transfer-item-card:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .transfer-pending-list {
+    min-height: auto;
+    max-height: 300px;
+  }
+}
