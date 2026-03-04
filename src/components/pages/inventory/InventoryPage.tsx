@@ -245,6 +245,10 @@ export function InventoryPage({
     pendingMoves: Array<{ itemId: string; quantity: number; item: InventoryItem }>,
     targetBranchId: string
   ) => {
+    if (typeof saveMoveToBranch !== 'function') {
+      throw new Error('Save is not available. Please refresh the page.');
+    }
+
     let updatedItems = [...db.items];
 
     pendingMoves.forEach(move => {
@@ -309,7 +313,6 @@ export function InventoryPage({
     });
 
     await saveMoveToBranch(pendingMoves, targetBranchId, updatedItems);
-    setShowMoveToBranch(false);
   };
 
   const handleMoveToMain = (
