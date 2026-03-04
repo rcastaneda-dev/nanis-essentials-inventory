@@ -38,7 +38,8 @@
     "analytics": "Análisis",
     "reports": "Reportes",
     "quotes": "Cotizaciones",
-    "importExport": "Importar/Exportar"
+    "importExport": "Importar/Exportar",
+    "location": "Ubicación"
   },
   "itemCard": {
     "outOfStock": "SIN STOCK",
