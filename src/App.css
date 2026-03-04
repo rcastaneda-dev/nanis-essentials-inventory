@@ -287,6 +287,11 @@ button.icon:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
   }
+
+  /* Sales Management: always 1 column */
+  .cards.cards--single-col {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Tablet-specific: Compact topbar for 768px - 1199px to prevent overflow */
@@ -337,6 +342,11 @@ button.icon:hover {
   .cards.two-cols,
   .cards.three-cols {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Sales Management: always 1 column */
+  .cards.cards--single-col {
+    grid-template-columns: 1fr;
   }
 }
 

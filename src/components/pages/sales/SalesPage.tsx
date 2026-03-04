@@ -166,7 +166,7 @@ export function SalesPage({ db, saveSale, removeSale }: SalesPageProps) {
         onCollapseAll={collapseAll}
       />
 
-      <div className="cards">
+      <div className="cards cards--single-col">
         {groups.map(group => (
           <CustomerGroup
             key={group.key}
