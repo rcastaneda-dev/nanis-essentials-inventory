@@ -1,4 +1,5 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import './App.css';
 import { MainLayoutTemplate } from './components/templates/MainLayoutTemplate';
 import { Tab } from './components/organisms/NavigationBar';
@@ -59,8 +60,32 @@ export default function App() {
     removeTransaction,
     saveCashWithdrawal,
   } = useAppData();
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('inventory');
+  const [selectedBranchId, setSelectedBranchId] = useState<string | 'main'>('main');
   const { handleExport, handleImport, handleClear } = useBackupImport(refreshData);
+
+  const activeBranches = useMemo(() => db.branches?.filter(b => !b.closedAt) || [], [db.branches]);
+
+  const branchOptions = useMemo(
+    () => [
+      { value: 'main', label: t('inventory.mainInventory') },
+      ...activeBranches.map(b => ({ value: b.id, label: b.name })),
+    ],
+    [activeBranches, t]
+  );
+
+  const hiddenTabs: Tab[] = useMemo(
+    () => (selectedBranchId !== 'main' ? ['purchases', 'transactions'] : []),
+    [selectedBranchId]
+  );
+
+  // Auto-redirect to inventory if current tab becomes hidden
+  useEffect(() => {
+    if (hiddenTabs.includes(tab)) {
+      setTab('inventory');
+    }
+  }, [hiddenTabs, tab]);
 
   if (authLoading) {
     return <PageLoader />;
@@ -86,6 +111,7 @@ export default function App() {
             productsLoading={loading}
             saveBranch={saveBranch}
             saveMoveToBranch={saveMoveToBranch}
+            selectedBranchId={selectedBranchId}
           />
         );
       case 'purchases':
@@ -93,7 +119,14 @@ export default function App() {
           <PurchasesPage db={db} savePurchase={savePurchase} removePurchase={removePurchase} />
         );
       case 'sales':
-        return <SalesPage db={db} saveSale={saveSale} removeSale={removeSale} />;
+        return (
+          <SalesPage
+            db={db}
+            saveSale={saveSale}
+            removeSale={removeSale}
+            selectedBranchId={selectedBranchId}
+          />
+        );
       case 'transactions':
         return (
           <TransactionsPage
@@ -105,7 +138,7 @@ export default function App() {
           />
         );
       case 'analytics':
-        return <AnalyticsPage db={db} />;
+        return <AnalyticsPage db={db} selectedBranchId={selectedBranchId} />;
       case 'reports':
         return <FinancialDashboard db={db} />;
       case 'quotes':
@@ -124,6 +157,7 @@ export default function App() {
             productsLoading={loading}
             saveBranch={saveBranch}
             saveMoveToBranch={saveMoveToBranch}
+            selectedBranchId={selectedBranchId}
           />
         );
     }
@@ -135,6 +169,10 @@ export default function App() {
       activeTab={tab}
       onTabChange={setTab}
       onSignOut={signOut}
+      selectedBranchId={selectedBranchId}
+      onBranchChange={setSelectedBranchId}
+      branchOptions={branchOptions}
+      hiddenTabs={hiddenTabs}
     >
       <Suspense fallback={<PageLoader />}>{renderPageContent()}</Suspense>
     </MainLayoutTemplate>
