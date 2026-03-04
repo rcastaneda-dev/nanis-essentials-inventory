@@ -10,6 +10,10 @@ interface MainLayoutTemplateProps {
   onTabChange: (_tab: Tab) => void;
   onSignOut?: () => void;
   children: React.ReactNode;
+  selectedBranchId?: string | 'main';
+  onBranchChange?: (_branchId: string | 'main') => void;
+  branchOptions?: Array<{ value: string; label: string }>;
+  hiddenTabs?: Tab[];
 }
 
 export function MainLayoutTemplate({
@@ -18,6 +22,10 @@ export function MainLayoutTemplate({
   onTabChange,
   onSignOut,
   children,
+  selectedBranchId,
+  onBranchChange,
+  branchOptions,
+  hiddenTabs,
 }: MainLayoutTemplateProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
@@ -40,6 +48,10 @@ export function MainLayoutTemplate({
         activeTab={activeTab}
         onTabChange={onTabChange}
         drawerFooter={isMobile ? drawerFooter : undefined}
+        selectedBranchId={selectedBranchId}
+        onBranchChange={onBranchChange}
+        branchOptions={branchOptions}
+        hiddenTabs={hiddenTabs}
       />
       {!isMobile && (
         <div className="top-right-controls">

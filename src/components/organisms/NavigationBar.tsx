@@ -19,6 +19,10 @@ interface NavigationBarProps {
   activeTab: Tab;
   onTabChange: (_tab: Tab) => void;
   drawerFooter?: React.ReactNode;
+  selectedBranchId?: string | 'main';
+  onBranchChange?: (_branchId: string | 'main') => void;
+  branchOptions?: Array<{ value: string; label: string }>;
+  hiddenTabs?: Tab[];
 }
 
 export function NavigationBar({
@@ -26,12 +30,16 @@ export function NavigationBar({
   activeTab,
   onTabChange,
   drawerFooter,
+  selectedBranchId,
+  onBranchChange,
+  branchOptions,
+  hiddenTabs,
 }: NavigationBarProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const tabs: { key: Tab; label: string; disabled?: boolean }[] = [
+  const allTabs: { key: Tab; label: string; disabled?: boolean }[] = [
     { key: 'inventory', label: t('navigation.inventory') },
     { key: 'purchases', label: t('navigation.purchases') },
     { key: 'sales', label: t('navigation.sales') },
@@ -41,6 +49,25 @@ export function NavigationBar({
     { key: 'quotes', label: t('navigation.quotes') },
     { key: 'import-export', label: t('navigation.importExport') },
   ];
+
+  const tabs = hiddenTabs?.length ? allTabs.filter(tab => !hiddenTabs.includes(tab.key)) : allTabs;
+
+  const branchSelector = branchOptions && branchOptions.length > 1 && onBranchChange && (
+    <div className="branch-selector">
+      <label htmlFor="global-branch-selector">{t('navigation.location')}:</label>
+      <select
+        id="global-branch-selector"
+        value={selectedBranchId || 'main'}
+        onChange={e => onBranchChange(e.target.value as string | 'main')}
+      >
+        {branchOptions.map(option => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
   const handleTabChange = useCallback(
     (tab: Tab) => {
@@ -84,6 +111,7 @@ export function NavigationBar({
               ✕
             </button>
           </div>
+          {branchSelector && <div className="mobile-branch-selector">{branchSelector}</div>}
           <div className="mobile-drawer-tabs">
             {tabs.map(tab => (
               <Button
@@ -109,6 +137,8 @@ export function NavigationBar({
           <Heading level={1}>{brandTitle}</Heading>
         </div>
       </div>
+
+      {branchSelector}
 
       <div className="tabs">
         {tabs.map(tab => (

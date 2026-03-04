@@ -114,6 +114,70 @@ body {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-weight: 400;
 }
+/* Branch selector in topbar */
+.branch-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.branch-selector label {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.branch-selector select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.branch-selector select:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.branch-selector select option {
+  color: var(--text);
+  background: var(--card);
+}
+
+/* Mobile branch selector in drawer */
+.mobile-branch-selector {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-branch-selector .branch-selector {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.mobile-branch-selector .branch-selector label {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.mobile-branch-selector .branch-selector select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  backdrop-filter: none;
+}
+
 .tabs {
   display: flex;
   gap: 6px;

@@ -10,24 +10,37 @@ import { RevenueService } from '../../../lib/revenueService';
 
 interface AnalyticsPageProps {
   db: DB;
+  selectedBranchId: string | 'main';
 }
 
-export function AnalyticsPage({ db }: AnalyticsPageProps) {
+export function AnalyticsPage({ db, selectedBranchId }: AnalyticsPageProps) {
   const { t } = useTranslation();
   const [dateFilter, setDateFilter] = useState<DateFilterOption>('current-month');
+
+  // Filter sales by branch first
+  const branchSales = useMemo(() => {
+    if (selectedBranchId === 'main') return db.sales;
+    return db.sales.filter(s => s.branchId === selectedBranchId);
+  }, [db.sales, selectedBranchId]);
+
+  // Filter items by branch for inventory metrics
+  const branchItems = useMemo(() => {
+    if (selectedBranchId === 'main') return db.items;
+    return db.items.filter(i => i.branchId === selectedBranchId);
+  }, [db.items, selectedBranchId]);
 
   // Filter data based on selected date range
   const filteredSales = useMemo(() => {
     switch (dateFilter) {
       case 'current-month':
-        return db.sales.filter(s => isCurrentMonth(s.createdAt));
+        return branchSales.filter(s => isCurrentMonth(s.createdAt));
       case 'previous-month':
-        return db.sales.filter(s => isPreviousMonth(s.createdAt));
+        return branchSales.filter(s => isPreviousMonth(s.createdAt));
       case 'overall':
       default:
-        return db.sales;
+        return branchSales;
     }
-  }, [db.sales, dateFilter]);
+  }, [branchSales, dateFilter]);
 
   const filteredTransactions = useMemo(() => {
     switch (dateFilter) {
@@ -85,7 +98,9 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
   // ===== NEW ANALYTICS CALCULATIONS =====
 
   // Filtered purchase costs (for time-filtered metrics)
+  // Purchases are main-only, so return 0 when viewing a branch
   const filteredPurchaseCosts = useMemo(() => {
+    if (selectedBranchId !== 'main') return 0;
     const filteredPurchases = db.purchases.filter(p => {
       switch (dateFilter) {
         case 'current-month':
@@ -100,7 +115,7 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
     // Use actualCost (actual amount paid after discounts) for accurate ROI calculations
     // Fallback to totalCost for backward compatibility with old purchases
     return filteredPurchases.reduce((acc, p) => acc + (p.actualCost ?? p.totalCost), 0);
-  }, [db.purchases, dateFilter]);
+  }, [db.purchases, dateFilter, selectedBranchId]);
 
   // ROI (Return on Investment)
   const roi = useMemo(() => {
@@ -126,11 +141,11 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
 
   // Current Inventory Value
   const inventoryValue = useMemo(() => {
-    return db.items.reduce(
+    return branchItems.reduce(
       (acc, item) => acc + item.stock * (item.costPostShipping || item.costPreShipping || 0),
       0
     );
-  }, [db.items]);
+  }, [branchItems]);
 
   // Operating Expense Ratio
   const operatingExpenseRatio = useMemo(() => {
@@ -455,7 +470,7 @@ export function AnalyticsPage({ db }: AnalyticsPageProps) {
 
       {/* Channel Performance Section */}
       <div className="section">
-        <ChannelPerformanceCard db={db} dateFilter={dateFilter} />
+        <ChannelPerformanceCard db={{ ...db, sales: branchSales }} dateFilter={dateFilter} />
       </div>
     </div>
   );

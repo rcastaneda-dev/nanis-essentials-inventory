@@ -39,7 +39,8 @@
     "analytics": "Analytics",
     "reports": "Reports",
     "quotes": "Quotes",
-    "importExport": "Import/Export"
+    "importExport": "Import/Export",
+    "location": "Location"
   },
   "itemCard": {
     "outOfStock": "OUT OF STOCK",
