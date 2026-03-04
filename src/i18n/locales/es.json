@@ -142,7 +142,16 @@
       "cost": "Costo",
       "category": "Categoría",
       "reset": "Reiniciar",
-      "saveUnits": "Guardar ({{count}} unidades)"
+      "saveUnits": "Guardar ({{count}} unidades)",
+      "tapToAdd": "Toca los artículos para agregarlos aquí",
+      "searchPlaceholder": "Buscar artículos...",
+      "noResults": "Ningún artículo coincide con tu búsqueda"
+    },
+    "moveToMainDialog": {
+      "title": "Mover Artículos de {{branch}} al Inventario Principal",
+      "branchInventory": "Inventario de Sucursal ({{count}} artículos)",
+      "movingToMain": "Moviendo al Principal",
+      "noItemsAvailable": "No hay artículos disponibles en la sucursal para mover."
     }
   },
   "purchases": {

@@ -143,7 +143,16 @@
       "cost": "Cost",
       "category": "Category",
       "reset": "Reset",
-      "saveUnits": "Save ({{count}} units)"
+      "saveUnits": "Save ({{count}} units)",
+      "tapToAdd": "Tap items to add them here",
+      "searchPlaceholder": "Search items...",
+      "noResults": "No items match your search"
+    },
+    "moveToMainDialog": {
+      "title": "Move Items from {{branch}} to Main Inventory",
+      "branchInventory": "Branch Inventory ({{count}} items)",
+      "movingToMain": "Moving to Main",
+      "noItemsAvailable": "No items available in branch inventory to move."
     }
   },
   "purchases": {
