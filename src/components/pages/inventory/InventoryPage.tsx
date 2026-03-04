@@ -30,6 +30,7 @@ interface InventoryPageProps {
     _targetBranchId: string,
     _updatedItems: InventoryItem[]
   ) => Promise<void>;
+  selectedBranchId: string | 'main';
 }
 
 export function InventoryPage({
@@ -39,6 +40,7 @@ export function InventoryPage({
   productsLoading,
   saveBranch,
   saveMoveToBranch,
+  selectedBranchId,
 }: InventoryPageProps) {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
@@ -49,7 +51,6 @@ export function InventoryPage({
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('inStock');
-  const [selectedBranchId, setSelectedBranchId] = useState<string | 'main'>('main');
 
   // Precompute last selling prices for all items (computed once, reused for all cards)
   const lastSellingPricesByItemId = useMemo(() => buildLastSellingPricesMap(db.sales), [db.sales]);
@@ -230,7 +231,6 @@ export function InventoryPage({
     persist({ ...db, items: updatedItems, purchases: updatedPurchases });
   };
 
-  const activeBranches = db.branches?.filter(b => !b.closedAt) || [];
   const selectedBranch =
     selectedBranchId === 'main' ? null : db.branches?.find(b => b.id === selectedBranchId);
 
@@ -507,12 +507,6 @@ export function InventoryPage({
         categoryFilter={categoryFilter}
         onCategoryChange={setCategoryFilter}
         categoryOptions={categoryOptions}
-        selectedBranchId={selectedBranchId}
-        onBranchChange={setSelectedBranchId}
-        branchOptions={[
-          { value: 'main', label: t('inventory.mainInventory') },
-          ...activeBranches.map(b => ({ value: b.id, label: b.name })),
-        ]}
         branchName={selectedBranch?.name}
         lastSellingPricesByItemId={lastSellingPricesByItemId}
         branchNameById={branchNameById}

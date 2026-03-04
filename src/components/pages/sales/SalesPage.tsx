@@ -8,18 +8,24 @@ import { isInMonthYear, getUniqueMonthsFromSales } from '../../../lib/utils';
 
 interface SalesPageProps {
   db: DB;
-
   saveSale: (sale: Sale, updatedItems: InventoryItem[]) => Promise<void>;
   removeSale: (id: string, restoredItems: InventoryItem[]) => Promise<void>;
+  selectedBranchId: string | 'main';
 }
 
-export function SalesPage({ db, saveSale, removeSale }: SalesPageProps) {
+export function SalesPage({ db, saveSale, removeSale, selectedBranchId }: SalesPageProps) {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Sale | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [monthFilter, setMonthFilter] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Filter sales by selected branch
+  const branchFilteredSales = useMemo(() => {
+    if (selectedBranchId === 'main') return db.sales;
+    return db.sales.filter(s => s.branchId === selectedBranchId);
+  }, [db.sales, selectedBranchId]);
 
   const onDelete = (id: string) => {
     if (!window.confirm(t('sales.deleteSale'))) return;
@@ -59,7 +65,7 @@ export function SalesPage({ db, saveSale, removeSale }: SalesPageProps) {
 
   // Generate month options from sales data
   const monthOptions = useMemo(() => {
-    const uniqueMonths = getUniqueMonthsFromSales(db.sales);
+    const uniqueMonths = getUniqueMonthsFromSales(branchFilteredSales);
     const options = [{ value: '', label: t('sales.allMonths') }];
     const monthNames = [
       'January',
@@ -82,11 +88,11 @@ export function SalesPage({ db, saveSale, removeSale }: SalesPageProps) {
       });
     });
     return options;
-  }, [db.sales, t]);
+  }, [branchFilteredSales, t]);
 
   const groups: CustomerGroupType[] = useMemo(() => {
     const map = new Map<string, Sale[]>();
-    db.sales
+    branchFilteredSales
       .filter(s => matchesSearch(s, searchQuery) && matchesMonthFilter(s, monthFilter))
       .forEach(s => {
         const name = s.buyerName?.trim() || t('sales.anonymous');
@@ -109,7 +115,7 @@ export function SalesPage({ db, saveSale, removeSale }: SalesPageProps) {
       (a, b) => b.totalAmount - a.totalAmount || a.customerName.localeCompare(b.customerName)
     );
     return result;
-  }, [db.sales, searchQuery, monthFilter, t]);
+  }, [branchFilteredSales, searchQuery, monthFilter, t]);
 
   const summaryStats = useMemo(() => {
     const totalSales = groups.reduce((acc, g) => acc + g.salesCount, 0);
@@ -190,6 +196,7 @@ export function SalesPage({ db, saveSale, removeSale }: SalesPageProps) {
           initial={editing ?? undefined}
           onClose={() => setShowForm(false)}
           onSave={handleSave}
+          selectedBranchId={selectedBranchId}
         />
       )}
     </div>

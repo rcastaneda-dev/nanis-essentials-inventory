@@ -19,9 +19,10 @@ interface SaleFormProps {
   initial?: Sale;
   onClose: () => void;
   onSave: (_sale: Sale, _updatedItems: InventoryItem[]) => void;
+  selectedBranchId: string | 'main';
 }
 
-export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
+export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: SaleFormProps) {
   const { t } = useTranslation();
   const [lines, setLines] = useState<SaleLine[]>(
     initial?.lines ?? [
@@ -37,8 +38,10 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
     initial?.paymentMethod ?? 'cash'
   );
-  const [channel, setChannel] = useState<SalesChannel | ''>(initial?.channel ?? '');
-  const [branchId, setBranchId] = useState<string | ''>(initial?.branchId ?? '');
+  const [channel, setChannel] = useState<SalesChannel | ''>(
+    initial?.channel ?? (selectedBranchId !== 'main' ? 'store_customer' : '')
+  );
+  const branchId = selectedBranchId === 'main' ? '' : selectedBranchId;
   const [numberOfPayments, setNumberOfPayments] = useState<number>(
     initial?.installments?.numberOfPayments ?? 2
   );
@@ -540,19 +543,6 @@ export function SaleForm({ db, initial, onClose, onSave }: SaleFormProps) {
             <option value="referred_to_store">{t('sales.referredToStore')}</option>
             <option value="store_customer">{t('sales.storeCustomer')}</option>
             <option value="other">{t('sales.other')}</option>
-          </select>
-        </div>
-        <div>
-          <label>{t('sales.whereWasThisSold')}</label>
-          <select value={branchId} onChange={e => setBranchId(e.target.value)}>
-            <option value="">{t('sales.mainInventory')}</option>
-            {db.branches
-              ?.filter(b => !b.closedAt)
-              .map(branch => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
           </select>
         </div>
         <div>
