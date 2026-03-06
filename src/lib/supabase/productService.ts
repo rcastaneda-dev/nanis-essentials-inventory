@@ -141,7 +141,14 @@ export async function upsertProduct(
 
   if (productError) throw new Error(`Failed to save product: ${productError.message}`);
 
-  await upsertLocationInventory(locationInventory, options?.existingLocationInventoryId);
+  // Prefer an explicitly provided id, then the one carried on the item (set during fetch),
+  // then fall back to a live lookup (handles items constructed outside a DB fetch).
+  const resolvedLocationInventoryId =
+    options?.existingLocationInventoryId !== undefined
+      ? options.existingLocationInventoryId
+      : (item.locationInventoryId ?? undefined);
+
+  await upsertLocationInventory(locationInventory, resolvedLocationInventoryId);
   return item.id;
 }
 
