@@ -9,10 +9,7 @@ import {
   PaymentMethod,
   SalesChannel,
 } from '../../../types/models';
-import { parseNumber, nowIso, fmtUSD } from '../../../lib/utils';
-
-/** UUID for new sale/line IDs so Supabase (uuid columns) accepts them. */
-const newId = () => crypto.randomUUID();
+import { parseNumber, nowIso, fmtUSD, uid } from '../../../lib/utils';
 
 interface SaleFormProps {
   db: DB;
@@ -27,7 +24,7 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
   const [lines, setLines] = useState<SaleLine[]>(
     initial?.lines ?? [
       {
-        id: newId(),
+        id: uid(),
         itemId: '',
         quantity: 1,
         unitPrice: 0,
@@ -130,7 +127,7 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
     setLines([
       ...lines,
       {
-        id: newId(),
+        id: uid(),
         itemId: db.items[0]?.id ?? '',
         quantity: 1,
         unitPrice: db.items[0]?.minPrice ?? 0,
@@ -198,7 +195,7 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
       : new Date(saleDate).toISOString();
 
     const s: Sale = {
-      id: initial?.id ?? newId(),
+      id: initial?.id ?? uid(),
       createdAt: saleDateISO,
       buyerName: buyerName.trim() || undefined,
       paymentMethod,

@@ -9,7 +9,7 @@ import {
   DB,
 } from '../../../types/models';
 import { RevenueService } from '../../../lib/revenueService';
-import { fmtUSD } from '../../../lib/utils';
+import { fmtUSD, uid } from '../../../lib/utils';
 import { getTransactionCategoryTranslationKey } from '../../../lib/transactionUtils';
 
 interface TransactionFormProps {
@@ -106,7 +106,7 @@ export function TransactionForm({ initial, onClose, onSave, db }: TransactionFor
     if (!validateForm()) return;
 
     const transaction: Transaction = {
-      id: initial?.id ?? crypto.randomUUID(),
+      id: initial?.id ?? uid(),
       type: formData.type,
       amount: parseFloat(formData.amount),
       description: formData.description.trim(),
