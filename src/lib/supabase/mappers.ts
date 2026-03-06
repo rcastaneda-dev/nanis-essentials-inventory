@@ -123,6 +123,7 @@ export function toInventoryItem(row: LocationWithProduct): InventoryItem {
     createdAt: p.created_at,
     updatedAt: p.updated_at,
     branchId: row.branch_id ?? undefined,
+    locationInventoryId: row.id,
   };
 }
 

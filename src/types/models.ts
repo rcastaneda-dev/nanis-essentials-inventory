@@ -57,6 +57,8 @@ export interface InventoryItem {
   createdAt: string; // ISO
   updatedAt?: string; // ISO
   branchId?: string; // Branch/store ID - undefined for main inventory
+  /** The location_inventory PK for this product/location row. Present for items loaded from DB. */
+  locationInventoryId?: string;
 }
 
 export interface PurchaseLine {
