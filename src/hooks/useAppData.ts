@@ -136,10 +136,13 @@ export function useAppData() {
 
   const saveProduct = useCallback(async (item: InventoryItem) => {
     const tempId = item.id;
+    const itemBranchId = item.branchId ?? null;
+    const matches = (i: InventoryItem) => i.id === tempId && (i.branchId ?? null) === itemBranchId;
+
     setDb(prev => {
-      const exists = prev.items.find(i => i.id === tempId);
+      const exists = prev.items.find(matches);
       const nextItems = exists
-        ? prev.items.map(i => (i.id === tempId ? item : i))
+        ? prev.items.map(i => (matches(i) ? item : i))
         : [...prev.items, item];
       return { ...prev, items: nextItems };
     });
@@ -147,7 +150,7 @@ export function useAppData() {
     if (dbId !== tempId) {
       setDb(prev => ({
         ...prev,
-        items: prev.items.map(i => (i.id === tempId ? { ...i, id: dbId } : i)),
+        items: prev.items.map(i => (matches(i) ? { ...i, id: dbId } : i)),
       }));
     }
   }, []);
