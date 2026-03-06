@@ -4,7 +4,7 @@ import { Button } from '../atoms/Button';
 import { Text, Badge } from '../atoms/Typography';
 import { ItemCardImage } from '../ItemImageDisplay';
 import { InventoryItem } from '../../types/models';
-import { fmtUSD } from '../../lib/utils';
+import { fmtUSD, itemDisplayName } from '../../lib/utils';
 
 interface ItemCardProps {
   item: InventoryItem;
@@ -32,12 +32,12 @@ export const ItemCard = React.memo(function ItemCard({
     <div
       className={`card item-card-modern ${isOutOfStock ? 'out-of-stock-card' : ''}`}
       data-testid={testId}
-      data-name={item.name}
+      data-name={itemDisplayName(item)}
     >
       {/* Header Section */}
       <div className="item-card-header">
         <div className="item-card-title-wrapper">
-          <h3 className="item-card-title">{item.name}</h3>
+          <h3 className="item-card-title">{itemDisplayName(item)}</h3>
           <span className="item-card-date">{new Date(item.createdAt).toLocaleDateString()}</span>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -59,7 +59,7 @@ export const ItemCard = React.memo(function ItemCard({
               images={item.images || []}
               primaryImageId={item.primaryImageId}
               category={item.category}
-              itemName={item.name}
+              itemName={itemDisplayName(item)}
             />
           </div>
           {(isOutOfStock || isLastItem) && (

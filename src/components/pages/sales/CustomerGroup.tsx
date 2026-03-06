@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sale, DB } from '../../../types/models';
-import { fmtUSD } from '../../../lib/utils';
+import { fmtUSD, itemDisplayName } from '../../../lib/utils';
 
 export type CustomerGroupType = {
   customerName: string;
@@ -71,7 +71,7 @@ export function CustomerGroup({
                   const item = db.items.find(i => i.id === l.itemId);
                   return (
                     <div key={l.id}>
-                      {item?.name} ({l.quantity})
+                      {item ? itemDisplayName(item) : '?'} ({l.quantity})
                     </div>
                   );
                 })}

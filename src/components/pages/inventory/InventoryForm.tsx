@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '../../shared/Modal';
 import { ImageUploadSection } from '../../organisms/ImageUploadSection';
-import { InventoryItem, Category, ItemImage } from '../../../types/models';
+import { InventoryItem, Category, ItemImage, Brand } from '../../../types/models';
 import { parseNumber, uid, nowIso, fmtUSD } from '../../../lib/utils';
 import { getCategoryTranslationKey } from '../../../lib/i18nUtils';
 
@@ -17,13 +17,16 @@ const CATEGORIES: Category[] = [
 
 interface InventoryFormProps {
   initial?: InventoryItem;
+  brands: Brand[];
   onClose: () => void;
   onSave: (_item: InventoryItem) => void;
 }
 
-export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) {
+export function InventoryForm({ initial, brands, onClose, onSave }: InventoryFormProps) {
   const { t } = useTranslation();
   const [name, setName] = useState(initial?.name ?? '');
+  const [brandId, setBrandId] = useState<string>(initial?.brandId ?? '');
+  const [color, setColor] = useState(initial?.color ?? '');
   const [category, setCategory] = useState<Category>(initial?.category ?? 'Other');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [stock, setStock] = useState<number>(initial?.stock ?? 0);
@@ -61,9 +64,13 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
       alert(t('inventory.nameRequired'));
       return;
     }
+    const selectedBrand = brands.find(b => b.id === brandId);
     const item: InventoryItem = {
       id: initial?.id ?? uid(),
       name: name.trim(),
+      brandId: brandId || undefined,
+      brandName: selectedBrand ? (selectedBrand.displayName ?? selectedBrand.name) : undefined,
+      color: color.trim() || undefined,
       category,
       description: description.trim() || undefined,
       stock,
@@ -107,6 +114,31 @@ export function InventoryForm({ initial, onClose, onSave }: InventoryFormProps) 
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label>{t('inventory.brand')}</label>
+          <select
+            value={brandId}
+            onChange={e => setBrandId(e.target.value)}
+            data-testid="item-brand-select"
+          >
+            <option value="">{t('inventory.noBrand')}</option>
+            {brands.map(b => (
+              <option key={b.id} value={b.id}>
+                {b.displayName ?? b.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>{t('inventory.color')}</label>
+          <input
+            value={color}
+            onChange={e => setColor(e.target.value)}
+            placeholder={t('inventory.colorPlaceholder')}
+            data-testid="item-color-input"
+          />
         </div>
 
         <div className="col-span-2">

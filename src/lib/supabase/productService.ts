@@ -36,10 +36,12 @@ export async function fetchAllProducts(): Promise<InventoryItem[]> {
         images,
         primary_image_url,
         brand_id,
+        color,
         catalog_price,
         is_active,
         created_at,
-        updated_at
+        updated_at,
+        brands (id, name, display_name)
       )
     `
     )

@@ -25,9 +25,18 @@ export interface ItemImage {
   isPrimary?: boolean; // Primary image flag
 }
 
+export interface Brand {
+  id: string;
+  name: string;
+  displayName?: string;
+}
+
 export interface InventoryItem {
   id: string;
   name: string;
+  brandId?: string;
+  brandName?: string; // Denormalised for display without an extra join
+  color?: string;
   description?: string;
   category: Category;
   stock: number;
@@ -132,6 +141,7 @@ export interface DB {
   cashWithdrawals: CashWithdrawal[]; // Track cash withdrawals for reinvestment
   transactions: Transaction[]; // Track business expenses and fees
   branches: Branch[]; // Branch/store locations
+  brands: Brand[]; // Product brands for dropdown selection
 }
 
 export interface CashWithdrawal {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { InventoryItem, Category } from '../../../types/models';
+import { InventoryItem, Category, Brand } from '../../../types/models';
 import { uid, nowIso } from '../../../lib/utils';
 import { getCategoryTranslationKey } from '../../../lib/i18nUtils';
 
@@ -14,13 +14,16 @@ const CATEGORIES: Category[] = [
 ];
 
 interface QuickAddItemFormProps {
+  brands: Brand[];
   onSave: (_item: InventoryItem) => void;
   onCancel: () => void;
 }
 
-export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
+export function QuickAddItemForm({ brands, onSave, onCancel }: QuickAddItemFormProps) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
+  const [brandId, setBrandId] = useState<string>('');
+  const [color, setColor] = useState('');
   const [category, setCategory] = useState<Category>('Other');
   const [description, setDescription] = useState('');
   const [weightLbs, setWeightLbs] = useState<number>(0);
@@ -31,9 +34,13 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
       return;
     }
 
+    const selectedBrand = brands.find(b => b.id === brandId);
     const item: InventoryItem = {
       id: uid(),
       name: name.trim(),
+      brandId: brandId || undefined,
+      brandName: selectedBrand ? (selectedBrand.displayName ?? selectedBrand.name) : undefined,
+      color: color.trim() || undefined,
       category,
       description: description.trim() || undefined,
       stock: 0, // Will be set by the purchase
@@ -84,6 +91,30 @@ export function QuickAddItemForm({ onSave, onCancel }: QuickAddItemFormProps) {
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <label>{t('inventory.brand')}</label>
+          <select
+            value={brandId}
+            onChange={e => setBrandId(e.target.value)}
+            data-testid="quick-add-brand-select"
+          >
+            <option value="">{t('inventory.noBrand')}</option>
+            {brands.map(b => (
+              <option key={b.id} value={b.id}>
+                {b.displayName ?? b.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>{t('inventory.color')}</label>
+          <input
+            value={color}
+            onChange={e => setColor(e.target.value)}
+            placeholder={t('inventory.colorPlaceholder')}
+            data-testid="quick-add-color-input"
+          />
         </div>
         <div>
           <label>{t('inventory.weight')}</label>
