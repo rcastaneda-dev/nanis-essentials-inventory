@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../../molecules/Modal';
 import { Button } from '../../atoms/Button';
 import { InventoryItem } from '../../../types/models';
-import { parseNumber } from '../../../lib/utils';
+import { parseNumber, itemDisplayName } from '../../../lib/utils';
 
 interface QuantityInputModalProps {
   item: InventoryItem;
@@ -34,7 +34,7 @@ export function QuantityInputModal({
   };
 
   return (
-    <Modal title={`Move ${item.name} to Branch`} onClose={onCancel}>
+    <Modal title={`Move ${itemDisplayName(item)} to Branch`} onClose={onCancel}>
       <div className="section-title">Select Quantity</div>
       <div className="grid two row-gap">
         <div>
@@ -55,7 +55,7 @@ export function QuantityInputModal({
         </div>
         <div className="flex align-center">
           <p className="text-muted">
-            Moving {quantity} unit{quantity !== 1 ? 's' : ''} of {item.name}
+            Moving {quantity} unit{quantity !== 1 ? 's' : ''} of {itemDisplayName(item)}
           </p>
         </div>
       </div>

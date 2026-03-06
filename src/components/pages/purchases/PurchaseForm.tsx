@@ -4,7 +4,7 @@ import { Modal } from '../../shared/Modal';
 import { QuickAddItemForm } from './QuickAddItemForm';
 import { RevenueManager, RevenueSummaryCard } from '../../RevenueManager';
 import { DB, Purchase, PurchaseLine, InventoryItem, DEFAULT_SETTINGS } from '../../../types/models';
-import { parseNumber, uid, nowIso, fmtUSD } from '../../../lib/utils';
+import { parseNumber, uid, nowIso, fmtUSD, itemDisplayName } from '../../../lib/utils';
 import { RevenueService } from '../../../lib/revenueService';
 
 // Helper function to check if purchase line quantities changed
@@ -346,10 +346,10 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
                     {t('purchases.addNewItem')}
                   </option>
                   {[...items]
-                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .sort((a, b) => itemDisplayName(a).localeCompare(itemDisplayName(b)))
                     .map(i => (
                       <option key={i.id} value={i.id}>
-                        {i.name}
+                        {itemDisplayName(i)}
                       </option>
                     ))}
                 </select>
@@ -671,6 +671,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       {showAddItem && (
         <div className="modal-overlay" data-testid="quick-add-overlay">
           <QuickAddItemForm
+            brands={db.brands}
             onSave={onAddItem}
             onCancel={() => {
               setShowAddItem(false);

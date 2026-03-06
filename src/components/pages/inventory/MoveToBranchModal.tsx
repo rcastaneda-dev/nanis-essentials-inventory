@@ -4,7 +4,7 @@ import { Modal } from '../../molecules/Modal';
 import { Button } from '../../atoms/Button';
 import { QuantityInputModal } from './QuantityInputModal';
 import { DB, InventoryItem } from '../../../types/models';
-import { fmtUSD } from '../../../lib/utils';
+import { fmtUSD, itemDisplayName } from '../../../lib/utils';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
 
 interface PendingMove {
@@ -56,7 +56,7 @@ function CompactItemCard({
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
-          <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>{item.name}</h4>
+          <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>{itemDisplayName(item)}</h4>
           <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
             <div>
               {t('inventory.moveToBranchDialog.stock')}: {availableStock}
@@ -175,7 +175,9 @@ function PendingMovesList({
                   }}
                 >
                   <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>{item.name}</h4>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>
+                      {itemDisplayName(item)}
+                    </h4>
                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                       <div>Qty: {move.quantity}</div>
                       <div>
@@ -272,7 +274,7 @@ function PendingMovesSummaryBar({
               >
                 <div style={{ flex: 1 }}>
                   <div>
-                    {item.name} x{move.quantity}
+                    {itemDisplayName(item)} x{move.quantity}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                     {fmtUSD((item.costPostShipping ?? item.costPreShipping ?? 0) + costAdjustment)}{' '}
@@ -312,7 +314,8 @@ export function MoveToBranchModal({ db, onSave, onClose }: MoveToBranchModalProp
     if (!searchQuery.trim()) return mainInventoryItems;
     const q = searchQuery.toLowerCase();
     return mainInventoryItems.filter(
-      item => item.name.toLowerCase().includes(q) || item.category?.toLowerCase().includes(q)
+      item =>
+        itemDisplayName(item).toLowerCase().includes(q) || item.category?.toLowerCase().includes(q)
     );
   }, [mainInventoryItems, searchQuery]);
 

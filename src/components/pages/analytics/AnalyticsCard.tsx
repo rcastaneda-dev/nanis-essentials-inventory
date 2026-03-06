@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ItemCardImage } from '../../ItemImageDisplay';
 import { InventoryItem } from '../../../types/models';
-import { fmtUSD } from '../../../lib/utils';
+import { fmtUSD, itemDisplayName } from '../../../lib/utils';
 
 interface AnalyticsItemCardProps {
   title: string;
@@ -29,11 +29,11 @@ export function AnalyticsItemCard({
               images={item.images || []}
               primaryImageId={item.primaryImageId}
               category={item.category}
-              itemName={item.name}
+              itemName={itemDisplayName(item)}
             />
           </div>
           <div className="analytics-item-details">
-            <div className="analytics-item-name">{item.name}</div>
+            <div className="analytics-item-name">{itemDisplayName(item)}</div>
             <div className="analytics-item-meta">
               {valueDisplay === 'category' && <span className="muted">{item.category}</span>}
               {valueDisplay === 'price' && (

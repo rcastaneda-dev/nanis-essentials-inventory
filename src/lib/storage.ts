@@ -31,6 +31,7 @@ export function loadDB(): DB {
       cashWithdrawals: [],
       transactions: [],
       branches: [],
+      brands: [],
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
     return empty;
@@ -92,6 +93,7 @@ export function loadDB(): DB {
       cashWithdrawals: [],
       transactions: [],
       branches: [],
+      brands: [],
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
     return empty;

@@ -21,6 +21,7 @@ import {
   upsertBranch as upsertBranchApi,
   deleteBranch as deleteBranchApi,
 } from '../lib/supabase/branchService';
+import { fetchAllBrands } from '../lib/supabase/brandService';
 import {
   fetchSettings,
   updateSettings as updateSettingsApi,
@@ -53,6 +54,7 @@ const EMPTY_DB: DB = {
   cashWithdrawals: [],
   transactions: [],
   branches: [],
+  brands: [],
 };
 
 export function useAppData() {
@@ -69,10 +71,22 @@ export function useAppData() {
       fetchAllSales(),
       fetchAllTransactions(),
       fetchAllCashWithdrawals(),
+      fetchAllBrands(),
     ])
-      .then(([items, branches, settings, purchases, sales, transactions, cashWithdrawals]) => {
-        setDb({ items, branches, settings, purchases, sales, transactions, cashWithdrawals });
-      })
+      .then(
+        ([items, branches, settings, purchases, sales, transactions, cashWithdrawals, brands]) => {
+          setDb({
+            items,
+            branches,
+            settings,
+            purchases,
+            sales,
+            transactions,
+            cashWithdrawals,
+            brands,
+          });
+        }
+      )
       .catch(err => {
         // eslint-disable-next-line no-console
         console.error('Failed to load data from Supabase:', err);
@@ -95,10 +109,22 @@ export function useAppData() {
       fetchAllSales(),
       fetchAllTransactions(),
       fetchAllCashWithdrawals(),
+      fetchAllBrands(),
     ])
-      .then(([items, branches, settings, purchases, sales, transactions, cashWithdrawals]) => {
-        setDb({ items, branches, settings, purchases, sales, transactions, cashWithdrawals });
-      })
+      .then(
+        ([items, branches, settings, purchases, sales, transactions, cashWithdrawals, brands]) => {
+          setDb({
+            items,
+            branches,
+            settings,
+            purchases,
+            sales,
+            transactions,
+            cashWithdrawals,
+            brands,
+          });
+        }
+      )
       .catch(err => {
         // eslint-disable-next-line no-console
         console.error('Failed to refresh data from Supabase:', err);

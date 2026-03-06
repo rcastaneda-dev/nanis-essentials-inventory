@@ -14,6 +14,7 @@ import {
   generateInventoryCSV,
   downloadCSV,
   buildLastSellingPricesMap,
+  itemDisplayName,
 } from '../../../lib/utils';
 import { CATEGORIES } from '../../../constants/categories';
 import { getCategoryTranslationKey } from '../../../lib/i18nUtils';
@@ -86,7 +87,7 @@ export function InventoryPage({
       const query = searchQuery.toLowerCase().trim();
       result = result.filter(
         item =>
-          item.name.toLowerCase().includes(query) ||
+          itemDisplayName(item).toLowerCase().includes(query) ||
           (item.description && item.description.toLowerCase().includes(query))
       );
     }
@@ -98,9 +99,9 @@ export function InventoryPage({
     const copy = [...filteredItems];
     switch (sortBy) {
       case 'nameAsc':
-        return copy.sort((a, b) => a.name.localeCompare(b.name));
+        return copy.sort((a, b) => itemDisplayName(a).localeCompare(itemDisplayName(b)));
       case 'nameDesc':
-        return copy.sort((a, b) => b.name.localeCompare(a.name));
+        return copy.sort((a, b) => itemDisplayName(b).localeCompare(itemDisplayName(a)));
       case 'minPriceAsc':
         return copy.sort((a, b) => {
           const aVal = a.minPrice ?? Number.POSITIVE_INFINITY;
@@ -127,7 +128,7 @@ export function InventoryPage({
           // Sort by stock level (high to low), which naturally puts out-of-stock (0) at bottom
           if (aStock !== bStock) return bStock - aStock;
           // Tie-breaker by name for stable, predictable order
-          return a.name.localeCompare(b.name);
+          return itemDisplayName(a).localeCompare(itemDisplayName(b));
         });
     }
   }, [filteredItems, sortBy]);
@@ -472,6 +473,7 @@ export function InventoryPage({
   const formContent = showForm ? (
     <InventoryForm
       initial={editing ?? undefined}
+      brands={db.brands}
       onClose={() => setShowForm(false)}
       onSave={item => {
         saveProduct(item).catch(err => {

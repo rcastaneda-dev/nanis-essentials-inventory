@@ -9,7 +9,7 @@ import {
   PaymentMethod,
   SalesChannel,
 } from '../../../types/models';
-import { parseNumber, nowIso, fmtUSD, uid } from '../../../lib/utils';
+import { parseNumber, nowIso, fmtUSD, uid, itemDisplayName } from '../../../lib/utils';
 
 interface SaleFormProps {
   db: DB;
@@ -92,14 +92,14 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
         return i.stock > 0 && !i.branchId;
       })
       .slice()
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => itemDisplayName(a).localeCompare(itemDisplayName(b)));
   }, [db.items, branchId]);
 
   // Get filtered items for a specific line
   const getFilteredItems = (lineId: string) => {
     const query = itemSearchQueries[lineId]?.trim().toLowerCase() || '';
     if (!query) return availableItems;
-    return availableItems.filter(i => i.name.toLowerCase().includes(query));
+    return availableItems.filter(i => itemDisplayName(i).toLowerCase().includes(query));
   };
 
   // Keep refs in sync with current state/props
@@ -249,7 +249,9 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
                     value={
                       itemSearchQueries[l.id] !== undefined
                         ? itemSearchQueries[l.id]
-                        : selectedItem?.name || ''
+                        : selectedItem
+                          ? itemDisplayName(selectedItem)
+                          : ''
                     }
                     onFocus={() => {
                       // Cancel any pending blur timeout for this line
@@ -262,7 +264,10 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
                       if (!itemSearchQueries[l.id]) {
                         const currentItem = dbRef.current.items.find(i => i.id === l.itemId);
                         if (currentItem) {
-                          setItemSearchQueries(prev => ({ ...prev, [l.id]: currentItem.name }));
+                          setItemSearchQueries(prev => ({
+                            ...prev,
+                            [l.id]: itemDisplayName(currentItem),
+                          }));
                         }
                       }
                     }}
@@ -309,7 +314,10 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
                                 : x
                             )
                           );
-                          setItemSearchQueries(prev => ({ ...prev, [l.id]: selected.name }));
+                          setItemSearchQueries(prev => ({
+                            ...prev,
+                            [l.id]: itemDisplayName(selected),
+                          }));
                           setShowItemSuggestions(prev => ({ ...prev, [l.id]: false }));
                         }
                       }
@@ -336,9 +344,10 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
                           // Only reset if the current query doesn't match the selected item
                           // This prevents overwriting a newly selected item's name
                           if (currentSelectedItem) {
+                            const displayLabel = itemDisplayName(currentSelectedItem);
                             setItemSearchQueries(prev => {
-                              if (prev[lineId] !== currentSelectedItem.name) {
-                                return { ...prev, [lineId]: currentSelectedItem.name };
+                              if (prev[lineId] !== displayLabel) {
+                                return { ...prev, [lineId]: displayLabel };
                               }
                               return prev;
                             });
@@ -372,11 +381,14 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
                                     : x
                                 )
                               );
-                              setItemSearchQueries(prev => ({ ...prev, [l.id]: item.name }));
+                              setItemSearchQueries(prev => ({
+                                ...prev,
+                                [l.id]: itemDisplayName(item),
+                              }));
                               setShowItemSuggestions(prev => ({ ...prev, [l.id]: false }));
                             }}
                           >
-                            {item.name}
+                            {itemDisplayName(item)}
                           </div>
                         );
                       })}

@@ -8,6 +8,18 @@ export const parseNumber = (v: string) => {
 
 export const uid = () => Math.random().toString(36).slice(2, 9);
 
+/** Compose a human-readable product label from structured fields. */
+export const itemDisplayName = (item: {
+  name: string;
+  brandName?: string;
+  color?: string;
+}): string => {
+  let label = item.name;
+  if (item.brandName) label += ` - ${item.brandName}`;
+  if (item.color) label += ` [${item.color}]`;
+  return label;
+};
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isValidUUID = (id: string) => UUID_RE.test(id);
 
@@ -109,6 +121,8 @@ export const escapeCSVField = (value: string | number | undefined | null): strin
 export const generateInventoryCSV = (
   items: Array<{
     name: string;
+    brandName?: string;
+    color?: string;
     stock: number;
     weightLbs?: number;
     costPostShipping?: number;
@@ -118,8 +132,9 @@ export const generateInventoryCSV = (
   }>
 ): string => {
   const headers = ['#', 'Item name', 'stock', 'weight', 'Unit Cost', 'price'];
-  // Sort items alphabetically by name
-  const sortedItems = [...items].sort((a, b) => a.name.localeCompare(b.name));
+  const sortedItems = [...items].sort((a, b) =>
+    itemDisplayName(a).localeCompare(itemDisplayName(b))
+  );
   const rows = sortedItems.map((item, index) => {
     const rowNumber = index + 1;
     const stock = item.stock;
@@ -132,7 +147,7 @@ export const generateInventoryCSV = (
           ? fmtUSD(item.minPrice)
           : '';
 
-    return [rowNumber, item.name, stock, weight, fmtUSD(unitCost), price]
+    return [rowNumber, itemDisplayName(item), stock, weight, fmtUSD(unitCost), price]
       .map(escapeCSVField)
       .join(',');
   });

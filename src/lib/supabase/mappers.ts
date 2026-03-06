@@ -49,6 +49,12 @@ function normalizeSupabaseImages(images: unknown): ItemImage[] {
 // Product / Location Inventory
 // ---------------------------------------------------------------------------
 
+export interface BrandRow {
+  id: string;
+  name: string;
+  display_name: string | null;
+}
+
 export interface ProductRow {
   id: string;
   name: string;
@@ -65,6 +71,7 @@ export interface ProductRow {
   images: unknown;
   primary_image_url: string | null;
   brand_id: string | null;
+  color: string | null;
   catalog_price: number | null;
   is_active: boolean;
   created_at: string;
@@ -81,17 +88,25 @@ export interface LocationInventoryRow {
   updated_at: string;
 }
 
+export interface ProductRowWithBrand extends ProductRow {
+  brands: BrandRow | null;
+}
+
 export interface LocationWithProduct extends LocationInventoryRow {
-  products: ProductRow;
+  products: ProductRowWithBrand;
 }
 
 export function toInventoryItem(row: LocationWithProduct): InventoryItem {
   const p = row.products;
   const images = normalizeSupabaseImages(p.images);
   const primaryUrl = p.primary_image_url ?? undefined;
+  const brand = p.brands;
   return {
     id: p.id,
     name: p.name,
+    brandId: p.brand_id ?? undefined,
+    brandName: brand ? (brand.display_name ?? brand.name) : undefined,
+    color: p.color ?? undefined,
     description: p.description ?? undefined,
     category: p.category,
     stock: row.stock,
@@ -124,7 +139,7 @@ export function toSupabaseProduct(item: InventoryItem) {
 
   const primaryUrl = sorted.length > 0 ? sorted[0].dataUrl : null;
 
-  const product: Omit<ProductRow, 'sku' | 'brand_id' | 'is_active'> = {
+  const product: Omit<ProductRow, 'sku' | 'is_active'> = {
     id: item.id,
     name: item.name,
     description: item.description ?? null,
@@ -139,6 +154,8 @@ export function toSupabaseProduct(item: InventoryItem) {
     max_revenue: item.maxProfit ?? null,
     images: serializedImages,
     primary_image_url: primaryUrl,
+    brand_id: item.brandId ?? null,
+    color: item.color ?? null,
     created_at: item.createdAt,
     updated_at: item.updatedAt ?? new Date().toISOString(),
   };
