@@ -212,18 +212,18 @@ body {
   font-weight: 600;
 }
 
-/* Top-right controls (language switcher + sign-out) */
-.top-right-controls {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 1000;
+/* App footer (language switcher + sign-out) */
+.app-footer {
   display: flex;
-  gap: 8px;
+  justify-content: center;
   align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
 }
 
-.top-right-sign-out-btn {
+.app-footer-sign-out-btn {
   padding: 6px 12px;
   border-radius: 6px;
   border: 1px solid var(--border);
@@ -231,6 +231,12 @@ body {
   color: var(--muted);
   font-size: 12px;
   cursor: pointer;
+}
+
+.app-footer-sign-out-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: #fef2f2;
 }
 
 /* Hamburger button for mobile */
@@ -368,33 +374,6 @@ body {
 .drawer-tab:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-/* Drawer footer (language switcher + sign-out) */
-.mobile-drawer-footer {
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.drawer-sign-out-btn {
-  width: 100%;
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: white;
-  color: var(--muted);
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.drawer-sign-out-btn:hover {
-  border-color: var(--danger);
-  color: var(--danger);
-  background: #fef2f2;
-  transform: none;
 }
 
 .actions {
