@@ -1,6 +1,7 @@
 import React from 'react';
 import { DB } from '../../../types/models';
 import { fmtUSD } from '../../../lib/utils';
+import { RevenueService } from '../../../lib/revenueService';
 import { PageHeader } from '../../molecules/PageHeader';
 import { Text } from '../../atoms/Typography';
 
@@ -19,8 +20,8 @@ export function IncomeStatementPage({ db }: IncomeStatementPageProps) {
 
   const totalRevenue = totalSalesRevenue + totalIncome;
 
-  // Calculate cost of goods sold from purchases
-  const totalCOGS = db.purchases.reduce((sum, purchase) => sum + purchase.totalCost, 0);
+  // Use sanitized purchase costs so legacy rows do not understate inventory spend.
+  const totalCOGS = RevenueService.getTotalEffectivePurchaseCost(db.purchases);
 
   // Calculate operating expenses from transactions
   const totalExpenses = db.transactions
