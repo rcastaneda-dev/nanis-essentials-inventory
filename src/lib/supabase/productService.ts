@@ -2,6 +2,7 @@ import { supabase } from './client';
 import { InventoryItem } from '../../types/models';
 import { toInventoryItem, toSupabaseProduct, LocationWithProduct } from './mappers';
 import { uploadProductImages, isBase64Image } from './storageService';
+import { isValidUUID } from '../utils';
 
 /**
  * Fetch all products joined with their location inventory from Supabase.
@@ -52,10 +53,13 @@ export async function fetchAllProducts(): Promise<InventoryItem[]> {
 }
 
 /**
- * Upsert a product and its location inventory into Supabase.
- * Handles both insert (new product) and update (existing product) cases.
+ * Save a product and its location inventory to Supabase.
+ * New products (non-UUID id) are inserted without id — the DB generates one.
+ * Existing products (valid UUID) are updated in place.
+ * Returns the DB id (generated for inserts, unchanged for updates).
  */
-export async function upsertProduct(item: InventoryItem): Promise<void> {
+export async function upsertProduct(item: InventoryItem): Promise<string> {
+  const isNew = !isValidUUID(item.id);
   const hasNewImages = item.images.some(img => isBase64Image(img.dataUrl));
 
   if (hasNewImages) {
@@ -74,15 +78,29 @@ export async function upsertProduct(item: InventoryItem): Promise<void> {
 
   const { product, locationInventory } = toSupabaseProduct(item);
 
-  const { error: productError } = await supabase
-    .from('products')
-    .upsert(product, { onConflict: 'id' });
+  if (isNew) {
+    const { id: _tempId, created_at: _ca, ...insertPayload } = product;
 
-  if (productError) {
-    throw new Error(`Failed to save product: ${productError.message}`);
+    const { data, error } = await supabase
+      .from('products')
+      .insert(insertPayload)
+      .select('id')
+      .single();
+
+    if (error) throw new Error(`Failed to create product: ${error.message}`);
+
+    const dbId = data.id as string;
+    locationInventory.product_id = dbId;
+    await upsertLocationInventory(locationInventory);
+    return dbId;
   }
 
+  const { error: productError } = await supabase.from('products').update(product).eq('id', item.id);
+
+  if (productError) throw new Error(`Failed to update product: ${productError.message}`);
+
   await upsertLocationInventory(locationInventory);
+  return item.id;
 }
 
 /** Pending move from MoveToBranchModal: itemId is product id. */

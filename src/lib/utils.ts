@@ -8,6 +8,9 @@ export const parseNumber = (v: string) => {
 
 export const uid = () => Math.random().toString(36).slice(2, 9);
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const isValidUUID = (id: string) => UUID_RE.test(id);
+
 export const nowIso = () => new Date().toISOString();
 
 export const startOfMonth = (d = new Date()) => new Date(d.getFullYear(), d.getMonth(), 1);
