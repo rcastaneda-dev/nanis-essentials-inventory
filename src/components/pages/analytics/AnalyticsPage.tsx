@@ -112,9 +112,8 @@ export function AnalyticsPage({ db, selectedBranchId }: AnalyticsPageProps) {
           return true;
       }
     });
-    // Use actualCost (actual amount paid after discounts) for accurate ROI calculations
-    // Fallback to totalCost for backward compatibility with old purchases
-    return filteredPurchases.reduce((acc, p) => acc + (p.actualCost ?? p.totalCost), 0);
+    // Legacy rows may have a bad actualCost, so use the sanitized purchase cost helper.
+    return RevenueService.getTotalEffectivePurchaseCost(filteredPurchases);
   }, [db.purchases, dateFilter, selectedBranchId]);
 
   // ROI (Return on Investment)

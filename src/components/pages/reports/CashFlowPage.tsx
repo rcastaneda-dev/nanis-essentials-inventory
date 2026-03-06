@@ -1,6 +1,7 @@
 import React from 'react';
 import { DB } from '../../../types/models';
 import { fmtUSD } from '../../../lib/utils';
+import { RevenueService } from '../../../lib/revenueService';
 import { PageHeader } from '../../molecules/PageHeader';
 import { Text } from '../../atoms/Typography';
 
@@ -24,8 +25,8 @@ export function CashFlowPage({ db }: CashFlowPageProps) {
 
   const operatingCashFlow = salesCashInflow + incomeCashInflow - expensesCashOutflow;
 
-  // Cash from investing activities (purchases of inventory)
-  const inventoryPurchases = db.purchases.reduce((sum, purchase) => sum + purchase.totalCost, 0);
+  // Use discounted purchase costs so inventory cash outflow matches what was actually owed.
+  const inventoryPurchases = RevenueService.getTotalEffectivePurchaseCost(db.purchases);
   const investingCashFlow = -inventoryPurchases;
 
   // Cash withdrawals (cash taken out of business)

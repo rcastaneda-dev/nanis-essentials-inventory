@@ -6,6 +6,41 @@ import { uid, nowIso } from './utils';
  * Handles business cash flow calculations and reinvestment operations following clean architecture principles
  */
 export class RevenueService {
+  private static roundCurrency(amount: number): number {
+    return Math.round((amount + Number.EPSILON) * 100) / 100;
+  }
+
+  /**
+   * Purchase costs should always reflect the discounted amount owed.
+   */
+  static getDiscountedPurchaseCost(purchase: Pick<Purchase, 'totalCost' | 'discount'>): number {
+    return this.roundCurrency(Math.max(0, purchase.totalCost - (purchase.discount ?? 0)));
+  }
+
+  /**
+   * Some legacy rows have a bad actualCost value; fall back to the discounted cost.
+   */
+  static getEffectivePurchaseCost(
+    purchase: Pick<Purchase, 'totalCost' | 'discount' | 'actualCost'>
+  ): number {
+    const discountedCost = this.getDiscountedPurchaseCost(purchase);
+
+    if (purchase.actualCost === undefined) {
+      return discountedCost;
+    }
+
+    const storedActualCost = this.roundCurrency(purchase.actualCost);
+    return Math.abs(storedActualCost - discountedCost) <= 0.01 ? storedActualCost : discountedCost;
+  }
+
+  static getTotalEffectivePurchaseCost(
+    purchases: Array<Pick<Purchase, 'totalCost' | 'discount' | 'actualCost'>>
+  ): number {
+    return this.roundCurrency(
+      purchases.reduce((total, purchase) => total + this.getEffectivePurchaseCost(purchase), 0)
+    );
+  }
+
   /**
    * Calculate total revenue from all sales
    */
@@ -116,8 +151,11 @@ export class RevenueService {
     externalPayment: number;
     paymentSource: PaymentSource;
   } {
-    const clampedCashUsed = Math.max(0, Math.min(cashToUse, totalCost));
-    const externalPayment = totalCost - clampedCashUsed;
+    const normalizedTotalCost = this.roundCurrency(Math.max(0, totalCost));
+    const clampedCashUsed = this.roundCurrency(
+      Math.max(0, Math.min(cashToUse, normalizedTotalCost))
+    );
+    const externalPayment = this.roundCurrency(normalizedTotalCost - clampedCashUsed);
 
     let paymentSource: PaymentSource;
     if (clampedCashUsed === 0) {
@@ -155,7 +193,10 @@ export class RevenueService {
     }
 
     // Calculate payment breakdown
-    const paymentBreakdown = this.calculatePaymentBreakdown(purchase.totalCost, cashToUse);
+    const paymentBreakdown = this.calculatePaymentBreakdown(
+      this.getEffectivePurchaseCost(purchase),
+      cashToUse
+    );
 
     // Create withdrawal if cash is used
     let withdrawal: CashWithdrawal | null = null;
