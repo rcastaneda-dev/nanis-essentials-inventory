@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 import { Heading } from '../atoms/Typography';
@@ -18,7 +18,6 @@ interface NavigationBarProps {
   brandTitle: string;
   activeTab: Tab;
   onTabChange: (_tab: Tab) => void;
-  drawerFooter?: React.ReactNode;
   selectedBranchId?: string | 'main';
   onBranchChange?: (_branchId: string | 'main') => void;
   branchOptions?: Array<{ value: string; label: string }>;
@@ -29,7 +28,6 @@ export function NavigationBar({
   brandTitle,
   activeTab,
   onTabChange,
-  drawerFooter,
   selectedBranchId,
   onBranchChange,
   branchOptions,
@@ -124,7 +122,6 @@ export function NavigationBar({
               </Button>
             ))}
           </div>
-          {drawerFooter && <div className="mobile-drawer-footer">{drawerFooter}</div>}
         </nav>
       </>
     );
