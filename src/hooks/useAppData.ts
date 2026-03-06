@@ -129,21 +129,14 @@ export function useAppData() {
   // --- Branch ---
 
   const saveBranch = useCallback(async (branch: Branch) => {
-    const tempId = branch.id;
     setDb(prev => {
-      const exists = prev.branches.find(b => b.id === tempId);
+      const exists = prev.branches.find(b => b.id === branch.id);
       const nextBranches = exists
-        ? prev.branches.map(b => (b.id === tempId ? branch : b))
+        ? prev.branches.map(b => (b.id === branch.id ? branch : b))
         : [...prev.branches, branch];
       return { ...prev, branches: nextBranches };
     });
-    const dbId = await upsertBranchApi(branch);
-    if (dbId !== tempId) {
-      setDb(prev => ({
-        ...prev,
-        branches: prev.branches.map(b => (b.id === tempId ? { ...b, id: dbId } : b)),
-      }));
-    }
+    await upsertBranchApi(branch);
   }, []);
 
   const saveMoveToBranch = useCallback(
@@ -173,21 +166,14 @@ export function useAppData() {
   // --- Transaction ---
 
   const saveTransaction = useCallback(async (tx: Transaction) => {
-    const tempId = tx.id;
     setDb(prev => {
-      const exists = prev.transactions.find(t => t.id === tempId);
+      const exists = prev.transactions.find(t => t.id === tx.id);
       const next = exists
-        ? prev.transactions.map(t => (t.id === tempId ? tx : t))
+        ? prev.transactions.map(t => (t.id === tx.id ? tx : t))
         : [...prev.transactions, tx];
       return { ...prev, transactions: next };
     });
-    const dbId = await upsertTransactionApi(tx);
-    if (dbId !== tempId) {
-      setDb(prev => ({
-        ...prev,
-        transactions: prev.transactions.map(t => (t.id === tempId ? { ...t, id: dbId } : t)),
-      }));
-    }
+    await upsertTransactionApi(tx);
   }, []);
 
   const removeTransaction = useCallback(async (id: string) => {
@@ -198,21 +184,14 @@ export function useAppData() {
   // --- Cash Withdrawal ---
 
   const saveCashWithdrawal = useCallback(async (cw: CashWithdrawal) => {
-    const tempId = cw.id;
     setDb(prev => {
-      const exists = prev.cashWithdrawals.find(w => w.id === tempId);
+      const exists = prev.cashWithdrawals.find(w => w.id === cw.id);
       const next = exists
-        ? prev.cashWithdrawals.map(w => (w.id === tempId ? cw : w))
+        ? prev.cashWithdrawals.map(w => (w.id === cw.id ? cw : w))
         : [...prev.cashWithdrawals, cw];
       return { ...prev, cashWithdrawals: next };
     });
-    const dbId = await upsertCashWithdrawalApi(cw);
-    if (dbId !== tempId) {
-      setDb(prev => ({
-        ...prev,
-        cashWithdrawals: prev.cashWithdrawals.map(w => (w.id === tempId ? { ...w, id: dbId } : w)),
-      }));
-    }
+    await upsertCashWithdrawalApi(cw);
   }, []);
 
   // --- Purchase ---
@@ -223,11 +202,10 @@ export function useAppData() {
       updatedItems: InventoryItem[],
       updatedWithdrawals?: CashWithdrawal[]
     ) => {
-      const tempId = purchase.id;
       setDb(prev => {
-        const exists = prev.purchases.find(p => p.id === tempId);
+        const exists = prev.purchases.find(p => p.id === purchase.id);
         const nextPurchases = exists
-          ? prev.purchases.map(p => (p.id === tempId ? purchase : p))
+          ? prev.purchases.map(p => (p.id === purchase.id ? purchase : p))
           : [...prev.purchases, purchase];
 
         const nextItems = [...prev.items];
@@ -246,13 +224,7 @@ export function useAppData() {
           cashWithdrawals: nextWithdrawals,
         };
       });
-      const dbId = await upsertPurchaseWithRelations(purchase, updatedItems, updatedWithdrawals);
-      if (dbId !== tempId) {
-        setDb(prev => ({
-          ...prev,
-          purchases: prev.purchases.map(p => (p.id === tempId ? { ...p, id: dbId } : p)),
-        }));
-      }
+      await upsertPurchaseWithRelations(purchase, updatedItems, updatedWithdrawals);
     },
     []
   );
@@ -272,11 +244,10 @@ export function useAppData() {
   // --- Sale ---
 
   const saveSale = useCallback(async (sale: Sale, updatedItems: InventoryItem[]) => {
-    const tempId = sale.id;
     setDb(prev => {
-      const exists = prev.sales.find(s => s.id === tempId);
+      const exists = prev.sales.find(s => s.id === sale.id);
       const nextSales = exists
-        ? prev.sales.map(s => (s.id === tempId ? sale : s))
+        ? prev.sales.map(s => (s.id === sale.id ? sale : s))
         : [...prev.sales, sale];
 
       let nextItems = [...prev.items];
@@ -286,13 +257,7 @@ export function useAppData() {
 
       return { ...prev, sales: nextSales, items: nextItems };
     });
-    const dbId = await upsertSaleWithRelations(sale, updatedItems);
-    if (dbId !== tempId) {
-      setDb(prev => ({
-        ...prev,
-        sales: prev.sales.map(s => (s.id === tempId ? { ...s, id: dbId } : s)),
-      }));
-    }
+    await upsertSaleWithRelations(sale, updatedItems);
   }, []);
 
   const removeSale = useCallback(async (id: string, restoredItems: InventoryItem[]) => {
