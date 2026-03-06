@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { InventoryForm } from './InventoryForm';
 import { BranchManager } from './BranchManager';
@@ -52,6 +52,10 @@ export function InventoryPage({
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('inStock');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastUpdatedItem, setLastUpdatedItem] = useState<{ id: string; branchId?: string } | null>(
+    null
+  );
 
   // Precompute last selling prices for all items (computed once, reused for all cards)
   const lastSellingPricesByItemId = useMemo(() => buildLastSellingPricesMap(db.sales), [db.sales]);
@@ -132,6 +136,23 @@ export function InventoryPage({
         });
     }
   }, [filteredItems, sortBy]);
+
+  const ITEMS_PER_PAGE = 20;
+  const filterSignature = `${searchQuery}|${categoryFilter}|${sortBy}|${selectedBranchId}`;
+
+  // After a product update, navigate to the page containing the updated item so it stays in view.
+  useEffect(() => {
+    if (!lastUpdatedItem || sortedItems.length === 0) return;
+    const idx = sortedItems.findIndex(
+      i =>
+        i.id === lastUpdatedItem.id && (i.branchId ?? null) === (lastUpdatedItem.branchId ?? null)
+    );
+    if (idx >= 0) {
+      const page = Math.floor(idx / ITEMS_PER_PAGE) + 1;
+      setCurrentPage(page);
+    }
+    setLastUpdatedItem(null);
+  }, [lastUpdatedItem, sortedItems]);
 
   const onDelete = useCallback(
     (id: string) => {
@@ -476,7 +497,9 @@ export function InventoryPage({
       brands={db.brands}
       onClose={() => setShowForm(false)}
       onSave={item => {
+        setLastUpdatedItem({ id: item.id, branchId: item.branchId });
         saveProduct(item).catch(err => {
+          setLastUpdatedItem(null);
           // eslint-disable-next-line no-console
           console.error('Failed to save product to Supabase:', err);
           alert(err.message);
@@ -497,6 +520,9 @@ export function InventoryPage({
         sortOptions={sortOptions}
         totalCount={items.length}
         filteredCount={filteredItems.length}
+        filterSignature={filterSignature}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
         items={sortedItems}
         onEditItem={handleEditItem}
         onDeleteItem={onDelete}
