@@ -2,6 +2,7 @@ import { supabase } from './client';
 import { Sale, InventoryItem } from '../../types/models';
 import { toSale, toSupabaseSale, SaleWithLines } from './mappers';
 import { upsertProduct } from './productService';
+import { isValidUUID } from '../utils';
 
 export async function fetchAllSales(): Promise<Sale[]> {
   const { data, error } = await supabase
@@ -19,35 +20,52 @@ export async function fetchAllSales(): Promise<Sale[]> {
 }
 
 /**
- * Upsert a sale with its lines and updated inventory items.
- * Line strategy: delete all existing lines for this sale, then re-insert.
+ * Save a sale header, lines, and inventory updates.
+ * New records are inserted without id (DB generates uuid).
+ * Lines are always deleted+re-inserted without id.
+ * Returns the DB-generated sale id.
  */
 export async function upsertSaleWithRelations(
   sale: Sale,
   updatedItems: InventoryItem[]
-): Promise<void> {
+): Promise<string> {
   const { row, lineRows } = toSupabaseSale(sale);
+  const isNew = !isValidUUID(sale.id);
+  let saleId: string;
 
-  // 1. Upsert the sale header
-  const { error: saleError } = await supabase.from('sales').upsert(row, { onConflict: 'id' });
-  if (saleError) throw new Error(`Failed to save sale: ${saleError.message}`);
+  if (isNew) {
+    const { id: _, ...insertPayload } = row;
+    const { data, error } = await supabase
+      .from('sales')
+      .insert(insertPayload)
+      .select('id')
+      .single();
+    if (error) throw new Error(`Failed to save sale: ${error.message}`);
+    saleId = data.id as string;
+  } else {
+    const { error } = await supabase.from('sales').update(row).eq('id', sale.id);
+    if (error) throw new Error(`Failed to save sale: ${error.message}`);
+    saleId = sale.id;
 
-  // 2. Replace lines: delete existing, then insert new
-  const { error: deleteError } = await supabase.from('sale_lines').delete().eq('sale_id', sale.id);
-  if (deleteError) throw new Error(`Failed to clear sale lines: ${deleteError.message}`);
+    const { error: deleteError } = await supabase.from('sale_lines').delete().eq('sale_id', saleId);
+    if (deleteError) throw new Error(`Failed to clear sale lines: ${deleteError.message}`);
+  }
+
+  await Promise.all(updatedItems.map(item => upsertProduct(item)));
 
   if (lineRows.length > 0) {
-    const rowsWithSaleId = lineRows.map(l => ({ ...l, sale_id: sale.id }));
+    const rowsWithSaleId = lineRows.map(({ id: _, ...rest }) => ({
+      ...rest,
+      sale_id: saleId,
+    }));
     const { error: insertError } = await supabase.from('sale_lines').insert(rowsWithSaleId);
     if (insertError) throw new Error(`Failed to insert sale lines: ${insertError.message}`);
   }
 
-  // 3. Update inventory for affected products
-  await Promise.all(updatedItems.map(item => upsertProduct(item)));
+  return saleId;
 }
 
 export async function deleteSale(id: string): Promise<void> {
-  // Lines cascade-delete automatically via FK constraint
   const { error } = await supabase.from('sales').delete().eq('id', id);
   if (error) throw new Error(`Failed to delete sale: ${error.message}`);
 }
