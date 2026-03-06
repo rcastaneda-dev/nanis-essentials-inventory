@@ -17,10 +17,7 @@ function hasQuantityChanges(oldLines: PurchaseLine[], newLines: PurchaseLine[]):
 
     if (!newLine) return true; // Item was removed/replaced
 
-    const oldUnits = oldLine.quantity + (oldLine.hasSubItems ? (oldLine.subItemsQty ?? 0) : 0);
-    const newUnits = newLine.quantity + (newLine.hasSubItems ? (newLine.subItemsQty ?? 0) : 0);
-
-    if (oldUnits !== newUnits) return true;
+    if (oldLine.quantity !== newLine.quantity) return true;
   }
 
   return false;
@@ -43,8 +40,6 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
         itemId: items[0]?.id ?? '',
         quantity: 1,
         unitCost: 0,
-        hasSubItems: false,
-        subItemsQty: 0,
       },
     ]
   );
@@ -96,8 +91,6 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
         itemId: items[0]?.id ?? '',
         quantity: 1,
         unitCost: 0,
-        hasSubItems: false,
-        subItemsQty: 0,
       },
     ]);
   }
@@ -123,7 +116,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
   };
 
   function totalUnits(ls = lines) {
-    return ls.reduce((acc, l) => acc + l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0), 0);
+    return ls.reduce((acc, l) => acc + l.quantity, 0);
   }
 
   function save() {
@@ -142,15 +135,14 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
     const totalWeight = lines.reduce((acc, l) => {
       const item = items.find(item => item.id === l.itemId);
       const itemWeight = item?.weightLbs ?? 0;
-      const lineUnits = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
-      return acc + itemWeight * lineUnits;
+      return acc + itemWeight * l.quantity;
     }, 0);
 
     // Allocate costs to each purchase line
     const enriched = lines.map(l => {
       const item = items.find(item => item.id === l.itemId);
       const itemWeight = item?.weightLbs ?? 0;
-      const lineUnits = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
+      const lineUnits = l.quantity;
       const lineWeight = itemWeight * lineUnits;
 
       // Proportional tax distribution based on item price using taxRatePercent
@@ -202,7 +194,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
 
     if (shouldUpdateInventory) {
       enriched.forEach(l => {
-        const unitsLine = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
+        const unitsLine = l.quantity;
         itemsUpdated = itemsUpdated.map(it => {
           if (it.id !== l.itemId) return it;
 
@@ -211,9 +203,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           if (initial) {
             const oldLine = initial.lines.find(oldL => oldL.itemId === l.itemId);
             if (oldLine) {
-              const oldUnits =
-                oldLine.quantity + (oldLine.hasSubItems ? (oldLine.subItemsQty ?? 0) : 0);
-              currentStock = Math.max(0, currentStock - oldUnits);
+              currentStock = Math.max(0, currentStock - oldLine.quantity);
             }
           }
 
@@ -305,7 +295,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
 
       {lines.map((l, idx) => (
         <div key={l.id} className="grid-with-delete" data-testid={`purchase-line-${idx}`}>
-          <div className="grid four row-gap">
+          <div className="grid three row-gap">
             <div>
               <label>{t('purchases.selectItem')}</label>
               <div className="item-selector">
@@ -324,9 +314,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
                       const newWeight = newLines.reduce((acc, line) => {
                         const item = items.find(item => item.id === line.itemId);
                         const itemWeight = item?.weightLbs ?? 0;
-                        const lineUnits =
-                          line.quantity + (line.hasSubItems ? (line.subItemsQty ?? 0) : 0);
-                        return acc + itemWeight * lineUnits;
+                        return acc + itemWeight * line.quantity;
                       }, 0);
                       if (newWeight > 0) {
                         setWeight(Math.max(1, Math.ceil(newWeight)));
@@ -375,9 +363,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
                   const newWeight = newLines.reduce((acc, line) => {
                     const item = items.find(item => item.id === line.itemId);
                     const itemWeight = item?.weightLbs ?? 0;
-                    const lineUnits =
-                      line.quantity + (line.hasSubItems ? (line.subItemsQty ?? 0) : 0);
-                    return acc + itemWeight * lineUnits;
+                    return acc + itemWeight * line.quantity;
                   }, 0);
                   if (newWeight > 0) {
                     setWeight(Math.max(1, Math.ceil(newWeight)));
@@ -405,53 +391,8 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
                 data-testid="unit-cost-input"
               />
             </div>
-            <div className="checkbox">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={l.hasSubItems}
-                  onChange={e =>
-                    setLines(
-                      lines.map(x => (x.id === l.id ? { ...x, hasSubItems: e.target.checked } : x))
-                    )
-                  }
-                  data-testid="sub-items-checkbox"
-                />
-                {t('purchases.subItems')}
-              </label>
-              {l.hasSubItems && (
-                <input
-                  placeholder={t('purchases.subItemsQty')}
-                  value={(l.subItemsQty ?? 0) === 0 ? '' : (l.subItemsQty ?? 0)}
-                  onChange={e => {
-                    const value = e.target.value;
-                    const newLines = lines.map(x =>
-                      x.id === l.id
-                        ? { ...x, subItemsQty: value === '' ? 0 : parseNumber(value) }
-                        : x
-                    );
-                    setLines(newLines);
-
-                    // Update weight when sub-items quantity changes (if items have weights)
-                    const newWeight = newLines.reduce((acc, line) => {
-                      const item = items.find(item => item.id === line.itemId);
-                      const itemWeight = item?.weightLbs ?? 0;
-                      const lineUnits =
-                        line.quantity + (line.hasSubItems ? (line.subItemsQty ?? 0) : 0);
-                      return acc + itemWeight * lineUnits;
-                    }, 0);
-                    if (newWeight > 0) {
-                      setWeight(Math.max(1, Math.ceil(newWeight)));
-                      setShipIntl(Math.max(1, Math.ceil(newWeight)) * weightCost);
-                    }
-                  }}
-                  data-testid="sub-items-quantity-input"
-                />
-              )}
-            </div>
-
             {idx === lines.length - 1 && (
-              <div className="col-span-4">
+              <div className="col-span-3">
                 <button className="link" onClick={addLine} data-testid="add-purchase-line-btn">
                   {t('purchases.addAnotherItem')}
                 </button>
@@ -599,7 +540,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
             </>
           )}{' '}
           &nbsp;
-          <span className="muted">{t('purchases.itemsInclSubItems', { count: totalUnits() })}</span>
+          <span className="muted">{t('purchases.itemsCount', { count: totalUnits() })}</span>
         </div>
       </div>
 

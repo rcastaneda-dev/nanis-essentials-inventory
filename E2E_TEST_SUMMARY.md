@@ -9,7 +9,7 @@ Successfully implemented a comprehensive Playwright + TypeScript test suite foll
 | Test Suite    | Scenarios | Key Workflows                                               |
 | ------------- | --------- | ----------------------------------------------------------- |
 | **Inventory** | 8 tests   | Auto-pricing, search, stock status, image support           |
-| **Purchases** | 8 tests   | Cost allocation, multi-line, quick-add, sub-items           |
+| **Purchases** | 8 tests   | Cost allocation, multi-line, quick-add                      |
 | **Sales**     | 8 tests   | Buyer grouping, autocomplete, installments, price hints     |
 | **Analytics** | 8 tests   | Real-time calculations, empty states, this month vs overall |
 | **Backup**    | 6 tests   | Export/import, legacy conversion, error handling            |

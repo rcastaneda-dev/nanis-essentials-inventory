@@ -28,7 +28,7 @@ export function PurchasesPage({ db, savePurchase, removePurchase }: PurchasesPag
         .map(it => {
           const qty = p.lines
             .filter(l => l.itemId === it.id)
-            .reduce((acc, l) => acc + l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0), 0);
+            .reduce((acc, l) => acc + l.quantity, 0);
           return qty > 0 ? { ...it, stock: Math.max(0, it.stock - qty) } : it;
         })
         .filter(it => {
