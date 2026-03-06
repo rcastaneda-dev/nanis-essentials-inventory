@@ -69,6 +69,9 @@ export function ItemGrid({
     );
   }
 
+  const itemKey = (item: InventoryItem) =>
+    item.branchId ? `${item.id}-${item.branchId}` : item.id;
+
   // For small lists, render without virtualization
   if (!shouldVirtualize) {
     return (
@@ -78,7 +81,7 @@ export function ItemGrid({
           const branchName = item.branchId ? branchNameById?.get(item.branchId) : undefined;
           return (
             <ItemCard
-              key={item.id}
+              key={itemKey(item)}
               item={item}
               onEdit={onEdit}
               onDelete={onDelete}
@@ -101,9 +104,9 @@ export function ItemGrid({
           const branchName = item.branchId ? branchNameById?.get(item.branchId) : undefined;
           return (
             <div
-              key={item.id}
+              key={itemKey(item)}
               style={{ flex: 1, minWidth: 0 }}
-              data-testid={`${testId}-item-${item.id}`}
+              data-testid={`${testId}-item-${itemKey(item)}`}
             >
               <ItemCard
                 item={item}

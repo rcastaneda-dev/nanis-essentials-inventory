@@ -24,6 +24,8 @@ interface InventoryPageTemplateProps {
   sortOptions: Array<{ value: string; label: string; disabled?: boolean }>;
   totalCount: number;
   filteredCount: number;
+  /** When this changes, pagination resets to page 1. Use to reset on filter/sort change, not on in-place updates. */
+  filterSignature?: string;
   categoryFilter?: string;
   onCategoryChange?: (_category: string) => void;
   categoryOptions?: Array<{ value: string; label: string; disabled?: boolean }>;
@@ -36,6 +38,9 @@ interface InventoryPageTemplateProps {
   items: InventoryItem[];
   onEditItem: (_item: InventoryItem) => void;
   onDeleteItem: (_id: string) => void;
+  /** Controlled pagination: current page (1-based) and setter. When provided, pagination is controlled by parent. */
+  currentPage?: number;
+  onPageChange?: (_page: number) => void;
   showEmptyState: boolean;
   showNoResults: boolean;
 
@@ -70,17 +75,33 @@ export function InventoryPageTemplate({
   branchName,
   lastSellingPricesByItemId,
   branchNameById,
+  filterSignature,
+  currentPage: controlledPage,
+  onPageChange,
 }: InventoryPageTemplateProps) {
   const { t } = useTranslation();
   const ITEMS_PER_PAGE = 20;
-  const [currentPage, setCurrentPage] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
+
+  const isControlled = controlledPage !== undefined && onPageChange;
+  const currentPage = isControlled ? controlledPage : internalPage;
+  const setCurrentPage = isControlled ? onPageChange : setInternalPage;
+
   const totalPages = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedItems = items.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
+  // Reset to page 1 only when filters/sort change — not on in-place product updates.
   useEffect(() => {
     setCurrentPage(1);
-  }, [items.length]);
+  }, [filterSignature, setCurrentPage]);
+
+  // When result set size changes, clamp to valid page range (avoid empty page).
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages >= 1) {
+      setCurrentPage(totalPages);
+    }
+  }, [items.length, totalPages, currentPage, setCurrentPage]);
 
   const pageTitle = branchName
     ? `${t('inventory.title')} - ${branchName}`
@@ -131,7 +152,7 @@ export function InventoryPageTemplate({
         >
           <button
             type="button"
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
             style={{
               padding: '0.5rem 1rem',
@@ -151,7 +172,7 @@ export function InventoryPageTemplate({
           </span>
           <button
             type="button"
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
             style={{
               padding: '0.5rem 1rem',
