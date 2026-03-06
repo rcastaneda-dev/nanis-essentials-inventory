@@ -4,6 +4,43 @@ import { toInventoryItem, toSupabaseProduct, LocationWithProduct } from './mappe
 import { uploadProductImages, isBase64Image } from './storageService';
 import { isValidUUID } from '../utils';
 
+type ExistingLocationInventoryRow = {
+  id: string;
+  product_id: string;
+  branch_id: string | null;
+};
+
+function getLocationInventoryKey(productId: string, branchId: string | null) {
+  return `${productId}:${branchId ?? 'null'}`;
+}
+
+async function fetchExistingLocationInventoryIds(items: InventoryItem[]) {
+  const existingProductIds = Array.from(new Set(items.map(item => item.id).filter(isValidUUID)));
+  const existingLocationInventoryIds = new Map<string, string>();
+
+  if (existingProductIds.length === 0) {
+    return existingLocationInventoryIds;
+  }
+
+  const { data, error } = await supabase
+    .from('location_inventory')
+    .select('id, product_id, branch_id')
+    .in('product_id', existingProductIds);
+
+  if (error) {
+    throw new Error(`Failed to fetch inventory rows: ${error.message}`);
+  }
+
+  for (const row of (data ?? []) as ExistingLocationInventoryRow[]) {
+    existingLocationInventoryIds.set(
+      getLocationInventoryKey(row.product_id, row.branch_id),
+      row.id
+    );
+  }
+
+  return existingLocationInventoryIds;
+}
+
 /**
  * Fetch all products joined with their location inventory from Supabase.
  * Each location_inventory row produces one InventoryItem (product + stock at location).
@@ -60,7 +97,10 @@ export async function fetchAllProducts(): Promise<InventoryItem[]> {
  * Existing products (valid UUID from DB) are updated in place.
  * Returns the DB id (generated for inserts, unchanged for updates).
  */
-export async function upsertProduct(item: InventoryItem): Promise<string> {
+export async function upsertProduct(
+  item: InventoryItem,
+  options?: { existingLocationInventoryId?: string | null }
+): Promise<string> {
   const isNew = !isValidUUID(item.id);
   const hasNewImages = item.images.some(img => isBase64Image(img.dataUrl));
 
@@ -93,7 +133,7 @@ export async function upsertProduct(item: InventoryItem): Promise<string> {
 
     const dbId = data.id as string;
     locationInventory.product_id = dbId;
-    await upsertLocationInventory(locationInventory);
+    await upsertLocationInventory(locationInventory, options?.existingLocationInventoryId ?? null);
     return dbId;
   }
 
@@ -101,8 +141,28 @@ export async function upsertProduct(item: InventoryItem): Promise<string> {
 
   if (productError) throw new Error(`Failed to save product: ${productError.message}`);
 
-  await upsertLocationInventory(locationInventory);
+  await upsertLocationInventory(locationInventory, options?.existingLocationInventoryId);
   return item.id;
+}
+
+export async function upsertProducts(items: InventoryItem[]): Promise<Map<string, string>> {
+  const existingLocationInventoryIds = await fetchExistingLocationInventoryIds(items);
+  const productIdMap = new Map<string, string>();
+
+  for (const item of items) {
+    const existingLocationInventoryId = isValidUUID(item.id)
+      ? (existingLocationInventoryIds.get(
+          getLocationInventoryKey(item.id, item.branchId ?? null)
+        ) ?? null)
+      : null;
+    const dbId = await upsertProduct(item, { existingLocationInventoryId });
+
+    if (dbId !== item.id) {
+      productIdMap.set(item.id, dbId);
+    }
+  }
+
+  return productIdMap;
 }
 
 /** Pending move from MoveToBranchModal: itemId is product id. */
@@ -149,26 +209,34 @@ export async function persistMoveToBranch(
  * PostgreSQL unique indexes don't match NULLs by default, so we manually
  * check-then-insert/update for the NULL branch case.
  */
-async function upsertLocationInventory(loc: {
-  product_id: string;
-  branch_id: string | null;
-  stock: number;
-}) {
-  let query = supabase.from('location_inventory').select('id').eq('product_id', loc.product_id);
+async function upsertLocationInventory(
+  loc: {
+    product_id: string;
+    branch_id: string | null;
+    stock: number;
+  },
+  existingLocationInventoryId?: string | null
+) {
+  let rowId = existingLocationInventoryId;
 
-  if (loc.branch_id) {
-    query = query.eq('branch_id', loc.branch_id);
-  } else {
-    query = query.is('branch_id', null);
+  if (rowId === undefined) {
+    let query = supabase.from('location_inventory').select('id').eq('product_id', loc.product_id);
+
+    if (loc.branch_id) {
+      query = query.eq('branch_id', loc.branch_id);
+    } else {
+      query = query.is('branch_id', null);
+    }
+
+    const { data: existing } = await query.maybeSingle();
+    rowId = existing?.id ?? null;
   }
 
-  const { data: existing } = await query.maybeSingle();
-
-  if (existing) {
+  if (rowId) {
     const { error } = await supabase
       .from('location_inventory')
       .update({ stock: loc.stock, updated_at: new Date().toISOString() })
-      .eq('id', existing.id);
+      .eq('id', rowId);
 
     if (error) {
       throw new Error(`Failed to update inventory: ${error.message}`);

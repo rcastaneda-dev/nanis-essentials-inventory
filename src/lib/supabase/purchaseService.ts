@@ -1,7 +1,7 @@
 import { supabase } from './client';
 import { Purchase, InventoryItem, CashWithdrawal } from '../../types/models';
 import { toPurchase, toSupabasePurchase, PurchaseWithLines } from './mappers';
-import { upsertProduct } from './productService';
+import { upsertProducts } from './productService';
 import { upsertCashWithdrawal } from './cashWithdrawalService';
 import { isValidUUID } from '../utils';
 
@@ -57,11 +57,7 @@ export async function upsertPurchaseWithRelations(
   }
 
   // Save products first so temp ids from QuickAdd resolve to real UUIDs
-  const productIdMap = new Map<string, string>();
-  for (const item of updatedItems) {
-    const dbId = await upsertProduct(item);
-    if (dbId !== item.id) productIdMap.set(item.id, dbId);
-  }
+  const productIdMap = await upsertProducts(updatedItems);
 
   if (lineRows.length > 0) {
     const rowsWithPurchaseId = lineRows.map(({ id: _, ...rest }) => ({
@@ -74,7 +70,10 @@ export async function upsertPurchaseWithRelations(
   }
 
   if (updatedWithdrawals) {
-    await Promise.all(updatedWithdrawals.map(cw => upsertCashWithdrawal(cw)));
+    const withdrawalsWithPurchaseId = updatedWithdrawals.map(cw =>
+      cw.linkedPurchaseId === purchase.id ? { ...cw, linkedPurchaseId: purchaseId } : cw
+    );
+    await Promise.all(withdrawalsWithPurchaseId.map(cw => upsertCashWithdrawal(cw)));
   }
 
   return purchaseId;
