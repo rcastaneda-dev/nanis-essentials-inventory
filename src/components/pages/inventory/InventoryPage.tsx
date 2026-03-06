@@ -184,22 +184,18 @@ export function InventoryPage({
       const { lines, tax, shippingUS, shippingIntl, subtotal } = purchase;
 
       // Calculate total units and weight for this purchase
-      const totalUnits = lines.reduce(
-        (acc, l) => acc + l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0),
-        0
-      );
+      const totalUnits = lines.reduce((acc, l) => acc + l.quantity, 0);
       const totalWeight = lines.reduce((acc, l) => {
         const item = updatedItems.find(item => item.id === l.itemId);
         const itemWeight = item?.weightLbs ?? 0;
-        const lineUnits = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
-        return acc + itemWeight * lineUnits;
+        return acc + itemWeight * l.quantity;
       }, 0);
 
       // Recalculate allocations for each line
       const updatedLines = lines.map(l => {
         const item = updatedItems.find(item => item.id === l.itemId);
         const itemWeight = item?.weightLbs ?? 0;
-        const lineUnits = l.quantity + (l.hasSubItems ? (l.subItemsQty ?? 0) : 0);
+        const lineUnits = l.quantity;
         const lineWeight = itemWeight * lineUnits;
 
         // Proportional tax distribution based on unit cost

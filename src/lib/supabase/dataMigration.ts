@@ -198,8 +198,6 @@ export async function migrateBackupToSupabase(
         product_id: remap(l.itemId),
         quantity: l.quantity,
         unit_cost: l.unitCost,
-        has_sub_items: l.hasSubItems ?? false,
-        sub_items_qty: l.subItemsQty ?? null,
         per_unit_tax: l.perUnitTax ?? null,
         per_unit_shipping_us: l.perUnitShippingUS ?? null,
         per_unit_shipping_intl: l.perUnitShippingIntl ?? null,
