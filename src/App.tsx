@@ -44,6 +44,23 @@ export default function App() {
     updatePassword,
     signOut,
   } = useAuth();
+
+  if (authLoading) {
+    return <PageLoader />;
+  }
+
+  if (!session) {
+    return <LoginPage onSignInWithPassword={signInWithPassword} onSignInWithOtp={signInWithOtp} />;
+  }
+
+  if (isPasswordRecovery) {
+    return <ResetPasswordPage onUpdatePassword={updatePassword} />;
+  }
+
+  return <AuthenticatedApp onSignOut={signOut} />;
+}
+
+function AuthenticatedApp({ onSignOut }: { onSignOut: () => Promise<void> }) {
   const {
     db,
     persist,
@@ -86,18 +103,6 @@ export default function App() {
       setTab('inventory');
     }
   }, [hiddenTabs, tab]);
-
-  if (authLoading) {
-    return <PageLoader />;
-  }
-
-  if (!session) {
-    return <LoginPage onSignInWithPassword={signInWithPassword} onSignInWithOtp={signInWithOtp} />;
-  }
-
-  if (isPasswordRecovery) {
-    return <ResetPasswordPage onUpdatePassword={updatePassword} />;
-  }
 
   const renderPageContent = () => {
     switch (tab) {
@@ -168,7 +173,7 @@ export default function App() {
       brandTitle="Nani's Essentials"
       activeTab={tab}
       onTabChange={setTab}
-      onSignOut={signOut}
+      onSignOut={onSignOut}
       selectedBranchId={selectedBranchId}
       onBranchChange={setSelectedBranchId}
       branchOptions={branchOptions}
