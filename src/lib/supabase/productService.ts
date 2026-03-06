@@ -54,8 +54,8 @@ export async function fetchAllProducts(): Promise<InventoryItem[]> {
 
 /**
  * Save a product and its location inventory to Supabase.
- * New products (non-UUID id) are inserted without id — the DB generates one.
- * Existing products (valid UUID) are updated in place.
+ * New products (non-UUID id, e.g. from uid()) are inserted without id — the DB generates one.
+ * Existing products (valid UUID from DB) are updated in place.
  * Returns the DB id (generated for inserts, unchanged for updates).
  */
 export async function upsertProduct(item: InventoryItem): Promise<string> {
@@ -87,7 +87,7 @@ export async function upsertProduct(item: InventoryItem): Promise<string> {
       .select('id')
       .single();
 
-    if (error) throw new Error(`Failed to create product: ${error.message}`);
+    if (error) throw new Error(`Failed to save product: ${error.message}`);
 
     const dbId = data.id as string;
     locationInventory.product_id = dbId;
@@ -97,7 +97,7 @@ export async function upsertProduct(item: InventoryItem): Promise<string> {
 
   const { error: productError } = await supabase.from('products').update(product).eq('id', item.id);
 
-  if (productError) throw new Error(`Failed to update product: ${productError.message}`);
+  if (productError) throw new Error(`Failed to save product: ${productError.message}`);
 
   await upsertLocationInventory(locationInventory);
   return item.id;

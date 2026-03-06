@@ -1,7 +1,6 @@
 import { supabase } from './client';
 import { Branch } from '../../types/models';
 import { toBranch, toSupabaseBranch, BranchRow } from './mappers';
-import { isValidUUID } from '../utils';
 
 export async function fetchAllBranches(): Promise<Branch[]> {
   const { data, error } = await supabase
@@ -13,24 +12,10 @@ export async function fetchAllBranches(): Promise<Branch[]> {
   return (data as BranchRow[]).map(toBranch);
 }
 
-export async function upsertBranch(branch: Branch): Promise<string> {
+export async function upsertBranch(branch: Branch): Promise<void> {
   const row = toSupabaseBranch(branch);
-  const isNew = !isValidUUID(branch.id);
-
-  if (isNew) {
-    const { id: _, ...insertPayload } = row;
-    const { data, error } = await supabase
-      .from('branches')
-      .insert(insertPayload)
-      .select('id')
-      .single();
-    if (error) throw new Error(`Failed to create branch: ${error.message}`);
-    return data.id as string;
-  }
-
-  const { error } = await supabase.from('branches').update(row).eq('id', branch.id);
-  if (error) throw new Error(`Failed to update branch: ${error.message}`);
-  return branch.id;
+  const { error } = await supabase.from('branches').upsert(row, { onConflict: 'id' });
+  if (error) throw new Error(`Failed to save branch: ${error.message}`);
 }
 
 export async function deleteBranch(id: string): Promise<void> {
