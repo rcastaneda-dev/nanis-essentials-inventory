@@ -341,8 +341,6 @@ export interface PurchaseLineRow {
   product_id: string;
   quantity: number;
   unit_cost: number;
-  has_sub_items: boolean;
-  sub_items_qty: number | null;
   per_unit_tax: number | null;
   per_unit_shipping_us: number | null;
   per_unit_shipping_intl: number | null;
@@ -360,8 +358,6 @@ function toPurchaseLine(row: PurchaseLineRow): PurchaseLine {
     itemId: row.product_id,
     quantity: Number(row.quantity),
     unitCost: Number(row.unit_cost),
-    hasSubItems: row.has_sub_items,
-    subItemsQty: row.sub_items_qty !== null ? Number(row.sub_items_qty) : undefined,
     perUnitTax: row.per_unit_tax !== null ? Number(row.per_unit_tax) : undefined,
     perUnitShippingUS:
       row.per_unit_shipping_us !== null ? Number(row.per_unit_shipping_us) : undefined,
@@ -418,8 +414,6 @@ export function toSupabasePurchase(purchase: Purchase) {
     product_id: l.itemId,
     quantity: l.quantity,
     unit_cost: l.unitCost,
-    has_sub_items: l.hasSubItems,
-    sub_items_qty: l.subItemsQty ?? null,
     per_unit_tax: l.perUnitTax ?? null,
     per_unit_shipping_us: l.perUnitShippingUS ?? null,
     per_unit_shipping_intl: l.perUnitShippingIntl ?? null,

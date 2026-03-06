@@ -62,10 +62,8 @@ export interface InventoryItem {
 export interface PurchaseLine {
   id: string;
   itemId: string;
-  quantity: number; // number of parent units
-  unitCost: number; // base cost per parent unit (pre-shipping/tax)
-  hasSubItems: boolean;
-  subItemsQty?: number; // only if hasSubItems === true
+  quantity: number; // number of units
+  unitCost: number; // base cost per unit (pre-shipping/tax)
   // Derived per-unit allocations (post-save)
   perUnitTax?: number;
   perUnitShippingUS?: number;
@@ -87,7 +85,7 @@ export interface Purchase {
   shippingIntl: number; // default weight * weightCost
   weightLbs: number;
   // Derived
-  totalUnits: number; // includes sub-items
+  totalUnits: number;
   totalCost: number; // subtotal + tax + shippingUS + shippingIntl (before discount)
   actualCost: number; // totalCost - discount (actual amount paid, used for analytics)
   // Cash reinvestment
