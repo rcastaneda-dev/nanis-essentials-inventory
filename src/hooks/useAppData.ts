@@ -14,7 +14,8 @@ import {
   fetchAllProducts,
   upsertProduct,
   persistMoveToBranch,
-  PendingMoveToBranch,
+  persistMoveToMain,
+  PendingMove,
 } from '../lib/supabase/productService';
 import {
   fetchAllBranches,
@@ -176,12 +177,16 @@ export function useAppData() {
   }, []);
 
   const saveMoveToBranch = useCallback(
-    async (
-      pendingMoves: PendingMoveToBranch[],
-      targetBranchId: string,
-      updatedItems: InventoryItem[]
-    ) => {
+    async (pendingMoves: PendingMove[], targetBranchId: string, updatedItems: InventoryItem[]) => {
       await persistMoveToBranch(pendingMoves, targetBranchId, updatedItems);
+      setDb(prev => ({ ...prev, items: updatedItems }));
+    },
+    []
+  );
+
+  const saveMoveToMain = useCallback(
+    async (pendingMoves: PendingMove[], sourceBranchId: string, updatedItems: InventoryItem[]) => {
+      await persistMoveToMain(pendingMoves, sourceBranchId, updatedItems);
       setDb(prev => ({ ...prev, items: updatedItems }));
     },
     []
@@ -346,6 +351,7 @@ export function useAppData() {
     // Branch
     saveBranch,
     saveMoveToBranch,
+    saveMoveToMain,
     removeBranch,
     // Settings
     saveSettings,

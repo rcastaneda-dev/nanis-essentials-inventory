@@ -69,6 +69,7 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => Promise<void> }) {
     saveProduct,
     saveBranch,
     saveMoveToBranch,
+    saveMoveToMain,
     savePurchase,
     removePurchase,
     saveSale,
@@ -116,6 +117,7 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => Promise<void> }) {
             productsLoading={loading}
             saveBranch={saveBranch}
             saveMoveToBranch={saveMoveToBranch}
+            saveMoveToMain={saveMoveToMain}
             selectedBranchId={selectedBranchId}
           />
         );
@@ -162,6 +164,7 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => Promise<void> }) {
             productsLoading={loading}
             saveBranch={saveBranch}
             saveMoveToBranch={saveMoveToBranch}
+            saveMoveToMain={saveMoveToMain}
             selectedBranchId={selectedBranchId}
           />
         );
