@@ -172,43 +172,97 @@ export async function upsertProducts(items: InventoryItem[]): Promise<Map<string
   return productIdMap;
 }
 
-/** Pending move from MoveToBranchModal: itemId is product id. */
-export type PendingMoveToBranch = {
+/** Pending move: itemId is product id. */
+export type PendingMove = {
   itemId: string;
   quantity: number;
   item: InventoryItem;
 };
+
+/** @deprecated Use PendingMove instead */
+export type PendingMoveToBranch = PendingMove;
 
 /**
  * Persist "Move Items to Branch" to Supabase: update source (main) and target (branch)
  * location_inventory so data survives refresh.
  */
 export async function persistMoveToBranch(
-  pendingMoves: PendingMoveToBranch[],
+  pendingMoves: PendingMove[],
   targetBranchId: string,
   updatedItems: InventoryItem[]
 ): Promise<void> {
-  for (const move of pendingMoves) {
-    const sourceItem = updatedItems.find(i => i.id === move.itemId && !i.branchId);
-    if (!sourceItem) continue;
+  await Promise.all(
+    pendingMoves.map(async move => {
+      const sourceItem = updatedItems.find(i => i.id === move.itemId && !i.branchId);
+      if (!sourceItem) return;
 
-    await upsertLocationInventory({
-      product_id: move.itemId,
-      branch_id: null,
-      stock: sourceItem.stock,
-    });
+      const branchItem = updatedItems.find(
+        i => i.id === move.itemId && i.branchId === targetBranchId
+      );
 
-    const branchItem = updatedItems.find(
-      i => i.id === move.itemId && i.branchId === targetBranchId
-    );
-    if (branchItem) {
-      await upsertLocationInventory({
-        product_id: move.itemId,
-        branch_id: targetBranchId,
-        stock: branchItem.stock,
-      });
-    }
-  }
+      await Promise.all([
+        upsertLocationInventory({
+          product_id: move.itemId,
+          branch_id: null,
+          stock: sourceItem.stock,
+        }),
+        branchItem
+          ? upsertLocationInventory({
+              product_id: move.itemId,
+              branch_id: targetBranchId,
+              stock: branchItem.stock,
+            })
+          : Promise.resolve(),
+      ]);
+    })
+  );
+}
+
+/**
+ * Persist "Move Items to Main" to Supabase: update source (branch) and target (main)
+ * location_inventory so data survives refresh.
+ * When branch stock reaches 0, the row is deleted.
+ */
+export async function persistMoveToMain(
+  pendingMoves: PendingMove[],
+  sourceBranchId: string,
+  updatedItems: InventoryItem[]
+): Promise<void> {
+  await Promise.all(
+    pendingMoves.map(async move => {
+      const branchItem = updatedItems.find(
+        i => i.id === move.itemId && i.branchId === sourceBranchId
+      );
+      const mainItem = updatedItems.find(i => i.id === move.itemId && !i.branchId);
+
+      const ops: Promise<void>[] = [];
+
+      // Branch item was removed from updatedItems when stock hit 0 → delete the row
+      if (!branchItem) {
+        ops.push(deleteLocationInventory(move.itemId, sourceBranchId));
+      } else {
+        ops.push(
+          upsertLocationInventory({
+            product_id: move.itemId,
+            branch_id: sourceBranchId,
+            stock: branchItem.stock,
+          })
+        );
+      }
+
+      if (mainItem) {
+        ops.push(
+          upsertLocationInventory({
+            product_id: move.itemId,
+            branch_id: null,
+            stock: mainItem.stock,
+          })
+        );
+      }
+
+      await Promise.all(ops);
+    })
+  );
 }
 
 /**
@@ -254,5 +308,18 @@ async function upsertLocationInventory(
     if (error) {
       throw new Error(`Failed to create inventory: ${error.message}`);
     }
+  }
+}
+
+/** Delete a location_inventory row when branch stock reaches 0. */
+async function deleteLocationInventory(productId: string, branchId: string): Promise<void> {
+  const { error } = await supabase
+    .from('location_inventory')
+    .delete()
+    .eq('product_id', productId)
+    .eq('branch_id', branchId);
+
+  if (error) {
+    throw new Error(`Failed to delete location inventory: ${error.message}`);
   }
 }

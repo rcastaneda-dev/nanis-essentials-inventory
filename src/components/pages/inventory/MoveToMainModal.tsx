@@ -17,7 +17,7 @@ interface MoveToMainModalProps {
   db: DB;
   sourceBranchId: string;
   // eslint-disable-next-line no-unused-vars
-  onSave: (moves: PendingMove[]) => void;
+  onSave: (moves: PendingMove[]) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -302,6 +302,7 @@ export function MoveToMainModal({ db, sourceBranchId, onSave, onClose }: MoveToM
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [pendingMoves, setPendingMoves] = useState<PendingMove[]>([]);
+  const [saving, setSaving] = useState(false);
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [quantityModalItem, setQuantityModalItem] = useState<InventoryItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -379,13 +380,22 @@ export function MoveToMainModal({ db, sourceBranchId, onSave, onClose }: MoveToM
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (pendingMoves.length === 0) {
       alert('No items selected to move');
       return;
     }
 
-    onSave(pendingMoves);
+    setSaving(true);
+    try {
+      await onSave(pendingMoves);
+      onClose();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      alert(`Failed to move items: ${message}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const totalPendingUnits = pendingMoves.reduce((sum, m) => sum + m.quantity, 0);
@@ -505,8 +515,14 @@ export function MoveToMainModal({ db, sourceBranchId, onSave, onClose }: MoveToM
               {t('inventory.moveToBranchDialog.reset')}
             </Button>
           )}
-          <Button variant="primary" onClick={handleSave} disabled={pendingMoves.length === 0}>
-            {t('inventory.moveToBranchDialog.saveUnits', { count: totalPendingUnits })}
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            disabled={pendingMoves.length === 0 || saving}
+          >
+            {saving
+              ? t('common.saving', 'Saving...')
+              : t('inventory.moveToBranchDialog.saveUnits', { count: totalPendingUnits })}
           </Button>
           <Button onClick={onClose}>{t('common.cancel')}</Button>
         </div>

@@ -10,7 +10,6 @@ import { SortOption } from '../../molecules/SearchFilters';
 import { DB, InventoryItem } from '../../../types/models';
 import {
   nowIso,
-  uid,
   generateInventoryCSV,
   downloadCSV,
   buildLastSellingPricesMap,
@@ -31,6 +30,11 @@ interface InventoryPageProps {
     _targetBranchId: string,
     _updatedItems: InventoryItem[]
   ) => Promise<void>;
+  saveMoveToMain: (
+    _pendingMoves: Array<{ itemId: string; quantity: number; item: InventoryItem }>,
+    _sourceBranchId: string,
+    _updatedItems: InventoryItem[]
+  ) => Promise<void>;
   selectedBranchId: string | 'main';
 }
 
@@ -41,6 +45,7 @@ export function InventoryPage({
   productsLoading,
   saveBranch,
   saveMoveToBranch,
+  saveMoveToMain,
   selectedBranchId,
 }: InventoryPageProps) {
   const { t } = useTranslation();
@@ -333,7 +338,7 @@ export function InventoryPage({
     await saveMoveToBranch(pendingMoves, targetBranchId, updatedItems);
   };
 
-  const handleMoveToMain = (
+  const handleMoveToMain = async (
     pendingMoves: Array<{ itemId: string; quantity: number; item: InventoryItem }>
   ) => {
     if (selectedBranchId === 'main') return;
@@ -362,8 +367,8 @@ export function InventoryPage({
         ? branchItem.costPostShipping - 1
         : branchCost - 1;
 
-      // Find or create main inventory item
-      const mainItem = updatedItems.find(i => i.name === branchItem.name && !i.branchId);
+      // Find or create main inventory item (match by product id, not name)
+      const mainItem = updatedItems.find(i => i.id === branchItem.id && !i.branchId);
 
       if (mainItem) {
         // Update existing main item
@@ -380,7 +385,6 @@ export function InventoryPage({
         // Create new main item with original cost
         const newMainItem: InventoryItem = {
           ...branchItem,
-          id: uid(),
           branchId: undefined,
           stock: move.quantity,
           costPreShipping: originalCostPre,
@@ -409,8 +413,7 @@ export function InventoryPage({
       }
     });
 
-    persist({ ...db, items: updatedItems });
-    setShowMoveToMain(false);
+    await saveMoveToMain(pendingMoves, selectedBranchId, updatedItems);
   };
 
   const headerActions = [
