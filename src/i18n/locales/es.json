@@ -74,6 +74,7 @@
     "minPrice": "Precio Mínimo",
     "maxPrice": "Precio Máximo",
     "catalogPrice": "Precio de Catálogo (opcional)",
+    "isActive": "Activo",
     "minProfit": "Ganancia Mínima",
     "maxProfit": "Ganancia Máxima",
     "saveChanges": "Guardar Cambios",

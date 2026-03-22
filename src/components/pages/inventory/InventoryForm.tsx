@@ -34,6 +34,7 @@ export function InventoryForm({ initial, brands, onClose, onSave }: InventoryFor
   const [costPostShipping, setCostPostShipping] = useState<number>(initial?.costPostShipping ?? 0);
   const [costPreShipping, setCostPreShipping] = useState<number>(initial?.costPreShipping ?? 0);
   const [catalogPrice, setCatalogPrice] = useState<number | undefined>(initial?.catalogPrice);
+  const [isActive, setIsActive] = useState<boolean>(initial?.isActive ?? true);
   const [images, setImages] = useState<ItemImage[]>(initial?.images || []);
   const [primaryImageId, setPrimaryImageId] = useState<string | undefined>(initial?.primaryImageId);
 
@@ -82,6 +83,7 @@ export function InventoryForm({ initial, brands, onClose, onSave }: InventoryFor
       minPrice,
       maxPrice,
       catalogPrice: catalogPrice || undefined,
+      isActive,
       minProfit,
       maxProfit,
       createdAt: initial?.createdAt ?? nowIso(),
@@ -234,6 +236,18 @@ export function InventoryForm({ initial, brands, onClose, onSave }: InventoryFor
             }
             data-testid="item-catalog-price-input"
           />
+        </div>
+
+        <div className="checkbox col-span-2">
+          <label>
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={e => setIsActive(e.target.checked)}
+              data-testid="item-is-active-checkbox"
+            />
+            {t('inventory.isActive')}
+          </label>
         </div>
       </div>
 
