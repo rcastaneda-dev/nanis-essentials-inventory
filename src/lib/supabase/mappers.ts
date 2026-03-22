@@ -120,6 +120,7 @@ export function toInventoryItem(row: LocationWithProduct): InventoryItem {
     catalogPrice: p.catalog_price ?? undefined,
     minProfit: p.min_revenue ?? undefined,
     maxProfit: p.max_revenue ?? undefined,
+    isActive: p.is_active,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
     branchId: row.branch_id ?? undefined,
@@ -140,7 +141,7 @@ export function toSupabaseProduct(item: InventoryItem) {
 
   const primaryUrl = sorted.length > 0 ? sorted[0].dataUrl : null;
 
-  const product: Omit<ProductRow, 'sku' | 'is_active'> = {
+  const product: Omit<ProductRow, 'sku'> = {
     id: item.id,
     name: item.name,
     description: item.description ?? null,
@@ -157,6 +158,7 @@ export function toSupabaseProduct(item: InventoryItem) {
     primary_image_url: primaryUrl,
     brand_id: item.brandId ?? null,
     color: item.color ?? null,
+    is_active: item.isActive ?? true,
     created_at: item.createdAt,
     updated_at: item.updatedAt ?? new Date().toISOString(),
   };

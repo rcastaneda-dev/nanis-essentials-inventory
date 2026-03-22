@@ -54,6 +54,7 @@ export interface InventoryItem {
   catalogPrice?: number; // Catalog/list price
   minProfit?: number;
   maxProfit?: number;
+  isActive?: boolean; // Whether the product is active (visible in catalog)
   createdAt: string; // ISO
   updatedAt?: string; // ISO
   branchId?: string; // Branch/store ID - undefined for main inventory
