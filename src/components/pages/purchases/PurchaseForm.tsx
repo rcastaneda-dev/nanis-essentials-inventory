@@ -253,6 +253,10 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       });
     }
 
+    // Only persist items that this purchase actually touches
+    const touchedItemIds = new Set(enriched.map(l => l.itemId));
+    const changedItems = itemsUpdated.filter(it => touchedItemIds.has(it.id));
+
     // Process revenue withdrawal if revenue is being used
     try {
       if (cashToUse > 0) {
@@ -276,9 +280,15 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
           throw new Error('Failed to process purchase with revenue');
         }
 
-        onSave(updatedPurchase, itemsUpdated, result.updatedDb.cashWithdrawals);
+        // Only persist new or purchase-linked withdrawals, not the entire array
+        const existingIds = new Set(db.cashWithdrawals.map(w => w.id));
+        const changedWithdrawals = result.updatedDb.cashWithdrawals.filter(
+          w => !existingIds.has(w.id) || w.linkedPurchaseId === p.id
+        );
+
+        onSave(updatedPurchase, changedItems, changedWithdrawals);
       } else {
-        onSave(p, itemsUpdated);
+        onSave(p, changedItems);
       }
     } catch (error) {
       alert(t('purchases.errorProcessingPurchase', { error: String(error) }));

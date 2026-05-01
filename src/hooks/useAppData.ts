@@ -271,7 +271,17 @@ export function useAppData() {
           else nextItems.push(ui);
         });
 
-        const nextWithdrawals = updatedWithdrawals ?? prev.cashWithdrawals;
+        // Merge changed withdrawals into existing array (patch, not replace)
+        const nextWithdrawals = updatedWithdrawals
+          ? prev.cashWithdrawals
+              .map(w => {
+                const updated = updatedWithdrawals.find(u => u.id === w.id);
+                return updated ?? w;
+              })
+              .concat(
+                updatedWithdrawals.filter(u => !prev.cashWithdrawals.some(w => w.id === u.id))
+              )
+          : prev.cashWithdrawals;
 
         return {
           ...prev,

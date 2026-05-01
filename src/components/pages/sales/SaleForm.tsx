@@ -208,23 +208,23 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
       thirdPartyDelivery: thirdPartyDelivery || undefined,
     };
 
-    let itemsUpdated = [...db.items];
+    // Only collect items that are part of the sale lines (not all db.items)
+    const changedItems = new Map<string, InventoryItem>();
     lines.forEach(l => {
-      // Find the item in the correct inventory (main or branch)
-      const itemToUpdate = branchId
-        ? itemsUpdated.find(it => it.id === l.itemId && it.branchId === branchId)
-        : itemsUpdated.find(it => it.id === l.itemId && !it.branchId);
+      const source = branchId
+        ? db.items.find(it => it.id === l.itemId && it.branchId === branchId)
+        : db.items.find(it => it.id === l.itemId && !it.branchId);
 
-      if (itemToUpdate) {
-        itemsUpdated = itemsUpdated.map(it => {
-          if (it.id !== itemToUpdate.id) return it;
-          const next = Math.max(0, it.stock - l.quantity);
-          return { ...it, stock: next, updatedAt: nowIso() };
-        });
+      if (source) {
+        const key = `${source.id}|${source.branchId ?? ''}`;
+        // Use already-updated item if the same product appears in multiple lines
+        const current = changedItems.get(key) ?? source;
+        const nextStock = Math.max(0, current.stock - l.quantity);
+        changedItems.set(key, { ...current, stock: nextStock, updatedAt: nowIso() });
       }
     });
 
-    onSave(s, itemsUpdated);
+    onSave(s, Array.from(changedItems.values()));
   }
 
   return (
