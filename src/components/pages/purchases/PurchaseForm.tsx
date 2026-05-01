@@ -196,7 +196,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       enriched.forEach(l => {
         const unitsLine = l.quantity;
         itemsUpdated = itemsUpdated.map(it => {
-          if (it.id !== l.itemId) return it;
+          if (it.id !== l.itemId || it.branchId) return it;
 
           // When editing, first subtract the old purchase quantities
           let currentStock = it.stock ?? 0;
@@ -232,7 +232,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       // For shipping/tax-only edits, just update cost calculations without changing stock
       enriched.forEach(l => {
         itemsUpdated = itemsUpdated.map(it => {
-          if (it.id !== l.itemId) return it;
+          if (it.id !== l.itemId || it.branchId) return it;
           const costPre = l.unitCost;
           const costPost = l.unitCostPostShipping ?? l.unitCost;
           const autoMin = Math.ceil(costPost * 1.25);
@@ -253,9 +253,9 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       });
     }
 
-    // Only persist items that this purchase actually touches
+    // Only persist main-inventory items that this purchase actually touches
     const touchedItemIds = new Set(enriched.map(l => l.itemId));
-    const changedItems = itemsUpdated.filter(it => touchedItemIds.has(it.id));
+    const changedItems = itemsUpdated.filter(it => touchedItemIds.has(it.id) && !it.branchId);
 
     // Process revenue withdrawal if revenue is being used
     try {

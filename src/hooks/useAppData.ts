@@ -266,7 +266,9 @@ export function useAppData() {
 
         const nextItems = [...prev.items];
         updatedItems.forEach(ui => {
-          const idx = nextItems.findIndex(it => it.id === ui.id);
+          const idx = nextItems.findIndex(
+            it => it.id === ui.id && (it.branchId ?? null) === (ui.branchId ?? null)
+          );
           if (idx >= 0) nextItems[idx] = ui;
           else nextItems.push(ui);
         });
@@ -295,6 +297,9 @@ export function useAppData() {
         setDb(prev => ({
           ...prev,
           purchases: prev.purchases.map(p => (p.id === tempId ? { ...p, id: dbId } : p)),
+          cashWithdrawals: prev.cashWithdrawals.map(w =>
+            w.linkedPurchaseId === tempId ? { ...w, linkedPurchaseId: dbId } : w
+          ),
         }));
       }
     },
@@ -305,7 +310,9 @@ export function useAppData() {
     setDb(prev => {
       let nextItems = [...prev.items];
       restoredItems.forEach(ri => {
-        nextItems = nextItems.map(it => (it.id === ri.id ? ri : it));
+        nextItems = nextItems.map(it =>
+          it.id === ri.id && (it.branchId ?? null) === (ri.branchId ?? null) ? ri : it
+        );
       });
       return { ...prev, purchases: prev.purchases.filter(p => p.id !== id), items: nextItems };
     });
@@ -325,7 +332,9 @@ export function useAppData() {
 
       let nextItems = [...prev.items];
       updatedItems.forEach(ui => {
-        nextItems = nextItems.map(it => (it.id === ui.id ? ui : it));
+        nextItems = nextItems.map(it =>
+          it.id === ui.id && (it.branchId ?? null) === (ui.branchId ?? null) ? ui : it
+        );
       });
 
       return { ...prev, sales: nextSales, items: nextItems };
@@ -343,7 +352,9 @@ export function useAppData() {
     setDb(prev => {
       let nextItems = [...prev.items];
       restoredItems.forEach(ri => {
-        nextItems = nextItems.map(it => (it.id === ri.id ? ri : it));
+        nextItems = nextItems.map(it =>
+          it.id === ri.id && (it.branchId ?? null) === (ri.branchId ?? null) ? ri : it
+        );
       });
       return { ...prev, sales: prev.sales.filter(s => s.id !== id), items: nextItems };
     });
