@@ -32,3 +32,9 @@ export async function upsertCashWithdrawal(cw: CashWithdrawal): Promise<string> 
   if (error) throw new Error(`Failed to save cash withdrawal: ${error.message}`);
   return cw.id;
 }
+
+export async function deleteCashWithdrawal(id: string): Promise<void> {
+  if (!isValidUUID(id)) return;
+  const { error } = await supabase.from('cash_withdrawals').delete().eq('id', id);
+  if (error) throw new Error(`Failed to delete cash withdrawal: ${error.message}`);
+}

@@ -24,13 +24,13 @@ export async function fetchAllPurchases(): Promise<Purchase[]> {
  * Save a purchase header, lines, inventory updates, and optional cash withdrawals.
  * New records are inserted without id (DB generates uuid).
  * Lines are always deleted+re-inserted without id.
- * Returns the DB-generated purchase id.
+ * Returns { purchaseId, withdrawalIdMap } where withdrawalIdMap maps temp ids to DB-generated ids.
  */
 export async function upsertPurchaseWithRelations(
   purchase: Purchase,
   updatedItems: InventoryItem[],
   updatedWithdrawals?: CashWithdrawal[]
-): Promise<string> {
+): Promise<{ purchaseId: string; withdrawalIdMap?: Map<string, string> }> {
   const { row, lineRows } = toSupabasePurchase(purchase);
   const isNew = !isValidUUID(purchase.id);
   let purchaseId: string;
@@ -69,14 +69,19 @@ export async function upsertPurchaseWithRelations(
     if (insertError) throw new Error(`Failed to insert purchase lines: ${insertError.message}`);
   }
 
+  let withdrawalIdMap: Map<string, string> | undefined;
   if (updatedWithdrawals) {
     const withdrawalsWithPurchaseId = updatedWithdrawals.map(cw =>
       cw.linkedPurchaseId === purchase.id ? { ...cw, linkedPurchaseId: purchaseId } : cw
     );
-    await Promise.all(withdrawalsWithPurchaseId.map(cw => upsertCashWithdrawal(cw)));
+    const dbIds = await Promise.all(withdrawalsWithPurchaseId.map(cw => upsertCashWithdrawal(cw)));
+    withdrawalIdMap = new Map<string, string>();
+    updatedWithdrawals.forEach((cw, i) => {
+      if (dbIds[i] !== cw.id) withdrawalIdMap!.set(cw.id, dbIds[i]);
+    });
   }
 
-  return purchaseId;
+  return { purchaseId, withdrawalIdMap };
 }
 
 export async function deletePurchase(id: string): Promise<void> {

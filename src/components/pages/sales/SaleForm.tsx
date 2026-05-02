@@ -210,6 +210,28 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
 
     // Only collect items that are part of the sale lines (not all db.items)
     const changedItems = new Map<string, InventoryItem>();
+
+    // When editing, first restore stock from old sale quantities using the original branch
+    if (initial) {
+      const initialBranchId = initial.branchId ?? '';
+      initial.lines.forEach(oldLine => {
+        const source = initialBranchId
+          ? db.items.find(it => it.id === oldLine.itemId && it.branchId === initialBranchId)
+          : db.items.find(it => it.id === oldLine.itemId && !it.branchId);
+
+        if (source) {
+          const key = `${source.id}|${source.branchId ?? ''}`;
+          const current = changedItems.get(key) ?? source;
+          changedItems.set(key, {
+            ...current,
+            stock: current.stock + oldLine.quantity,
+            updatedAt: nowIso(),
+          });
+        }
+      });
+    }
+
+    // Now deduct new sale quantities
     lines.forEach(l => {
       const source = branchId
         ? db.items.find(it => it.id === l.itemId && it.branchId === branchId)

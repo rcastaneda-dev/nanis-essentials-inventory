@@ -3,7 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Modal } from '../../shared/Modal';
 import { QuickAddItemForm } from './QuickAddItemForm';
 import { RevenueManager, RevenueSummaryCard } from '../../RevenueManager';
-import { DB, Purchase, PurchaseLine, InventoryItem, DEFAULT_SETTINGS } from '../../../types/models';
+import {
+  DB,
+  Purchase,
+  PurchaseLine,
+  InventoryItem,
+  CashWithdrawal,
+  DEFAULT_SETTINGS,
+} from '../../../types/models';
 import { parseNumber, uid, nowIso, fmtUSD, itemDisplayName } from '../../../lib/utils';
 import { RevenueService } from '../../../lib/revenueService';
 
@@ -27,12 +34,17 @@ interface PurchaseFormProps {
   db: DB;
   initial?: Purchase;
   onClose: () => void;
-  onSave: (_purchase: Purchase, _updatedItems: InventoryItem[], _cashWithdrawals?: any[]) => void;
+  onSave: (
+    _purchase: Purchase,
+    _updatedItems: InventoryItem[],
+    _cashWithdrawals?: CashWithdrawal[],
+    _withdrawalIdsToDelete?: string[]
+  ) => void;
 }
 
 export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps) {
   const { t } = useTranslation();
-  const [items, setItems] = useState<InventoryItem[]>(db.items);
+  const [items, setItems] = useState<InventoryItem[]>(() => db.items.filter(i => !i.branchId));
   const [lines, setLines] = useState<PurchaseLine[]>(
     initial?.lines ?? [
       {
@@ -196,7 +208,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       enriched.forEach(l => {
         const unitsLine = l.quantity;
         itemsUpdated = itemsUpdated.map(it => {
-          if (it.id !== l.itemId || it.branchId) return it;
+          if (it.id !== l.itemId) return it;
 
           // When editing, first subtract the old purchase quantities
           let currentStock = it.stock ?? 0;
@@ -232,7 +244,7 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       // For shipping/tax-only edits, just update cost calculations without changing stock
       enriched.forEach(l => {
         itemsUpdated = itemsUpdated.map(it => {
-          if (it.id !== l.itemId || it.branchId) return it;
+          if (it.id !== l.itemId) return it;
           const costPre = l.unitCost;
           const costPost = l.unitCostPostShipping ?? l.unitCost;
           const autoMin = Math.ceil(costPost * 1.25);
@@ -253,9 +265,9 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
       });
     }
 
-    // Only persist main-inventory items that this purchase actually touches
+    // Only persist items that this purchase actually touches
     const touchedItemIds = new Set(enriched.map(l => l.itemId));
-    const changedItems = itemsUpdated.filter(it => touchedItemIds.has(it.id) && !it.branchId);
+    const changedItems = itemsUpdated.filter(it => touchedItemIds.has(it.id));
 
     // Process revenue withdrawal if revenue is being used
     try {
@@ -288,7 +300,20 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
 
         onSave(updatedPurchase, changedItems, changedWithdrawals);
       } else {
-        onSave(p, changedItems);
+        // When editing a purchase that previously used cash, remove all linked withdrawals
+        const oldWithdrawalIds = initial
+          ? db.cashWithdrawals.filter(w => w.linkedPurchaseId === p.id).map(w => w.id)
+          : [];
+        if (oldWithdrawalIds.length > 0) {
+          onSave(
+            { ...p, cashUsed: 0, paymentSource: 'external' as const },
+            changedItems,
+            undefined,
+            oldWithdrawalIds
+          );
+        } else {
+          onSave(p, changedItems);
+        }
       }
     } catch (error) {
       alert(t('purchases.errorProcessingPurchase', { error: String(error) }));
