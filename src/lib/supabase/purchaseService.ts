@@ -24,7 +24,7 @@ export async function fetchAllPurchases(): Promise<Purchase[]> {
  * Save a purchase header, lines, inventory updates, and optional cash withdrawals.
  * New records are inserted without id (DB generates uuid).
  * Lines are always deleted+re-inserted without id.
- * Returns the DB-generated purchase id.
+ * Returns { purchaseId, withdrawalIdMap } where withdrawalIdMap maps temp ids to DB-generated ids.
  */
 export async function upsertPurchaseWithRelations(
   purchase: Purchase,

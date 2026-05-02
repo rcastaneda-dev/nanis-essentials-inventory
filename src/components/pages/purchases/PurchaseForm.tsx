@@ -3,7 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Modal } from '../../shared/Modal';
 import { QuickAddItemForm } from './QuickAddItemForm';
 import { RevenueManager, RevenueSummaryCard } from '../../RevenueManager';
-import { DB, Purchase, PurchaseLine, InventoryItem, DEFAULT_SETTINGS } from '../../../types/models';
+import {
+  DB,
+  Purchase,
+  PurchaseLine,
+  InventoryItem,
+  CashWithdrawal,
+  DEFAULT_SETTINGS,
+} from '../../../types/models';
 import { parseNumber, uid, nowIso, fmtUSD, itemDisplayName } from '../../../lib/utils';
 import { RevenueService } from '../../../lib/revenueService';
 
@@ -30,7 +37,7 @@ interface PurchaseFormProps {
   onSave: (
     _purchase: Purchase,
     _updatedItems: InventoryItem[],
-    _cashWithdrawals?: any[],
+    _cashWithdrawals?: CashWithdrawal[],
     _withdrawalIdsToDelete?: string[]
   ) => void;
 }
