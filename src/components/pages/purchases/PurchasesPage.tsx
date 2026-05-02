@@ -44,9 +44,10 @@ export function PurchasesPage({ db, savePurchase, removePurchase }: PurchasesPag
   const handleSave = (
     purchase: Purchase,
     updatedItems: InventoryItem[],
-    updatedWithdrawals?: CashWithdrawal[]
+    updatedWithdrawals?: CashWithdrawal[],
+    withdrawalIdsToDelete?: string[]
   ) => {
-    savePurchase(purchase, updatedItems, updatedWithdrawals);
+    savePurchase(purchase, updatedItems, updatedWithdrawals, withdrawalIdsToDelete);
     setShowForm(false);
   };
 

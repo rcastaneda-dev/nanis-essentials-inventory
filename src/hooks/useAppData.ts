@@ -35,6 +35,7 @@ import {
 import {
   fetchAllCashWithdrawals,
   upsertCashWithdrawal as upsertCashWithdrawalApi,
+  deleteCashWithdrawal as deleteCashWithdrawalApi,
 } from '../lib/supabase/cashWithdrawalService';
 import {
   fetchAllPurchases,
@@ -255,10 +256,16 @@ export function useAppData() {
     async (
       purchase: Purchase,
       updatedItems: InventoryItem[],
-      updatedWithdrawals?: CashWithdrawal[]
+      updatedWithdrawals?: CashWithdrawal[],
+      withdrawalIdsToDelete?: string[]
     ) => {
       const tempId = purchase.id;
+      const deleteSet = new Set(withdrawalIdsToDelete ?? []);
+      let snapshot: DB | null = null;
+
       setDb(prev => {
+        snapshot = prev;
+
         const exists = prev.purchases.find(p => p.id === tempId);
         const nextPurchases = exists
           ? prev.purchases.map(p => (p.id === tempId ? purchase : p))
@@ -273,17 +280,20 @@ export function useAppData() {
           else nextItems.push(ui);
         });
 
-        // Merge changed withdrawals into existing array (patch, not replace)
-        const nextWithdrawals = updatedWithdrawals
-          ? prev.cashWithdrawals
-              .map(w => {
-                const updated = updatedWithdrawals.find(u => u.id === w.id);
-                return updated ?? w;
-              })
-              .concat(
-                updatedWithdrawals.filter(u => !prev.cashWithdrawals.some(w => w.id === u.id))
-              )
-          : prev.cashWithdrawals;
+        // Remove deleted withdrawals, then merge changed ones
+        let nextWithdrawals =
+          deleteSet.size > 0
+            ? prev.cashWithdrawals.filter(w => !deleteSet.has(w.id))
+            : prev.cashWithdrawals;
+
+        if (updatedWithdrawals) {
+          nextWithdrawals = nextWithdrawals
+            .map(w => {
+              const updated = updatedWithdrawals.find(u => u.id === w.id);
+              return updated ?? w;
+            })
+            .concat(updatedWithdrawals.filter(u => !nextWithdrawals.some(w => w.id === u.id)));
+        }
 
         return {
           ...prev,
@@ -292,22 +302,49 @@ export function useAppData() {
           cashWithdrawals: nextWithdrawals,
         };
       });
-      const dbId = await upsertPurchaseWithRelations(purchase, updatedItems, updatedWithdrawals);
-      if (dbId !== tempId) {
-        setDb(prev => ({
-          ...prev,
-          purchases: prev.purchases.map(p => (p.id === tempId ? { ...p, id: dbId } : p)),
-          cashWithdrawals: prev.cashWithdrawals.map(w =>
-            w.linkedPurchaseId === tempId ? { ...w, linkedPurchaseId: dbId } : w
-          ),
-        }));
+
+      try {
+        // Delete withdrawals from DB
+        if (withdrawalIdsToDelete) {
+          await Promise.all(withdrawalIdsToDelete.map(id => deleteCashWithdrawalApi(id)));
+        }
+
+        const { purchaseId: dbId, withdrawalIdMap } = await upsertPurchaseWithRelations(
+          purchase,
+          updatedItems,
+          updatedWithdrawals
+        );
+        if (dbId !== tempId || (withdrawalIdMap && withdrawalIdMap.size > 0)) {
+          setDb(prev => ({
+            ...prev,
+            purchases:
+              dbId !== tempId
+                ? prev.purchases.map(p => (p.id === tempId ? { ...p, id: dbId } : p))
+                : prev.purchases,
+            cashWithdrawals: prev.cashWithdrawals.map(w => {
+              let updated = w;
+              if (dbId !== tempId && w.linkedPurchaseId === tempId) {
+                updated = { ...updated, linkedPurchaseId: dbId };
+              }
+              if (withdrawalIdMap?.has(w.id)) {
+                updated = { ...updated, id: withdrawalIdMap.get(w.id)! };
+              }
+              return updated;
+            }),
+          }));
+        }
+      } catch (err) {
+        if (snapshot) setDb(snapshot);
+        throw err;
       }
     },
     []
   );
 
   const removePurchase = useCallback(async (id: string, restoredItems: InventoryItem[]) => {
+    let snapshot: DB | null = null;
     setDb(prev => {
+      snapshot = prev;
       let nextItems = [...prev.items];
       restoredItems.forEach(ri => {
         nextItems = nextItems.map(it =>
@@ -316,15 +353,22 @@ export function useAppData() {
       });
       return { ...prev, purchases: prev.purchases.filter(p => p.id !== id), items: nextItems };
     });
-    await deletePurchaseApi(id);
-    await Promise.all(restoredItems.map(item => upsertProduct(item)));
+    try {
+      await deletePurchaseApi(id);
+      await Promise.all(restoredItems.map(item => upsertProduct(item)));
+    } catch (err) {
+      if (snapshot) setDb(snapshot);
+      throw err;
+    }
   }, []);
 
   // --- Sale ---
 
   const saveSale = useCallback(async (sale: Sale, updatedItems: InventoryItem[]) => {
     const tempId = sale.id;
+    let snapshot: DB | null = null;
     setDb(prev => {
+      snapshot = prev;
       const exists = prev.sales.find(s => s.id === tempId);
       const nextSales = exists
         ? prev.sales.map(s => (s.id === tempId ? sale : s))
@@ -339,17 +383,24 @@ export function useAppData() {
 
       return { ...prev, sales: nextSales, items: nextItems };
     });
-    const dbId = await upsertSaleWithRelations(sale, updatedItems);
-    if (dbId !== tempId) {
-      setDb(prev => ({
-        ...prev,
-        sales: prev.sales.map(s => (s.id === tempId ? { ...s, id: dbId } : s)),
-      }));
+    try {
+      const dbId = await upsertSaleWithRelations(sale, updatedItems);
+      if (dbId !== tempId) {
+        setDb(prev => ({
+          ...prev,
+          sales: prev.sales.map(s => (s.id === tempId ? { ...s, id: dbId } : s)),
+        }));
+      }
+    } catch (err) {
+      if (snapshot) setDb(snapshot);
+      throw err;
     }
   }, []);
 
   const removeSale = useCallback(async (id: string, restoredItems: InventoryItem[]) => {
+    let snapshot: DB | null = null;
     setDb(prev => {
+      snapshot = prev;
       let nextItems = [...prev.items];
       restoredItems.forEach(ri => {
         nextItems = nextItems.map(it =>
@@ -358,8 +409,13 @@ export function useAppData() {
       });
       return { ...prev, sales: prev.sales.filter(s => s.id !== id), items: nextItems };
     });
-    await deleteSaleApi(id);
-    await Promise.all(restoredItems.map(item => upsertProduct(item)));
+    try {
+      await deleteSaleApi(id);
+      await Promise.all(restoredItems.map(item => upsertProduct(item)));
+    } catch (err) {
+      if (snapshot) setDb(snapshot);
+      throw err;
+    }
   }, []);
 
   return {

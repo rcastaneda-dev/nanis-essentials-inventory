@@ -187,8 +187,14 @@ export class RevenueService {
     withdrawal: CashWithdrawal | null;
     paymentBreakdown: ReturnType<typeof RevenueService.calculatePaymentBreakdown>;
   } {
-    // Validate cash availability
-    if (!this.canWithdrawCash(db, cashToUse)) {
+    // Remove any existing withdrawal linked to this purchase before validating/creating
+    const withoutOldWithdrawal: DB = {
+      ...db,
+      cashWithdrawals: db.cashWithdrawals.filter(w => w.linkedPurchaseId !== purchase.id),
+    };
+
+    // Validate cash availability (with old withdrawal freed up)
+    if (!this.canWithdrawCash(withoutOldWithdrawal, cashToUse)) {
       throw new Error('Insufficient cash available for withdrawal');
     }
 
@@ -198,9 +204,9 @@ export class RevenueService {
       cashToUse
     );
 
-    // Create withdrawal if cash is used
+    // Create new withdrawal (old one already removed)
     let withdrawal: CashWithdrawal | null = null;
-    let updatedWithdrawals = db.cashWithdrawals;
+    let updatedWithdrawals = withoutOldWithdrawal.cashWithdrawals;
 
     if (paymentBreakdown.cashUsed > 0) {
       withdrawal = this.createCashWithdrawal(
@@ -209,7 +215,7 @@ export class RevenueService {
         purchase.id,
         withdrawalNotes
       );
-      updatedWithdrawals = [...db.cashWithdrawals, withdrawal];
+      updatedWithdrawals = [...updatedWithdrawals, withdrawal];
     }
 
     // Update purchase with payment information
