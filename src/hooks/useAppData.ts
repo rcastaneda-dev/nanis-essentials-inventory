@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   DB,
   InventoryItem,
@@ -61,6 +61,8 @@ const EMPTY_DB: DB = {
 
 export function useAppData() {
   const [db, setDb] = useState<DB>(EMPTY_DB);
+  const dbRef = useRef(db);
+  dbRef.current = db;
   const [loading, setLoading] = useState(true);
 
   // Load all entities from Supabase on mount
@@ -261,11 +263,9 @@ export function useAppData() {
     ) => {
       const tempId = purchase.id;
       const deleteSet = new Set(withdrawalIdsToDelete ?? []);
-      let snapshot: DB | null = null;
+      const snapshot = dbRef.current;
 
       setDb(prev => {
-        snapshot = prev;
-
         const exists = prev.purchases.find(p => p.id === tempId);
         const nextPurchases = exists
           ? prev.purchases.map(p => (p.id === tempId ? purchase : p))
@@ -334,7 +334,7 @@ export function useAppData() {
           }));
         }
       } catch (err) {
-        if (snapshot) setDb(snapshot);
+        setDb(snapshot);
         throw err;
       }
     },
@@ -342,9 +342,8 @@ export function useAppData() {
   );
 
   const removePurchase = useCallback(async (id: string, restoredItems: InventoryItem[]) => {
-    let snapshot: DB | null = null;
+    const snapshot = dbRef.current;
     setDb(prev => {
-      snapshot = prev;
       let nextItems = [...prev.items];
       restoredItems.forEach(ri => {
         nextItems = nextItems.map(it =>
@@ -357,7 +356,7 @@ export function useAppData() {
       await deletePurchaseApi(id);
       await Promise.all(restoredItems.map(item => upsertProduct(item)));
     } catch (err) {
-      if (snapshot) setDb(snapshot);
+      setDb(snapshot);
       throw err;
     }
   }, []);
@@ -366,9 +365,8 @@ export function useAppData() {
 
   const saveSale = useCallback(async (sale: Sale, updatedItems: InventoryItem[]) => {
     const tempId = sale.id;
-    let snapshot: DB | null = null;
+    const snapshot = dbRef.current;
     setDb(prev => {
-      snapshot = prev;
       const exists = prev.sales.find(s => s.id === tempId);
       const nextSales = exists
         ? prev.sales.map(s => (s.id === tempId ? sale : s))
@@ -392,15 +390,14 @@ export function useAppData() {
         }));
       }
     } catch (err) {
-      if (snapshot) setDb(snapshot);
+      setDb(snapshot);
       throw err;
     }
   }, []);
 
   const removeSale = useCallback(async (id: string, restoredItems: InventoryItem[]) => {
-    let snapshot: DB | null = null;
+    const snapshot = dbRef.current;
     setDb(prev => {
-      snapshot = prev;
       let nextItems = [...prev.items];
       restoredItems.forEach(ri => {
         nextItems = nextItems.map(it =>
@@ -413,7 +410,7 @@ export function useAppData() {
       await deleteSaleApi(id);
       await Promise.all(restoredItems.map(item => upsertProduct(item)));
     } catch (err) {
-      if (snapshot) setDb(snapshot);
+      setDb(snapshot);
       throw err;
     }
   }, []);
