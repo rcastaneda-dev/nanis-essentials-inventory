@@ -304,11 +304,6 @@ export function useAppData() {
       });
 
       try {
-        // Delete withdrawals from DB
-        if (withdrawalIdsToDelete) {
-          await Promise.all(withdrawalIdsToDelete.map(id => deleteCashWithdrawalApi(id)));
-        }
-
         const { purchaseId: dbId, withdrawalIdMap } = await upsertPurchaseWithRelations(
           purchase,
           updatedItems,
@@ -332,6 +327,11 @@ export function useAppData() {
               return updated;
             }),
           }));
+        }
+
+        // Delete old withdrawals after purchase is saved, so DB stays consistent if upsert fails
+        if (withdrawalIdsToDelete) {
+          await Promise.all(withdrawalIdsToDelete.map(id => deleteCashWithdrawalApi(id)));
         }
       } catch (err) {
         setDb(snapshot);
