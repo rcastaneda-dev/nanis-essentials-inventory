@@ -303,7 +303,9 @@ export function useAppData() {
         };
       });
 
+      let remoteWriteStarted = false;
       try {
+        remoteWriteStarted = true;
         const { purchaseId: dbId, withdrawalIdMap } = await upsertPurchaseWithRelations(
           purchase,
           updatedItems,
@@ -334,7 +336,11 @@ export function useAppData() {
           await Promise.all(withdrawalIdsToDelete.map(id => deleteCashWithdrawalApi(id)));
         }
       } catch (err) {
-        setDb(snapshot);
+        if (remoteWriteStarted) {
+          refreshData();
+        } else {
+          setDb(snapshot);
+        }
         throw err;
       }
     },
@@ -352,11 +358,17 @@ export function useAppData() {
       });
       return { ...prev, purchases: prev.purchases.filter(p => p.id !== id), items: nextItems };
     });
+    let remoteWriteStarted = false;
     try {
+      remoteWriteStarted = true;
       await deletePurchaseApi(id);
       await Promise.all(restoredItems.map(item => upsertProduct(item)));
     } catch (err) {
-      setDb(snapshot);
+      if (remoteWriteStarted) {
+        refreshData();
+      } else {
+        setDb(snapshot);
+      }
       throw err;
     }
   }, []);
@@ -381,7 +393,9 @@ export function useAppData() {
 
       return { ...prev, sales: nextSales, items: nextItems };
     });
+    let remoteWriteStarted = false;
     try {
+      remoteWriteStarted = true;
       const dbId = await upsertSaleWithRelations(sale, updatedItems);
       if (dbId !== tempId) {
         setDb(prev => ({
@@ -390,7 +404,11 @@ export function useAppData() {
         }));
       }
     } catch (err) {
-      setDb(snapshot);
+      if (remoteWriteStarted) {
+        refreshData();
+      } else {
+        setDb(snapshot);
+      }
       throw err;
     }
   }, []);
@@ -406,11 +424,17 @@ export function useAppData() {
       });
       return { ...prev, sales: prev.sales.filter(s => s.id !== id), items: nextItems };
     });
+    let remoteWriteStarted = false;
     try {
+      remoteWriteStarted = true;
       await deleteSaleApi(id);
       await Promise.all(restoredItems.map(item => upsertProduct(item)));
     } catch (err) {
-      setDb(snapshot);
+      if (remoteWriteStarted) {
+        refreshData();
+      } else {
+        setDb(snapshot);
+      }
       throw err;
     }
   }, []);

@@ -141,9 +141,13 @@ export function SalesPage({ db, saveSale, removeSale, selectedBranchId }: SalesP
     setExpandedGroups(new Set());
   }
 
-  const handleSave = (sale: Sale, updatedItems: InventoryItem[]) => {
-    saveSale(sale, updatedItems);
-    setShowForm(false);
+  const handleSave = async (sale: Sale, updatedItems: InventoryItem[]) => {
+    try {
+      await saveSale(sale, updatedItems);
+      setShowForm(false);
+    } catch {
+      // State is rolled back by saveSale; form stays open so user can retry
+    }
   };
 
   return (

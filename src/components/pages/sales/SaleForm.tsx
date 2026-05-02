@@ -222,7 +222,11 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
         if (source) {
           const key = `${source.id}|${source.branchId ?? ''}`;
           const current = changedItems.get(key) ?? source;
-          changedItems.set(key, { ...current, stock: current.stock + oldLine.quantity });
+          changedItems.set(key, {
+            ...current,
+            stock: current.stock + oldLine.quantity,
+            updatedAt: nowIso(),
+          });
         }
       });
     }

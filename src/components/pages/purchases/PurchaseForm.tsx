@@ -300,16 +300,16 @@ export function PurchaseForm({ db, initial, onClose, onSave }: PurchaseFormProps
 
         onSave(updatedPurchase, changedItems, changedWithdrawals);
       } else {
-        // When editing a purchase that previously used cash, remove the old withdrawal
-        const oldWithdrawal = initial
-          ? db.cashWithdrawals.find(w => w.linkedPurchaseId === p.id)
-          : undefined;
-        if (oldWithdrawal) {
+        // When editing a purchase that previously used cash, remove all linked withdrawals
+        const oldWithdrawalIds = initial
+          ? db.cashWithdrawals.filter(w => w.linkedPurchaseId === p.id).map(w => w.id)
+          : [];
+        if (oldWithdrawalIds.length > 0) {
           onSave(
             { ...p, cashUsed: 0, paymentSource: 'external' as const },
             changedItems,
             undefined,
-            [oldWithdrawal.id]
+            oldWithdrawalIds
           );
         } else {
           onSave(p, changedItems);

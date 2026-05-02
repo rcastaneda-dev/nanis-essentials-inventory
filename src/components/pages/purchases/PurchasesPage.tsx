@@ -42,14 +42,18 @@ export function PurchasesPage({ db, savePurchase, removePurchase }: PurchasesPag
     }
   };
 
-  const handleSave = (
+  const handleSave = async (
     purchase: Purchase,
     updatedItems: InventoryItem[],
     updatedWithdrawals?: CashWithdrawal[],
     withdrawalIdsToDelete?: string[]
   ) => {
-    savePurchase(purchase, updatedItems, updatedWithdrawals, withdrawalIdsToDelete);
-    setShowForm(false);
+    try {
+      await savePurchase(purchase, updatedItems, updatedWithdrawals, withdrawalIdsToDelete);
+      setShowForm(false);
+    } catch {
+      // State is rolled back by savePurchase; form stays open so user can retry
+    }
   };
 
   return (
