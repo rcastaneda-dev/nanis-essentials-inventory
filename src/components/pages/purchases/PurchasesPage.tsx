@@ -10,7 +10,8 @@ interface PurchasesPageProps {
   savePurchase: (
     purchase: Purchase,
     updatedItems: InventoryItem[],
-    updatedWithdrawals?: CashWithdrawal[]
+    updatedWithdrawals?: CashWithdrawal[],
+    withdrawalIdsToDelete?: string[]
   ) => Promise<void>;
   removePurchase: (id: string, restoredItems: InventoryItem[]) => Promise<void>;
 }
