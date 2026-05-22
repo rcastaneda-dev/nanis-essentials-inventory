@@ -178,17 +178,6 @@ export function SaleForm({ db, initial, onClose, onSave, selectedBranchId }: Sal
       return;
     }
 
-    // Validate sale date is not more than 1 week in the past
-    const selectedDate = new Date(saleDate);
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    oneWeekAgo.setHours(0, 0, 0, 0);
-
-    if (selectedDate < oneWeekAgo) {
-      alert(t('sales.dateCannotBeMoreThanWeekOld'));
-      return;
-    }
-
     // Convert YYYY-MM-DD to ISO timestamp, preserving time if editing
     const saleDateISO = initial?.createdAt
       ? new Date(saleDate + 'T' + initial.createdAt.split('T')[1]).toISOString()

@@ -344,100 +344,109 @@ export function useAppData() {
         throw err;
       }
     },
-    []
+    [refreshData]
   );
 
-  const removePurchase = useCallback(async (id: string, restoredItems: InventoryItem[]) => {
-    const snapshot = dbRef.current;
-    setDb(prev => {
-      let nextItems = [...prev.items];
-      restoredItems.forEach(ri => {
-        nextItems = nextItems.map(it =>
-          it.id === ri.id && (it.branchId ?? null) === (ri.branchId ?? null) ? ri : it
-        );
+  const removePurchase = useCallback(
+    async (id: string, restoredItems: InventoryItem[]) => {
+      const snapshot = dbRef.current;
+      setDb(prev => {
+        let nextItems = [...prev.items];
+        restoredItems.forEach(ri => {
+          nextItems = nextItems.map(it =>
+            it.id === ri.id && (it.branchId ?? null) === (ri.branchId ?? null) ? ri : it
+          );
+        });
+        return { ...prev, purchases: prev.purchases.filter(p => p.id !== id), items: nextItems };
       });
-      return { ...prev, purchases: prev.purchases.filter(p => p.id !== id), items: nextItems };
-    });
-    let remoteWriteStarted = false;
-    try {
-      remoteWriteStarted = true;
-      await deletePurchaseApi(id);
-      await Promise.all(restoredItems.map(item => upsertProduct(item)));
-    } catch (err) {
-      if (remoteWriteStarted) {
-        refreshData();
-      } else {
-        setDb(snapshot);
+      let remoteWriteStarted = false;
+      try {
+        remoteWriteStarted = true;
+        await deletePurchaseApi(id);
+        await Promise.all(restoredItems.map(item => upsertProduct(item)));
+      } catch (err) {
+        if (remoteWriteStarted) {
+          refreshData();
+        } else {
+          setDb(snapshot);
+        }
+        throw err;
       }
-      throw err;
-    }
-  }, []);
+    },
+    [refreshData]
+  );
 
   // --- Sale ---
 
-  const saveSale = useCallback(async (sale: Sale, updatedItems: InventoryItem[]) => {
-    const tempId = sale.id;
-    const snapshot = dbRef.current;
-    setDb(prev => {
-      const exists = prev.sales.find(s => s.id === tempId);
-      const nextSales = exists
-        ? prev.sales.map(s => (s.id === tempId ? sale : s))
-        : [...prev.sales, sale];
+  const saveSale = useCallback(
+    async (sale: Sale, updatedItems: InventoryItem[]) => {
+      const tempId = sale.id;
+      const snapshot = dbRef.current;
+      setDb(prev => {
+        const exists = prev.sales.find(s => s.id === tempId);
+        const nextSales = exists
+          ? prev.sales.map(s => (s.id === tempId ? sale : s))
+          : [...prev.sales, sale];
 
-      let nextItems = [...prev.items];
-      updatedItems.forEach(ui => {
-        nextItems = nextItems.map(it =>
-          it.id === ui.id && (it.branchId ?? null) === (ui.branchId ?? null) ? ui : it
-        );
+        let nextItems = [...prev.items];
+        updatedItems.forEach(ui => {
+          nextItems = nextItems.map(it =>
+            it.id === ui.id && (it.branchId ?? null) === (ui.branchId ?? null) ? ui : it
+          );
+        });
+
+        return { ...prev, sales: nextSales, items: nextItems };
       });
-
-      return { ...prev, sales: nextSales, items: nextItems };
-    });
-    let remoteWriteStarted = false;
-    try {
-      remoteWriteStarted = true;
-      const dbId = await upsertSaleWithRelations(sale, updatedItems);
-      if (dbId !== tempId) {
-        setDb(prev => ({
-          ...prev,
-          sales: prev.sales.map(s => (s.id === tempId ? { ...s, id: dbId } : s)),
-        }));
+      let remoteWriteStarted = false;
+      try {
+        remoteWriteStarted = true;
+        const dbId = await upsertSaleWithRelations(sale, updatedItems);
+        if (dbId !== tempId) {
+          setDb(prev => ({
+            ...prev,
+            sales: prev.sales.map(s => (s.id === tempId ? { ...s, id: dbId } : s)),
+          }));
+        }
+      } catch (err) {
+        if (remoteWriteStarted) {
+          refreshData();
+        } else {
+          setDb(snapshot);
+        }
+        throw err;
       }
-    } catch (err) {
-      if (remoteWriteStarted) {
-        refreshData();
-      } else {
-        setDb(snapshot);
-      }
-      throw err;
-    }
-  }, []);
+    },
+    [refreshData]
+  );
 
-  const removeSale = useCallback(async (id: string, restoredItems: InventoryItem[]) => {
-    const snapshot = dbRef.current;
-    setDb(prev => {
-      let nextItems = [...prev.items];
-      restoredItems.forEach(ri => {
-        nextItems = nextItems.map(it =>
-          it.id === ri.id && (it.branchId ?? null) === (ri.branchId ?? null) ? ri : it
-        );
+  const removeSale = useCallback(
+    async (id: string, restoredItems: InventoryItem[]) => {
+      const snapshot = dbRef.current;
+      setDb(prev => {
+        let nextItems = [...prev.items];
+        restoredItems.forEach(ri => {
+          nextItems = nextItems.map(it =>
+            it.id === ri.id && (it.branchId ?? null) === (ri.branchId ?? null) ? ri : it
+          );
+        });
+        return { ...prev, sales: prev.sales.filter(s => s.id !== id), items: nextItems };
       });
-      return { ...prev, sales: prev.sales.filter(s => s.id !== id), items: nextItems };
-    });
-    let remoteWriteStarted = false;
-    try {
-      remoteWriteStarted = true;
-      await deleteSaleApi(id);
-      await Promise.all(restoredItems.map(item => upsertProduct(item)));
-    } catch (err) {
-      if (remoteWriteStarted) {
-        refreshData();
-      } else {
-        setDb(snapshot);
+      let remoteWriteStarted = false;
+      try {
+        remoteWriteStarted = true;
+        await deleteSaleApi(id);
+        await Promise.all(restoredItems.map(item => upsertProduct(item)));
+      } catch (err) {
+        if (remoteWriteStarted) {
+          refreshData();
+        } else {
+          setDb(snapshot);
+        }
+        throw err;
       }
-      throw err;
-    }
-  }, []);
+    },
+    [refreshData]
+  );
 
   return {
     db,
