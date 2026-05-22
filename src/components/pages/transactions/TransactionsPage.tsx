@@ -6,7 +6,10 @@ import { RevenueService } from '../../../lib/revenueService';
 import { TransactionForm } from './TransactionForm';
 import { DateFilters, DateFilterOption } from '../../molecules/DateFilters';
 import { RevenueWithdrawals } from '../../RevenueWithdrawals';
-import { getTransactionCategoryTranslationKey } from '../../../lib/transactionUtils';
+import {
+  getPaymentSourceTranslationKey,
+  getTransactionCategoryTranslationKey,
+} from '../../../lib/transactionUtils';
 
 interface TransactionsPageProps {
   db: DB;
@@ -210,18 +213,18 @@ export function TransactionsPage({
                 <div className="grid two">
                   <div>
                     <b>{t('transactions.sourceLabel')}:</b>{' '}
-                    {transaction.paymentSource === 'mixed'
-                      ? t('transactions.mixedSources')
-                      : transaction.paymentSource === 'revenue'
-                        ? t('transactions.businessRevenue')
-                        : t('transactions.externalFunds')}
+                    {transaction.paymentSource
+                      ? t(
+                          `transactions.${getPaymentSourceTranslationKey(transaction.paymentSource)}`
+                        )
+                      : t('transactions.notSpecified')}
                   </div>
                   {transaction.paymentSource === 'mixed' &&
                     transaction.cashAmount &&
                     transaction.externalAmount && (
                       <div>
                         <b>{t('transactions.breakdownLabel')}:</b> {fmtUSD(transaction.cashAmount)}{' '}
-                        {t('transactions.businessRevenue').toLowerCase()} +{' '}
+                        {t('transactions.businessCash').toLowerCase()} +{' '}
                         {fmtUSD(transaction.externalAmount)}{' '}
                         {t('transactions.externalFunds').toLowerCase()}
                       </div>

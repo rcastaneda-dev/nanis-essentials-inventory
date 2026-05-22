@@ -1,3 +1,15 @@
+import { PaymentSource } from '../types/models';
+
+const PAYMENT_SOURCE_TRANSLATION_KEYS: Record<PaymentSource, string> = {
+  external: 'externalFunds',
+  revenue: 'businessCash',
+  mixed: 'mixedSources',
+};
+
+/** Maps payment source values to transactions.* i18n keys */
+export const getPaymentSourceTranslationKey = (source: PaymentSource): string =>
+  PAYMENT_SOURCE_TRANSLATION_KEYS[source];
+
 /**
  * Maps transaction category keys to translation keys
  */
