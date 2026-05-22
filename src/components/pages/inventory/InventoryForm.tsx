@@ -86,6 +86,8 @@ export function InventoryForm({ initial, brands, onClose, onSave }: InventoryFor
       isActive,
       minProfit,
       maxProfit,
+      branchId: initial?.branchId,
+      locationInventoryId: initial?.locationInventoryId,
       createdAt: initial?.createdAt ?? nowIso(),
       updatedAt: nowIso(),
     };
